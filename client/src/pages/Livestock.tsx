@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Plus, Trash2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
+import BreedingRecords from "@/components/BreedingRecords";
 
 const ANIMAL_TYPES = [
   { id: 1, name: "Cattle" },
@@ -210,11 +211,12 @@ export default function Livestock() {
       </div>
 
       <Tabs value={tabValue} onValueChange={setTabValue}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="animals">Animals</TabsTrigger>
           <TabsTrigger value="health">Health Records</TabsTrigger>
           <TabsTrigger value="vaccinations">Vaccinations</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="breeding">Breeding</TabsTrigger>
         </TabsList>
 
         <TabsContent value="animals" className="space-y-4">
@@ -555,6 +557,16 @@ export default function Livestock() {
                 </div>
               </div>
             </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="breeding" className="space-y-4">
+          {!selectedFarmId ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>Select a farm to view breeding records</p>
+            </div>
+          ) : (
+            <BreedingRecords farmId={selectedFarmId} animalsList={animalsList} />
           )}
         </TabsContent>
 

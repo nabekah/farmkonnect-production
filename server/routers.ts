@@ -369,6 +369,67 @@ export const appRouter = router({
         });
       }),
   }),
+
+  breeding: router({
+    listByAnimal: protectedProcedure
+      .input(z.object({ animalId: z.number() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        return await db.select().from(breedingRecords).where(eq(breedingRecords.animalId, input.animalId));
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        animalId: z.number(),
+        breedingDate: z.date(),
+        sireId: z.number().optional(),
+        damId: z.number().optional(),
+        expectedDueDate: z.date().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        return await db.insert(breedingRecords).values({
+          animalId: input.animalId,
+          breedingDate: input.breedingDate,
+          sireId: input.sireId,
+          damId: input.damId,
+          expectedDueDate: input.expectedDueDate,
+          notes: input.notes,
+          outcome: "pending",
+        });
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        outcome: z.enum(["pending", "successful", "unsuccessful", "aborted"]).optional(),
+        expectedDueDate: z.date().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        const updates: any = {};
+        if (input.outcome) updates.outcome = input.outcome;
+        if (input.expectedDueDate) updates.expectedDueDate = input.expectedDueDate;
+        if (input.notes) updates.notes = input.notes;
+
+        return await db.update(breedingRecords).set(updates).where(eq(breedingRecords.id, input.id));
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        return await db.delete(breedingRecords).where(eq(breedingRecords.id, input.id));
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

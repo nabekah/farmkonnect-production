@@ -239,4 +239,38 @@ describe("tRPC Routers", () => {
       expect(caller.performanceMetrics.record).toBeDefined();
     });
   });
+
+  describe("Breeding Records Router", () => {
+    it("should have breeding.listByAnimal procedure", () => {
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+        db: {} as any,
+      });
+      expect(caller.breeding.listByAnimal).toBeDefined();
+    });
+
+    it("should have breeding.create procedure", () => {
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+        db: {} as any,
+      });
+      expect(caller.breeding.create).toBeDefined();
+    });
+
+    it("should have breeding.update procedure", () => {
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+        db: {} as any,
+      });
+      expect(caller.breeding.update).toBeDefined();
+    });
+
+    it("should have breeding.delete procedure", () => {
+      const caller = appRouter.createCaller({
+        user: { id: 1, email: "test@example.com", role: "user" },
+        db: {} as any,
+      });
+      expect(caller.breeding.delete).toBeDefined();
+    });
+  });
 });
