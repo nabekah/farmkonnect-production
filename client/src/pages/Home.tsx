@@ -108,7 +108,7 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation("/livestock")}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-orange-600" />
@@ -117,8 +117,8 @@ export default function Home() {
               <CardDescription>Manage animals and health records</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full" disabled>
-                Coming Soon
+              <Button variant="outline" className="w-full">
+                Go to Livestock
               </Button>
             </CardContent>
           </Card>

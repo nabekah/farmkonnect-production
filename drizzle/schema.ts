@@ -458,3 +458,25 @@ export const swotAnalysis = mysqlTable("swotAnalysis", {
 
 export type SWOTAnalysis = typeof swotAnalysis.$inferSelect;
 export type InsertSWOTAnalysis = typeof swotAnalysis.$inferInsert;
+
+
+// ============================================================================
+// THEME CONFIGURATION
+// ============================================================================
+export const themeConfigs = mysqlTable("themeConfigs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  primaryColor: varchar("primaryColor", { length: 7 }).default("#3b82f6").notNull(),
+  secondaryColor: varchar("secondaryColor", { length: 7 }).default("#10b981").notNull(),
+  accentColor: varchar("accentColor", { length: 7 }).default("#f59e0b").notNull(),
+  backgroundColor: varchar("backgroundColor", { length: 7 }).default("#ffffff").notNull(),
+  textColor: varchar("textColor", { length: 7 }).default("#1f2937").notNull(),
+  borderColor: varchar("borderColor", { length: 7 }).default("#e5e7eb").notNull(),
+  fontFamily: varchar("fontFamily", { length: 255 }).default("Inter, system-ui, sans-serif").notNull(),
+  fontSize: varchar("fontSize", { length: 10 }).default("16px").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ThemeConfig = typeof themeConfigs.$inferSelect;
+export type InsertThemeConfig = typeof themeConfigs.$inferInsert;

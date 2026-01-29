@@ -15,6 +15,13 @@
       "when": 1769728426356,
       "tag": "0001_awesome_ultragirl",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1769730631830,
+      "tag": "0002_long_wolf_cub",
+      "breakpoints": true
     }
   ]
 }

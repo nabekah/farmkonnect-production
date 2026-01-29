@@ -18,6 +18,7 @@ import {
   breedingRecords,
   feedingRecords,
   performanceMetrics,
+  themeConfigs,
 } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -428,6 +429,50 @@ export const appRouter = router({
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         return await db.delete(breedingRecords).where(eq(breedingRecords.id, input.id));
+      }),
+  }),
+
+  theme: router({
+    getTheme: protectedProcedure
+      .query(async ({ ctx }) => {
+        const db = await getDb();
+        if (!db) return null;
+        const theme = await db.select().from(themeConfigs).where(eq(themeConfigs.userId, ctx.user.id)).limit(1);
+        return theme[0] || null;
+      }),
+
+    updateTheme: protectedProcedure
+      .input(z.object({
+        primaryColor: z.string().optional(),
+        secondaryColor: z.string().optional(),
+        accentColor: z.string().optional(),
+        backgroundColor: z.string().optional(),
+        textColor: z.string().optional(),
+        borderColor: z.string().optional(),
+        fontFamily: z.string().optional(),
+        fontSize: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        const existing = await db.select().from(themeConfigs).where(eq(themeConfigs.userId, ctx.user.id)).limit(1);
+
+        if (existing.length > 0) {
+          return await db.update(themeConfigs).set(input).where(eq(themeConfigs.userId, ctx.user.id));
+        } else {
+          return await db.insert(themeConfigs).values({
+            userId: ctx.user.id,
+            ...input,
+          });
+        }
+      }),
+
+    resetTheme: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        return await db.delete(themeConfigs).where(eq(themeConfigs.userId, ctx.user.id));
       }),
   }),
 });

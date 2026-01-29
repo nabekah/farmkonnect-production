@@ -9,6 +9,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import FarmManagement from "./pages/FarmManagement";
 import CropTracking from "./pages/CropTracking";
 import Livestock from "./pages/Livestock";
+import ThemeAdmin from "./components/ThemeAdmin";
 
 function Router() {
   return (
@@ -35,7 +36,14 @@ function Router() {
           </DashboardLayout>
         )}
       </Route>
-        <Route path="/404" component={NotFound} />
+      <Route path="/settings">
+        {() => (
+          <DashboardLayout>
+            <ThemeAdmin />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );
