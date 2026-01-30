@@ -253,3 +253,13 @@
 - [ ] Add automated threshold-based notifications
 - [ ] Create unit tests for inventory features
 - [x] TypeScript compilation: 0 errors
+
+
+## Sample Data Population (Ghana & West Africa)
+- [ ] Create seed data script with farms and locations
+- [ ] Add sample crops, soil tests, and yields
+- [ ] Populate livestock with animals and health records
+- [ ] Add marketplace products
+- [ ] Create sample orders and transactions
+- [ ] Add breeding and feeding records
+- [ ] Populate IoT devices and sensor readings
