@@ -13,6 +13,8 @@ import Livestock from "./pages/Livestock";
 import ThemeAdmin from "./components/ThemeAdmin";
 import { Analytics } from "./pages/Analytics";
 import Marketplace from "./pages/Marketplace";
+import Training from "./pages/Training";
+import MERL from "./pages/MERL";
 
 function Router() {
   return (
@@ -53,14 +55,27 @@ function Router() {
           </DashboardLayout>
         )}
       </Route>
-      <Route path="/settings">
+          <Route path="/theme">
         {() => (
           <DashboardLayout>
             <ThemeAdmin />
           </DashboardLayout>
         )}
       </Route>
-      <Route path="/404" component={NotFound} />
+      <Route path="/training">
+        {() => (
+          <DashboardLayout>
+            <Training />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/merl">
+        {() => (
+          <DashboardLayout>
+            <MERL />
+          </DashboardLayout>
+        )}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
