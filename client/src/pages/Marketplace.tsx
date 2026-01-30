@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ShoppingCart, Plus, Trash2, Star, Search, TrendingUp, Package, Loader2 } from "lucide-react";
+import { ShoppingCart, Plus, Trash2, Search, Package } from "lucide-react";
 import { toast } from "sonner";
 
 const CATEGORIES = ["Vegetables", "Dairy", "Meat", "Grains", "Fruits", "Herbs", "Eggs", "Other"];
@@ -21,9 +21,19 @@ export default function Marketplace() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [cartQuantities, setCartQuantities] = useState<Record<number, number>>({});
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    description: "",
+    category: "",
+    productType: "standard",
+    price: "",
+    quantity: "",
+    unit: "kg",
+  });
+
   const [checkoutForm, setCheckoutForm] = useState({
     address: "",
     city: "",
@@ -32,18 +42,8 @@ export default function Marketplace() {
     phone: "",
   });
 
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    category: "",
-    productType: "",
-    price: "",
-    quantity: "",
-    unit: "kg",
-  });
-
   // Queries
-  const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = trpc.marketplace.listProducts.useQuery({
+  const { data: products = [], refetch: refetchProducts } = trpc.marketplace.listProducts.useQuery({
     category: selectedCategory || undefined,
     search: searchQuery || undefined,
     limit: 50,
@@ -58,6 +58,19 @@ export default function Marketplace() {
     onSuccess: () => {
       refetchProducts();
       toast.success("Product listed successfully!");
+      setIsAddProductOpen(false);
+      setNewProduct({
+        name: "",
+        description: "",
+        category: "",
+        productType: "standard",
+        price: "",
+        quantity: "",
+        unit: "kg",
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to add product");
     },
   });
 
@@ -66,12 +79,18 @@ export default function Marketplace() {
       refetchCart();
       toast.success("Added to cart!");
     },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to add to cart");
+    },
   });
 
   const removeFromCartMutation = trpc.marketplace.removeFromCart.useMutation({
     onSuccess: () => {
       refetchCart();
       toast.success("Removed from cart!");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to remove from cart");
     },
   });
 
@@ -83,6 +102,9 @@ export default function Marketplace() {
       setCheckoutForm({ address: "", city: "", state: "", zipCode: "", phone: "" });
       toast.success("Order placed successfully!");
     },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to place order");
+    },
   });
 
   // Handlers
@@ -92,33 +114,43 @@ export default function Marketplace() {
       return;
     }
 
-    await createProductMutation.mutateAsync({
-      name: newProduct.name,
-      description: newProduct.description,
-      category: newProduct.category,
-      productType: newProduct.productType,
-      price: parseFloat(newProduct.price),
-      quantity: parseFloat(newProduct.quantity),
-      unit: newProduct.unit,
-    });
-
-    setNewProduct({ name: "", description: "", category: "", productType: "", price: "", quantity: "", unit: "kg" });
-    setIsCreateOpen(false);
+    try {
+      await createProductMutation.mutateAsync({
+        name: newProduct.name,
+        description: newProduct.description,
+        category: newProduct.category,
+        productType: newProduct.productType,
+        price: parseFloat(newProduct.price),
+        quantity: parseFloat(newProduct.quantity),
+        unit: newProduct.unit,
+      });
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+    }
   };
 
   const handleAddToCart = async (productId: number) => {
-    const quantity = cartQuantities[productId] || 1;
-    await addToCartMutation.mutateAsync({ productId, quantity });
-    setCartQuantities({ ...cartQuantities, [productId]: 1 });
+    try {
+      await addToCartMutation.mutateAsync({
+        productId,
+        quantity: 1,
+      });
+    } catch (error: any) {
+      console.error("Error adding to cart:", error);
+    }
   };
 
   const handleRemoveFromCart = async (cartId: number) => {
-    await removeFromCartMutation.mutateAsync({ cartId });
+    try {
+      await removeFromCartMutation.mutateAsync({ cartId });
+    } catch (error: any) {
+      console.error("Error removing from cart:", error);
+    }
   };
 
   const handleCheckout = async () => {
-    if (!checkoutForm.address || !checkoutForm.city || !checkoutForm.phone) {
-      toast.error("Please fill in all required fields");
+    if (!checkoutForm.address || !checkoutForm.city || !checkoutForm.state || !checkoutForm.zipCode) {
+      toast.error("Please fill in all address fields");
       return;
     }
 
@@ -127,16 +159,26 @@ export default function Marketplace() {
       return;
     }
 
+    const firstProduct = products.find((p: any) => p.id === cart[0]?.productId);
+    if (!firstProduct) {
+      toast.error("Product not found");
+      return;
+    }
+
     const orderItems = cart.map((item: any) => ({
       productId: item.productId,
       quantity: parseFloat(item.quantity),
     }));
 
-    await createOrderMutation.mutateAsync({
-      sellerId: user?.id || 0,
-      items: orderItems,
-      deliveryAddress: `${checkoutForm.address}, ${checkoutForm.city}, ${checkoutForm.state} ${checkoutForm.zipCode}`,
-    });
+    try {
+      await createOrderMutation.mutateAsync({
+        sellerId: firstProduct.sellerId || user?.id || 0,
+        items: orderItems,
+        deliveryAddress: `${checkoutForm.address}, ${checkoutForm.city}, ${checkoutForm.state} ${checkoutForm.zipCode}`,
+      });
+    } catch (error: any) {
+      console.error("Error placing order:", error);
+    }
   };
 
   const cartTotal = cart.reduce((sum: number, item: any) => {
@@ -144,146 +186,41 @@ export default function Marketplace() {
     return sum + (product ? parseFloat(product.price) * parseFloat(item.quantity) : 0);
   }, 0);
 
-  const sortedProducts = [...products].sort((a: any, b: any) => {
-    switch (sortBy) {
-      case "price-low":
-        return parseFloat(a.price) - parseFloat(b.price);
-      case "price-high":
-        return parseFloat(b.price) - parseFloat(a.price);
-      case "newest":
-      default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }
-  });
+  const filteredProducts = products
+    .filter((p: any) => {
+      if (selectedCategory && p.category !== selectedCategory) return false;
+      if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a: any, b: any) => {
+      if (sortBy === "price-low") return parseFloat(a.price) - parseFloat(b.price);
+      if (sortBy === "price-high") return parseFloat(b.price) - parseFloat(a.price);
+      return (b.id || 0) - (a.id || 0);
+    });
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="browse" className="space-y-4">
-        <TabsList>
+    <div className="container mx-auto py-8">
+      <Tabs defaultValue="browse" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="browse">Browse Products</TabsTrigger>
           <TabsTrigger value="orders">My Orders</TabsTrigger>
           <TabsTrigger value="selling">My Products</TabsTrigger>
         </TabsList>
 
         {/* Browse Products Tab */}
-        <TabsContent value="browse" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Marketplace</h1>
-              <p className="text-muted-foreground">Buy and sell agricultural products directly</p>
-            </div>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Sell Product
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>List New Product</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Product Name *</Label>
-                    <Input
-                      value={newProduct.name}
-                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                      placeholder="e.g., Organic Tomatoes"
-                    />
-                  </div>
-                  <div>
-                    <Label>Description</Label>
-                    <Textarea
-                      value={newProduct.description}
-                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                      placeholder="Describe your product..."
-                      className="h-24"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Category *</Label>
-                      <Select value={newProduct.category} onValueChange={(v) => setNewProduct({ ...newProduct, category: v })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Type</Label>
-                      <Input
-                        value={newProduct.productType}
-                        onChange={(e) => setNewProduct({ ...newProduct, productType: e.target.value })}
-                        placeholder="e.g., Cherry, Beefsteak"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label>Price (₹) *</Label>
-                      <Input
-                        type="number"
-                        value={newProduct.price}
-                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div>
-                      <Label>Quantity *</Label>
-                      <Input
-                        type="number"
-                        value={newProduct.quantity}
-                        onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
-                        placeholder="0"
-                      />
-                    </div>
-                    <div>
-                      <Label>Unit</Label>
-                      <Select value={newProduct.unit} onValueChange={(v) => setNewProduct({ ...newProduct, unit: v })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UNITS.map((unit) => (
-                            <SelectItem key={unit} value={unit}>
-                              {unit}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <Button onClick={handleCreateProduct} disabled={createProductMutation.isPending} className="w-full">
-                    {createProductMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    List Product
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Filters and Search */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <TabsContent value="browse" className="space-y-6">
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
               <Input
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="w-full"
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Categories</SelectItem>
@@ -295,66 +232,120 @@ export default function Marketplace() {
               </SelectContent>
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Shopping Cart Summary */}
-          {cart.length > 0 && (
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <ShoppingCart className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="font-semibold">{cart.length} items in cart</p>
-                    <p className="text-sm text-muted-foreground">Total: ₹{cartTotal.toFixed(2)}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredProducts.map((product: any) => (
+              <Card key={product.id}>
+                <CardHeader>
+                  <CardTitle className="line-clamp-2">{product.name}</CardTitle>
+                  <CardDescription>{product.category}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-2xl font-bold">₹{(product.price as unknown as number).toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">{product.quantity} {product.unit} available</p>
+                    </div>
                   </div>
-                </div>
-                <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
-                  <DialogTrigger asChild>
-                    <Button>Proceed to Checkout</Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Checkout</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="bg-muted p-4 rounded-lg space-y-2">
-                        <p className="font-semibold">Order Summary</p>
-                        {cart.map((item: any) => {
-                          const product = products.find((p: any) => p.id === item.productId);
-                          return (
-                            <div key={item.id} className="flex justify-between text-sm">
-                              <span>{product?.name} x {item.quantity}</span>
-                              <span>₹{((product?.price as unknown as number || 0) * parseFloat(item.quantity)).toFixed(2)}</span>
-                            </div>
-                          );
-                        })}
-                        <div className="border-t pt-2 font-semibold flex justify-between">
-                          <span>Total</span>
-                          <span>₹{cartTotal.toFixed(2)}</span>
-                        </div>
-                      </div>
+                  <Button onClick={() => handleAddToCart(product.id)} className="w-full">
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Add to Cart
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-                      <div className="space-y-3">
+        {/* My Orders Tab */}
+        <TabsContent value="orders" className="space-y-4">
+          {orders.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center text-muted-foreground">
+                No orders yet. Start shopping!
+              </CardContent>
+            </Card>
+          ) : (
+            orders.map((order: any) => (
+              <Card key={order.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{order.orderNumber}</CardTitle>
+                      <CardDescription>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}</CardDescription>
+                    </div>
+                    <Badge variant={order.status === "delivered" ? "default" : "secondary"}>{order.status}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-lg font-semibold">₹{(order.totalAmount as unknown as number).toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground mt-2">{order.deliveryAddress}</p>
+                </CardContent>
+              </Card>
+            ))
+          )}
+
+          {/* Shopping Cart */}
+          {cart.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Shopping Cart</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {cart.map((item: any) => {
+                  const product = products.find((p: any) => p.id === item.productId);
+                  return (
+                             <div key={item.id} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">{product?.name}</p>
+                        <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p>₹{((product?.price as unknown as number || 0) * parseFloat(item.quantity)).toFixed(2)}</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFromCart(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="border-t pt-4">
+                  <p className="text-lg font-bold mb-4">Total: ₹{cartTotal.toFixed(2)}</p>
+                  <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full">Proceed to Checkout</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Checkout</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
                         <div>
-                          <Label>Address *</Label>
+                          <Label>Address</Label>
                           <Input
                             value={checkoutForm.address}
                             onChange={(e) => setCheckoutForm({ ...checkoutForm, address: e.target.value })}
                             placeholder="Street address"
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <Label>City *</Label>
+                            <Label>City</Label>
                             <Input
                               value={checkoutForm.city}
                               onChange={(e) => setCheckoutForm({ ...checkoutForm, city: e.target.value })}
@@ -370,141 +361,124 @@ export default function Marketplace() {
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label>ZIP Code</Label>
-                            <Input
-                              value={checkoutForm.zipCode}
-                              onChange={(e) => setCheckoutForm({ ...checkoutForm, zipCode: e.target.value })}
-                              placeholder="12345"
-                            />
-                          </div>
-                          <div>
-                            <Label>Phone *</Label>
-                            <Input
-                              value={checkoutForm.phone}
-                              onChange={(e) => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
-                              placeholder="+91 9876543210"
-                            />
-                          </div>
+                        <div>
+                          <Label>ZIP Code</Label>
+                          <Input
+                            value={checkoutForm.zipCode}
+                            onChange={(e) => setCheckoutForm({ ...checkoutForm, zipCode: e.target.value })}
+                            placeholder="ZIP code"
+                          />
                         </div>
+                        <Button onClick={handleCheckout} className="w-full">
+                          Place Order
+                        </Button>
                       </div>
-
-                      <Button onClick={handleCheckout} disabled={createOrderMutation.isPending} className="w-full">
-                        {createOrderMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        Place Order - ₹{cartTotal.toFixed(2)}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardContent>
             </Card>
-          )}
-
-          {/* Products Grid */}
-          {productsLoading ? (
-            <div className="flex items-center justify-center h-96">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : sortedProducts.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No products found</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sortedProducts.map((product: any) => (
-                <Card key={product.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="line-clamp-2">{product.name}</CardTitle>
-                        <CardDescription>{product.category}</CardDescription>
-                      </div>
-                      <Badge variant="secondary">{product.unit}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold">₹{(product.price as unknown as number).toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">{product.quantity} {product.unit} available</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="1"
-                        value={cartQuantities[product.id] || 1}
-                        onChange={(e) => setCartQuantities({ ...cartQuantities, [product.id]: parseInt(e.target.value) })}
-                        className="w-20"
-                      />
-                      <Button onClick={() => handleAddToCart(product.id)} className="flex-1" disabled={addToCartMutation.isPending}>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add to Cart
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           )}
         </TabsContent>
 
-        {/* Orders Tab */}
-        <TabsContent value="orders" className="space-y-4">
-          <h2 className="text-2xl font-bold">My Orders</h2>
-          {orders.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <p className="text-muted-foreground">No orders yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((order: any) => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Order #{order.id}</CardTitle>
-                        <CardDescription>{new Date(order.createdAt).toLocaleDateString()}</CardDescription>
-                      </div>
-                      <Badge variant={order.status === "completed" ? "default" : "secondary"}>{order.status}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-lg font-semibold">₹{(order.totalAmount as unknown as number).toFixed(2)}</p>
-                    <p className="text-sm text-muted-foreground mt-2">{order.shippingAddress}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Selling Tab */}
-        <TabsContent value="selling" className="space-y-4">
-          <div className="flex items-center justify-between">
+        {/* My Products Tab */}
+        <TabsContent value="selling" className="space-y-6">
+          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">My Products</h2>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
                   Add Product
                 </Button>
               </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>List New Product</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Product Name</Label>
+                    <Input
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                      placeholder="Product name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={newProduct.description}
+                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                      placeholder="Product description"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Category</Label>
+                      <Select value={newProduct.category} onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Unit</Label>
+                      <Select value={newProduct.unit} onValueChange={(value) => setNewProduct({ ...newProduct, unit: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UNITS.map((unit) => (
+                            <SelectItem key={unit} value={unit}>
+                              {unit}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Price (₹)</Label>
+                      <Input
+                        type="number"
+                        value={newProduct.price}
+                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Quantity</Label>
+                      <Input
+                        type="number"
+                        value={newProduct.quantity}
+                        onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleCreateProduct} className="w-full">
+                    List Product
+                  </Button>
+                </div>
+              </DialogContent>
             </Dialog>
           </div>
 
+          {/* Seller Stats */}
           {sellerStats && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold">₹{(sellerStats.totalRevenue as unknown as number).toFixed(2)}</p>
@@ -529,6 +503,7 @@ export default function Marketplace() {
             </div>
           )}
 
+          {/* My Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {products
               .filter((p: any) => p.sellerId === user?.id)
@@ -541,6 +516,7 @@ export default function Marketplace() {
                   <CardContent className="space-y-2">
                     <p className="text-2xl font-bold">₹{(product.price as unknown as number).toFixed(2)}</p>
                     <p className="text-sm text-muted-foreground">{product.quantity} {product.unit} available</p>
+                    <Badge variant={product.status === "active" ? "default" : "secondary"}>{product.status}</Badge>
                   </CardContent>
                 </Card>
               ))}
