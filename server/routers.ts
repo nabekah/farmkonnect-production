@@ -5,6 +5,7 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { notificationRouter } from "./notificationRouter";
 import { feedingRouter } from "./feedingRouter";
 import { marketplaceRouter } from "./marketplaceRouter";
+import { iotRouter } from "./iotRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -483,6 +484,7 @@ export const appRouter = router({
   notifications: notificationRouter,
   feeding: feedingRouter,
   marketplace: marketplaceRouter,
+  iot: iotRouter,
 });
 
 export type AppRouter = typeof appRouter;

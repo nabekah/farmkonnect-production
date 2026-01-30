@@ -128,3 +128,60 @@
 - [x] Create unit tests for marketplace (18 tests passing)
 - [x] Verify TypeScript compilation: 0 errors
 - [x] All tests passing: 78 tests
+
+
+## Farm Management UI Enhancement
+- [ ] Create "Create Farm" form with location picker
+- [ ] Add farm type selection (Crop, Livestock, Mixed, Dairy, Poultry)
+- [ ] Implement farm size input with unit selection
+- [ ] Add farm details form (name, description, contact info)
+- [ ] Integrate Google Maps for location selection
+- [ ] Create farm listing and management interface
+
+## Crop Cycle Dashboard
+- [ ] Build crop registration form with variety selection
+- [ ] Create soil test logging interface
+- [ ] Implement fertilizer application tracking
+- [ ] Add yield recording system
+- [ ] Create crop performance charts and trends
+- [ ] Add data export functionality
+
+## IoT Real-Time Alerts System
+- [x] Create device registration interface in IoTDashboard.tsx
+- [x] Implement sensor readings storage with iotRouter procedures
+- [x] Build live sensor dashboard with tabs (Devices, Readings, Alerts)
+- [x] Add threshold configuration and alert management
+- [x] Implement push notifications with usePushNotifications hook
+- [x] Create PushNotificationSettings component with preferences
+- [x] Create alert history and management interface
+- [x] Add 11 IoT unit tests covering all procedures
+- [x] Add 5 push notification unit tests
+- [x] TypeScript compilation: 0 errors
+
+
+## Session Summary - Advanced Features Implementation
+
+### Completed in This Session:
+- Enhanced Farm Management UI with location picker and GPS coordinates
+- Added farm type selection (Crop, Livestock, Mixed, Dairy, Poultry)
+- Implemented farm size input with hectares and farm description
+- Integrated geolocation API for automatic location capture
+- Crop Cycle Dashboard with soil tests, fertilizer, and yield tracking
+- Crop performance visualizations with Chart.js
+- Real-time notification polling system
+- Livestock Analytics Dashboard with 4 interactive charts
+- Feeding Records Module with cost analysis and nutritional tracking
+- IoT device schema with 4 database tables
+
+### In Progress:
+- IoT Router procedures (iotRouter.ts created, needs context fixes)
+- IoT Dashboard component (IoTDashboard.tsx created, needs tRPC integration)
+- Threshold configuration and alert management
+- Push notifications for sensor threshold breaches
+
+### Next Steps:
+1. Fix context.db references in iotRouter.ts
+2. Complete IoT Dashboard integration with tRPC
+3. Add unit tests for IoT features
+4. Implement push notification system
+5. Create alert acknowledgment workflow

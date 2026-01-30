@@ -7,26 +7,49 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, MapPin, Leaf } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Plus, MapPin, Leaf, Map } from "lucide-react";
+import { toast } from "sonner";
 
 export default function FarmManagement() {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({ farmName: "", location: "", sizeHectares: "", farmType: "mixed" });
+  const [formData, setFormData] = useState({
+    farmName: "",
+    location: "",
+    latitude: "",
+    longitude: "",
+    sizeHectares: "",
+    farmType: "mixed",
+    description: "",
+  });
   const [open, setOpen] = useState(false);
 
-  // Fetch farms
   const { data: farms = [], isLoading } = trpc.farms.list.useQuery();
 
-  // Create farm mutation
   const createFarmMutation = trpc.farms.create.useMutation({
     onSuccess: () => {
-      setFormData({ farmName: "", location: "", sizeHectares: "", farmType: "mixed" });
+      setFormData({
+        farmName: "",
+        location: "",
+        latitude: "",
+        longitude: "",
+        sizeHectares: "",
+        farmType: "mixed",
+        description: "",
+      });
       setOpen(false);
+      toast.success("Farm created successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create farm");
     },
   });
 
   const handleCreateFarm = async () => {
-    if (!formData.farmName) return;
+    if (!formData.farmName) {
+      toast.error("Farm name is required");
+      return;
+    }
 
     await createFarmMutation.mutateAsync({
       farmName: formData.farmName,
@@ -34,6 +57,24 @@ export default function FarmManagement() {
       sizeHectares: formData.sizeHectares,
       farmType: formData.farmType as "crop" | "livestock" | "mixed",
     });
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setFormData({
+            ...formData,
+            latitude: position.coords.latitude.toFixed(6),
+            longitude: position.coords.longitude.toFixed(6),
+          });
+          toast.success("Location captured!");
+        },
+        () => {
+          toast.error("Unable to get your location");
+        }
+      );
+    }
   };
 
   if (!user) return null;
@@ -52,54 +93,118 @@ export default function FarmManagement() {
               New Farm
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Farm</DialogTitle>
-              <DialogDescription>Register a new farm to your account</DialogDescription>
+              <DialogDescription>Register a new farm to your account with location and details</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="farmName">Farm Name *</Label>
+                  <Input
+                    id="farmName"
+                    placeholder="e.g., Green Valley Farm"
+                    value={formData.farmName}
+                    onChange={(e) => setFormData({ ...formData, farmName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="farmType">Farm Type *</Label>
+                  <Select value={formData.farmType} onValueChange={(v) => setFormData({ ...formData, farmType: v })}>
+                    <SelectTrigger id="farmType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="crop">Crop Production</SelectItem>
+                      <SelectItem value="livestock">Livestock</SelectItem>
+                      <SelectItem value="mixed">Mixed Farming</SelectItem>
+                      <SelectItem value="dairy">Dairy</SelectItem>
+                      <SelectItem value="poultry">Poultry</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="farmName">Farm Name *</Label>
-                <Input
-                  id="farmName"
-                  placeholder="e.g., Green Valley Farm"
-                  value={formData.farmName}
-                  onChange={(e) => setFormData({ ...formData, farmName: e.target.value })}
+                <Label htmlFor="description">Farm Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe your farm, crops, animals, or operations..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="min-h-20"
                 />
               </div>
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  placeholder="e.g., District, Region"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="sizeHectares">Farm Size (Hectares) *</Label>
+                  <Input
+                    id="sizeHectares"
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g., 10.5"
+                    value={formData.sizeHectares}
+                    onChange={(e) => setFormData({ ...formData, sizeHectares: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Location/Address</Label>
+                  <Input
+                    id="location"
+                    placeholder="e.g., District, Region"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="sizeHectares">Size (Hectares)</Label>
-                <Input
-                  id="sizeHectares"
-                  type="number"
-                  step="0.1"
-                  placeholder="e.g., 10.5"
-                  value={formData.sizeHectares}
-                  onChange={(e) => setFormData({ ...formData, sizeHectares: e.target.value })}
-                />
+
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="flex items-center gap-2">
+                    <Map className="h-4 w-4" />
+                    GPS Coordinates
+                  </Label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleUseCurrentLocation}
+                    className="text-xs"
+                  >
+                    Use Current Location
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="latitude">Latitude</Label>
+                    <Input
+                      id="latitude"
+                      type="number"
+                      step="0.000001"
+                      placeholder="e.g., 40.7128"
+                      value={formData.latitude}
+                      onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="longitude">Longitude</Label>
+                    <Input
+                      id="longitude"
+                      type="number"
+                      step="0.000001"
+                      placeholder="e.g., -74.0060"
+                      value={formData.longitude}
+                      onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="farmType">Farm Type</Label>
-                <Select value={formData.farmType} onValueChange={(v) => setFormData({ ...formData, farmType: v })}>
-                  <SelectTrigger id="farmType">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="crop">Crop Production</SelectItem>
-                    <SelectItem value="livestock">Livestock</SelectItem>
-                    <SelectItem value="mixed">Mixed Farming</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+
               <Button onClick={handleCreateFarm} disabled={createFarmMutation.isPending} className="w-full">
                 {createFarmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Create Farm
@@ -154,62 +259,126 @@ export default function FarmManagement() {
           <CardContent className="py-12 text-center">
             <Leaf className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-lg font-medium">No farms yet</p>
-            <p className="text-muted-foreground mb-6">Create your first farm to get started</p>
+            <p className="text-muted-foreground mb-6">Create your first farm to unlock the entire platform</p>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button size="lg">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Farm
+                  Create Your First Farm
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Create New Farm</DialogTitle>
-                  <DialogDescription>Register a new farm to your account</DialogDescription>
+                  <DialogDescription>Register a new farm to your account with location and details</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="farmName">Farm Name *</Label>
+                      <Input
+                        id="farmName"
+                        placeholder="e.g., Green Valley Farm"
+                        value={formData.farmName}
+                        onChange={(e) => setFormData({ ...formData, farmName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="farmType">Farm Type *</Label>
+                      <Select value={formData.farmType} onValueChange={(v) => setFormData({ ...formData, farmType: v })}>
+                        <SelectTrigger id="farmType">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="crop">Crop Production</SelectItem>
+                          <SelectItem value="livestock">Livestock</SelectItem>
+                          <SelectItem value="mixed">Mixed Farming</SelectItem>
+                          <SelectItem value="dairy">Dairy</SelectItem>
+                          <SelectItem value="poultry">Poultry</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="farmName">Farm Name *</Label>
-                    <Input
-                      id="farmName"
-                      placeholder="e.g., Green Valley Farm"
-                      value={formData.farmName}
-                      onChange={(e) => setFormData({ ...formData, farmName: e.target.value })}
+                    <Label htmlFor="description">Farm Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Describe your farm, crops, animals, or operations..."
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="min-h-20"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      placeholder="e.g., District, Region"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="sizeHectares">Farm Size (Hectares) *</Label>
+                      <Input
+                        id="sizeHectares"
+                        type="number"
+                        step="0.1"
+                        placeholder="e.g., 10.5"
+                        value={formData.sizeHectares}
+                        onChange={(e) => setFormData({ ...formData, sizeHectares: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="location">Location/Address</Label>
+                      <Input
+                        id="location"
+                        placeholder="e.g., District, Region"
+                        value={formData.location}
+                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="sizeHectares">Size (Hectares)</Label>
-                    <Input
-                      id="sizeHectares"
-                      type="number"
-                      step="0.1"
-                      placeholder="e.g., 10.5"
-                      value={formData.sizeHectares}
-                      onChange={(e) => setFormData({ ...formData, sizeHectares: e.target.value })}
-                    />
+
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="flex items-center gap-2">
+                        <Map className="h-4 w-4" />
+                        GPS Coordinates
+                      </Label>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleUseCurrentLocation}
+                        className="text-xs"
+                      >
+                        Use Current Location
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="latitude">Latitude</Label>
+                        <Input
+                          id="latitude"
+                          type="number"
+                          step="0.000001"
+                          placeholder="e.g., 40.7128"
+                          value={formData.latitude}
+                          onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                          readOnly
+                          className="bg-muted"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="longitude">Longitude</Label>
+                        <Input
+                          id="longitude"
+                          type="number"
+                          step="0.000001"
+                          placeholder="e.g., -74.0060"
+                          value={formData.longitude}
+                          onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                          readOnly
+                          className="bg-muted"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="farmType">Farm Type</Label>
-                    <Select value={formData.farmType} onValueChange={(v) => setFormData({ ...formData, farmType: v })}>
-                      <SelectTrigger id="farmType">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="crop">Crop Production</SelectItem>
-                        <SelectItem value="livestock">Livestock</SelectItem>
-                        <SelectItem value="mixed">Mixed Farming</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+
                   <Button onClick={handleCreateFarm} disabled={createFarmMutation.isPending} className="w-full">
                     {createFarmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Create Farm

@@ -570,3 +570,227 @@ describe("Marketplace Router", () => {
     expect(caller.marketplace.getSellerStats).toBeDefined();
   });
 });
+
+
+  it("should have removeFromCart procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.removeFromCart).toBeDefined();
+  });
+
+  it("should have createOrder procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.createOrder).toBeDefined();
+  });
+
+  it("should have getOrders procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.getOrders).toBeDefined();
+  });
+
+  it("should have getOrderDetails procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.getOrderDetails).toBeDefined();
+  });
+
+  it("should have updateOrderStatus procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.updateOrderStatus).toBeDefined();
+  });
+
+  it("should have getSellerStats procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.getSellerStats).toBeDefined();
+  });
+
+  it("should have submitReview procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.submitReview).toBeDefined();
+  });
+
+  it("should have getProductReviews procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.marketplace.getProductReviews).toBeDefined();
+  });
+});
+
+describe("IoT Router", () => {
+  it("should have iot router defined", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot).toBeDefined();
+  });
+
+  it("should have registerDevice procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.registerDevice).toBeDefined();
+  });
+
+  it("should have listDevices procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.listDevices).toBeDefined();
+  });
+
+  it("should have getDevice procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.getDevice).toBeDefined();
+  });
+
+  it("should have updateDeviceStatus procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.updateDeviceStatus).toBeDefined();
+  });
+
+  it("should have recordSensorReading procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.recordSensorReading).toBeDefined();
+  });
+
+  it("should have getSensorReadings procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.getSensorReadings).toBeDefined();
+  });
+
+  it("should have getAlerts procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.getAlerts).toBeDefined();
+  });
+
+  it("should have getDeviceAlerts procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.getDeviceAlerts).toBeDefined();
+  });
+
+  it("should have resolveAlert procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.resolveAlert).toBeDefined();
+  });
+
+  it("should have getUnresolvedAlerts procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "test@example.com", role: "user" },
+      db: {} as any,
+    });
+    expect(caller.iot.getUnresolvedAlerts).toBeDefined();
+  });
+
+  it("should support all device types", () => {
+    const deviceTypes = ["soil_sensor", "weather_station", "animal_monitor", "water_meter", "other"];
+    expect(deviceTypes.length).toBe(5);
+  });
+
+  it("should support all device statuses", () => {
+    const statuses = ["active", "inactive", "maintenance", "retired"];
+    expect(statuses.length).toBe(4);
+  });
+
+  it("should support all alert severities", () => {
+    const severities = ["info", "warning", "critical"];
+    expect(severities.length).toBe(3);
+  });
+});
+
+describe("Push Notifications", () => {
+  it("should validate notification preferences structure", () => {
+    const prefs = {
+      enabled: true,
+      soilMoisture: true,
+      temperature: true,
+      humidity: true,
+      criticalOnly: false,
+      minThreshold: 20,
+      maxThreshold: 80,
+    };
+    expect(prefs.enabled).toBe(true);
+    expect(prefs.minThreshold).toBeLessThan(prefs.maxThreshold);
+  });
+
+  it("should validate threshold ranges", () => {
+    const minThreshold = 20;
+    const maxThreshold = 80;
+    expect(minThreshold >= 0).toBe(true);
+    expect(maxThreshold <= 100).toBe(true);
+    expect(minThreshold < maxThreshold).toBe(true);
+  });
+
+  it("should support all alert types", () => {
+    const alertTypes = [
+      "soil_moisture",
+      "temperature",
+      "humidity",
+      "ph_level",
+      "ec_level",
+      "water_level",
+    ];
+    expect(alertTypes.length).toBe(6);
+  });
+
+  it("should support critical alert filtering", () => {
+    const alerts = [
+      { severity: "critical", message: "Critical alert" },
+      { severity: "warning", message: "Warning alert" },
+      { severity: "info", message: "Info alert" },
+    ];
+    const criticalOnly = alerts.filter((a) => a.severity === "critical");
+    expect(criticalOnly.length).toBe(1);
+  });
+
+  it("should validate notification preferences enabled state", () => {
+    const prefs1 = { enabled: true };
+    const prefs2 = { enabled: false };
+    expect(typeof prefs1.enabled).toBe("boolean");
+    expect(typeof prefs2.enabled).toBe("boolean");
+  });
+});

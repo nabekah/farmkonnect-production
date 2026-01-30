@@ -622,3 +622,6 @@ export const marketplaceCart = mysqlTable("marketplaceCart", {
 });
 export type MarketplaceCart = typeof marketplaceCart.$inferSelect;
 export type InsertMarketplaceCart = typeof marketplaceCart.$inferInsert;
+
+
+// IoT Devices and Sensors
