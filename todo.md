@@ -357,3 +357,17 @@
 - [ ] Create SWOT analysis input and visualization
 - [ ] Add farm business model planning tools
 - [ ] Implement investment decision support dashboards
+
+
+## IoT Management UI Implementation (Current)
+- [x] Review existing IoT router procedures and database schema
+- [x] Create IoT Management page component with tabbed interface
+- [x] Build device registration form with device type selection
+- [x] Implement device listing with status indicators
+- [x] Create sensor readings dashboard with real-time data
+- [x] Add sensor data visualization with charts
+- [x] Build alert management interface with threshold configuration
+- [x] Implement alert history and acknowledgment workflow
+- [x] Add IoT module to navigation menu
+- [x] Create route in App.tsx with DashboardLayout
+- [x] Test device registration and sensor monitoring
