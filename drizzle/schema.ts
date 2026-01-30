@@ -539,6 +539,20 @@ export type MarketplaceProduct = typeof marketplaceProducts.$inferSelect;
 export type InsertMarketplaceProduct = typeof marketplaceProducts.$inferInsert;
 
 // ============================================================================
+// MARKETPLACE - PRODUCT IMAGES
+// ============================================================================
+export const marketplaceProductImages = mysqlTable("marketplaceProductImages", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull().references(() => marketplaceProducts.id, { onDelete: "cascade" }),
+  imageUrl: varchar("imageUrl", { length: 500 }).notNull(),
+  displayOrder: int("displayOrder").default(0).notNull(), // Order in which images should be displayed
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MarketplaceProductImage = typeof marketplaceProductImages.$inferSelect;
+export type InsertMarketplaceProductImage = typeof marketplaceProductImages.$inferInsert;
+
+// ============================================================================
 // MARKETPLACE - ORDERS
 // ============================================================================
 export const marketplaceOrders = mysqlTable("marketplaceOrders", {

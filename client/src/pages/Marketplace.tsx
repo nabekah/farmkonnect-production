@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ShoppingCart, Plus, Trash2, Search, Package } from "lucide-react";
 import { toast } from "sonner";
+import { ProductImageCarousel } from "@/components/ProductImageCarousel";
+import { ProductCard } from "@/components/ProductCard";
+import { SellerProductCard } from "@/components/SellerProductCard";
 
 const CATEGORIES = ["Vegetables", "Dairy", "Meat", "Grains", "Fruits", "Herbs", "Eggs", "Other"];
 const UNITS = ["kg", "liter", "dozen", "piece", "ton", "bag"];
@@ -33,11 +36,13 @@ export default function Marketplace() {
     quantity: "",
     unit: "kg",
     imageUrl: "",
+    imageUrls: [] as string[],
   });
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const MAX_IMAGES = 5;
 
   const [checkoutForm, setCheckoutForm] = useState({
     address: "",
@@ -57,6 +62,9 @@ export default function Marketplace() {
   const { data: cart = [], refetch: refetchCart } = trpc.marketplace.getCart.useQuery();
   const { data: sellerStats } = trpc.marketplace.getSellerStats.useQuery();
   const { data: orders = [] } = trpc.marketplace.listOrders.useQuery({ role: "buyer" });
+
+  // For now, we'll use imageUrl from products and fetch images on-demand in the component
+  // This avoids violating React hooks rules by calling useQuery in a loop
 
   // Mutations
   const uploadImageMutation = trpc.marketplace.uploadProductImage.useMutation({
@@ -85,9 +93,10 @@ export default function Marketplace() {
         quantity: "",
         unit: "kg",
         imageUrl: "",
+        imageUrls: [],
       });
-      setSelectedImage(null);
-      setImagePreview("");
+      setSelectedImages([]);
+      setImagePreviews([]);
     },
     onError: (error: any) => {
       toast.error(error?.message || "Failed to add product");
@@ -128,49 +137,96 @@ export default function Marketplace() {
   });
 
   // Handlers
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImagesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    // Check if adding these files would exceed MAX_IMAGES
+    if (selectedImages.length + files.length > MAX_IMAGES) {
+      toast.error(`You can only upload up to ${MAX_IMAGES} images`);
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return;
+    // Validate each file
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select only image files');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Each image must be less than 5MB');
+        return;
+      }
     }
 
-    setSelectedImage(file);
+    // Add files to selected images
+    setSelectedImages(prev => [...prev, ...files]);
     
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Create previews for new files
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const handleImageUpload = async () => {
-    if (!selectedImage) return;
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    setNewProduct(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleUploadImages = async () => {
+    if (selectedImages.length === 0) return;
 
     setIsUploadingImage(true);
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        await uploadImageMutation.mutateAsync({
-          imageData: reader.result as string,
-          fileName: selectedImage.name,
-          mimeType: selectedImage.type,
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const file of selectedImages) {
+        const reader = new FileReader();
+        const uploadPromise = new Promise<string>((resolve, reject) => {
+          reader.onloadend = async () => {
+            try {
+              const result = await uploadImageMutation.mutateAsync({
+                imageData: reader.result as string,
+                fileName: file.name,
+                mimeType: file.type,
+              });
+              resolve(result.url);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          reader.readAsDataURL(file);
         });
-      } catch (error) {
-        console.error('Upload error:', error);
+        
+        const url = await uploadPromise;
+        uploadedUrls.push(url);
       }
-    };
-    reader.readAsDataURL(selectedImage);
+
+      setNewProduct(prev => ({
+        ...prev,
+        imageUrls: [...prev.imageUrls, ...uploadedUrls],
+        imageUrl: uploadedUrls[0] || prev.imageUrl, // Set first image as primary
+      }));
+      
+      // Clear selected images after successful upload
+      setSelectedImages([]);
+      setImagePreviews([]);
+      
+      toast.success(`${uploadedUrls.length} image(s) uploaded successfully!`);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload some images');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleCreateProduct = async () => {
@@ -189,6 +245,7 @@ export default function Marketplace() {
         quantity: parseFloat(newProduct.quantity),
         unit: newProduct.unit,
         imageUrl: newProduct.imageUrl || undefined,
+        imageUrls: newProduct.imageUrls.length > 0 ? newProduct.imageUrls : undefined,
       });
     } catch (error: any) {
       console.error("Error creating product:", error);
@@ -311,37 +368,7 @@ export default function Marketplace() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map((product: any) => (
-              <Card key={product.id}>
-                {product.imageUrl && (
-                  <div className="w-full h-48 overflow-hidden">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="line-clamp-2">{product.name}</CardTitle>
-                  <CardDescription>{product.category}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-2xl font-bold">₹{parseFloat(product.price).toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground">{product.quantity} {product.unit} available</p>
-                    </div>
-                  </div>
-                  <Button onClick={() => handleAddToCart(product.id)} className="w-full">
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart
-                  </Button>
-                </CardContent>
-              </Card>
+              <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
             ))}
           </div>
         </TabsContent>
@@ -476,32 +503,61 @@ export default function Marketplace() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Product Image</Label>
+                    <Label>Product Images (Max {MAX_IMAGES})</Label>
                     <div className="space-y-2">
-                      {imagePreview && (
-                        <div className="relative w-full h-48 border rounded-lg overflow-hidden">
-                          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      {/* Image Previews Grid */}
+                      {(imagePreviews.length > 0 || newProduct.imageUrls.length > 0) && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={`preview-${index}`} className="relative w-full h-32 border rounded-lg overflow-hidden group">
+                              <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                          {newProduct.imageUrls.map((url, index) => (
+                            <div key={`uploaded-${index}`} className="relative w-full h-32 border rounded-lg overflow-hidden">
+                              <img src={url} alt={`Uploaded ${index + 1}`} className="w-full h-full object-cover" />
+                              <div className="absolute top-1 right-1 bg-green-500 text-white rounded-full p-1 text-xs">
+                                ✓
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
-                      <div className="flex gap-2">
-                        <Input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                          className="flex-1"
-                        />
-                        {selectedImage && !newProduct.imageUrl && (
-                          <Button
-                            type="button"
-                            onClick={handleImageUpload}
-                            disabled={isUploadingImage}
-                          >
-                            {isUploadingImage ? "Uploading..." : "Upload"}
-                          </Button>
-                        )}
-                      </div>
-                      {newProduct.imageUrl && (
-                        <p className="text-sm text-green-600">✓ Image uploaded successfully</p>
+                      
+                      {/* File Input and Upload Button */}
+                      {(selectedImages.length + newProduct.imageUrls.length) < MAX_IMAGES && (
+                        <div className="flex gap-2">
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImagesSelect}
+                            className="flex-1"
+                          />
+                          {selectedImages.length > 0 && (
+                            <Button
+                              type="button"
+                              onClick={handleUploadImages}
+                              disabled={isUploadingImage}
+                            >
+                              {isUploadingImage ? "Uploading..." : `Upload (${selectedImages.length})`}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                      
+                      {newProduct.imageUrls.length > 0 && (
+                        <p className="text-sm text-green-600">✓ {newProduct.imageUrls.length} image(s) uploaded</p>
+                      )}
+                      {(selectedImages.length + newProduct.imageUrls.length) >= MAX_IMAGES && (
+                        <p className="text-sm text-muted-foreground">Maximum {MAX_IMAGES} images reached</p>
                       )}
                     </div>
                   </div>
@@ -616,29 +672,7 @@ export default function Marketplace() {
             {products
               .filter((p: any) => p.sellerId === user?.id)
               .map((product: any) => (
-                <Card key={product.id}>
-                  {product.imageUrl && (
-                    <div className="w-full h-48 overflow-hidden">
-                      <img 
-                        src={product.imageUrl} 
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">{product.name}</CardTitle>
-                    <CardDescription>{product.category}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <p className="text-2xl font-bold">₹{parseFloat(product.price).toFixed(2)}</p>
-                    <p className="text-sm text-muted-foreground">{product.quantity} {product.unit} available</p>
-                    <Badge variant={product.status === "active" ? "default" : "secondary"}>{product.status}</Badge>
-                  </CardContent>
-                </Card>
+                <SellerProductCard key={product.id} product={product} />
               ))}
           </div>
         </TabsContent>

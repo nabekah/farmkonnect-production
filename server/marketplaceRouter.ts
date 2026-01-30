@@ -4,6 +4,7 @@ import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
 import {
   marketplaceProducts,
+  marketplaceProductImages,
   marketplaceOrders,
   marketplaceOrderItems,
   marketplaceTransactions,
@@ -46,6 +47,17 @@ export const marketplaceRouter = router({
       }
     }),
   // ========== PRODUCTS ==========
+  getProductImages: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      return await db.select().from(marketplaceProductImages)
+        .where(eq(marketplaceProductImages.productId, input.productId))
+        .orderBy(marketplaceProductImages.displayOrder);
+    }),
+
   listProducts: protectedProcedure
     .input(z.object({ category: z.string().optional(), search: z.string().optional(), limit: z.number().default(20) }))
     .query(async ({ input }) => {
@@ -82,6 +94,7 @@ export const marketplaceRouter = router({
       quantity: z.number().positive(),
       unit: z.string(),
       imageUrl: z.string().optional(),
+      imageUrls: z.array(z.string()).optional(), // Multiple images
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
@@ -100,6 +113,18 @@ export const marketplaceRouter = router({
         imageUrl: input.imageUrl,
         status: "active",
       });
+      
+      const productId = Number((result as any).insertId);
+      
+      // Insert multiple images if provided
+      if (input.imageUrls && input.imageUrls.length > 0) {
+        const imageValues = input.imageUrls.map((url, index) => ({
+          productId,
+          imageUrl: url,
+          displayOrder: index,
+        }));
+        await db.insert(marketplaceProductImages).values(imageValues);
+      }
       
       return result;
     }),

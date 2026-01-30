@@ -281,3 +281,14 @@
 - [x] Implement image upload UI in product creation dialog
 - [x] Display product images in marketplace cards with fallback
 - [x] Test image upload and display functionality
+
+
+## Multi-Image Carousel for Products (Current)
+- [x] Update database schema to support multiple product images
+- [x] Create product images table and update marketplace router
+- [x] Implement multi-image upload UI in product creation dialog (max 5 images)
+- [x] Create carousel component for product image display
+- [x] Integrate carousel into Browse Products and My Products cards
+- [x] Test multi-image upload and carousel functionality
+- [x] Create ProductCard and SellerProductCard components to avoid React hooks violations
+- [x] Add getProductImages query to fetch images for individual products
