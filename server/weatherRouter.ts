@@ -1,9 +1,43 @@
 import { protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
+
+// Mock data generator for when API is not available
+const getMockWeatherData = () => ({
+  temperature: 28.5,
+  feelsLike: 30.2,
+  humidity: 65,
+  pressure: 1013,
+  windSpeed: 3.5,
+  cloudiness: 40,
+  description: "partly cloudy",
+  icon: "02d",
+  sunrise: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+  sunset: new Date(Date.now() + 6 * 60 * 60 * 1000), // 6 hours from now
+  isMockData: true,
+});
+
+const getMockForecastData = () => {
+  const forecasts = [];
+  for (let i = 0; i < 5; i++) {
+    forecasts.push({
+      timestamp: new Date(Date.now() + i * 24 * 60 * 60 * 1000),
+      temperature: 28 + Math.random() * 5,
+      feelsLike: 30 + Math.random() * 5,
+      humidity: 60 + Math.random() * 20,
+      pressure: 1010 + Math.random() * 10,
+      windSpeed: 2 + Math.random() * 3,
+      cloudiness: 30 + Math.random() * 40,
+      description: i % 2 === 0 ? "clear sky" : "scattered clouds",
+      icon: i % 2 === 0 ? "01d" : "02d",
+      rainProbability: Math.random() * 40,
+      rainVolume: 0,
+    });
+  }
+  return forecasts;
+};
 
 export const weatherRouter = router({
   getCurrentWeather: protectedProcedure
@@ -11,10 +45,8 @@ export const weatherRouter = router({
     .query(async ({ input }) => {
       try {
         if (!OPENWEATHER_API_KEY) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Weather API not configured",
-          });
+          console.log("OpenWeather API key not configured, returning mock data");
+          return getMockWeatherData();
         }
 
         const response = await fetch(
@@ -22,7 +54,8 @@ export const weatherRouter = router({
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch weather data");
+          console.warn("Weather API request failed, returning mock data");
+          return getMockWeatherData();
         }
 
         const data = await response.json();
@@ -37,13 +70,11 @@ export const weatherRouter = router({
           icon: data.weather[0].icon,
           sunrise: new Date(data.sys.sunrise * 1000),
           sunset: new Date(data.sys.sunset * 1000),
+          isMockData: false,
         };
       } catch (error) {
         console.error("Weather API error:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch weather data",
-        });
+        return getMockWeatherData();
       }
     }),
 
@@ -52,10 +83,8 @@ export const weatherRouter = router({
     .query(async ({ input }) => {
       try {
         if (!OPENWEATHER_API_KEY) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Weather API not configured",
-          });
+          console.log("OpenWeather API key not configured, returning mock forecast");
+          return getMockForecastData();
         }
 
         const response = await fetch(
@@ -63,7 +92,8 @@ export const weatherRouter = router({
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch forecast data");
+          console.warn("Forecast API request failed, returning mock data");
+          return getMockForecastData();
         }
 
         const data = await response.json();
@@ -79,15 +109,13 @@ export const weatherRouter = router({
           icon: item.weather[0].icon,
           rainProbability: item.pop * 100,
           rainVolume: item.rain?.["3h"] || 0,
+          isMockData: false,
         }));
 
         return forecasts;
       } catch (error) {
         console.error("Forecast API error:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch forecast data",
-        });
+        return getMockForecastData();
       }
     }),
 

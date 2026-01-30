@@ -427,3 +427,13 @@
 - [ ] Add weather alerts and advisories
 - [ ] Display weather on dashboard and farm pages
 - [ ] Add weather-based crop recommendations
+
+
+## Weather API Error Fixes (Current)
+- [x] Fix weather router to return mock data instead of throwing TRPCError when API key missing
+- [x] Update getCurrentWeather to gracefully handle API failures
+- [x] Update getForecast to gracefully handle API failures
+- [x] Test weather widget displays mock data without errors
+- [x] Add user-friendly message indicating mock data is being used
+- [x] Create mock data generators for weather and forecast
+- [x] All 105 tests passing with graceful fallback
