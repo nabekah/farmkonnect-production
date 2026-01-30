@@ -34,7 +34,7 @@ export default function CropTracking() {
     { cycleId: selectedCycleId! },
     { enabled: !!selectedCycleId }
   );
-  const { data: crops = [] } = trpc.crops.list.useQuery();
+  const { data: crops = [], isLoading: cropsLoading } = trpc.crops.list.useQuery();
 
   const createCycleMutation = trpc.crops.cycles.create.useMutation();
   const createSoilTestMutation = trpc.crops.soilTests.create.useMutation();
@@ -207,11 +207,17 @@ export default function CropTracking() {
                       <SelectValue placeholder="Select crop..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {crops.map((crop: any) => (
-                        <SelectItem key={crop.id} value={crop.id.toString()}>
-                          {crop.cropName}
-                        </SelectItem>
-                      ))}
+                      {cropsLoading ? (
+                        <div className="p-2 text-sm text-muted-foreground">Loading crops...</div>
+                      ) : crops.length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground">No crops available</div>
+                      ) : (
+                        crops.map((crop: any) => (
+                          <SelectItem key={crop.id} value={crop.id.toString()}>
+                            {crop.cropName || crop.name || "Unknown Crop"}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
