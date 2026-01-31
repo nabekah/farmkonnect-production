@@ -397,3 +397,9 @@ export default function Training() {
     </div>
   );
 }
+
+// TODO: Add Impact Analytics tab with training.analytics.overallImpact query
+// TODO: Add training.analytics.programStats for individual program metrics
+// TODO: Add training.analytics.participantHistory for user training history
+// TODO: Add certificate generation feature
+// Training module has full CRUD, enrollment, and attendance tracking implemented

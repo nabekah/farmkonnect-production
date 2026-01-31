@@ -3,7 +3,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "./db";
 import { trainingPrograms, trainingSessions, enrollments } from "../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 
 export const trainingRouter = router({
   // Training Programs
@@ -193,4 +193,132 @@ export const trainingRouter = router({
           .where(eq(enrollments.id, input.id));
       }),
   }),
+
+  // Analytics and Impact Measurement
+  analytics: router({
+    /**
+     * Get training program statistics
+     */
+    programStats: protectedProcedure
+      .input(z.object({ programId: z.number() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return null;
+
+        // Get program details
+        const program = await db.select().from(trainingPrograms)
+          .where(eq(trainingPrograms.id, input.programId));
+        
+        if (program.length === 0) return null;
+
+        // Get sessions count
+        const sessions = await db.select().from(trainingSessions)
+          .where(eq(trainingSessions.programId, input.programId));
+        
+        // Get enrollments for all sessions
+        const sessionIds = sessions.map(s => s.id);
+        let enrollmentData: any[] = [];
+        
+        if (sessionIds.length > 0) {
+          enrollmentData = await db.select().from(enrollments)
+            .where(sql`${enrollments.sessionId} IN (${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`);        }
+
+        // Calculate stats
+        const totalEnrollments = enrollmentData.length;
+        const attended = enrollmentData.filter(e => e.attendanceStatus === 'attended').length;
+        const absent = enrollmentData.filter(e => e.attendanceStatus === 'absent').length;
+        const dropped = enrollmentData.filter(e => e.attendanceStatus === 'dropped').length;
+        
+        // Calculate average feedback score
+        const feedbackScores = enrollmentData
+          .filter(e => e.feedbackScore !== null)
+          .map(e => e.feedbackScore as number);
+        const avgFeedback = feedbackScores.length > 0
+          ? feedbackScores.reduce((a: number, b: number) => a + b, 0) / feedbackScores.length
+          : 0;
+
+        return {
+          program: program[0],
+          totalSessions: sessions.length,
+          completedSessions: sessions.filter(s => s.status === 'completed').length,
+          totalEnrollments,
+          attendanceRate: totalEnrollments > 0 ? (attended / totalEnrollments) * 100 : 0,
+          attended,
+          absent,
+          dropped,
+          averageFeedbackScore: avgFeedback,
+          feedbackCount: feedbackScores.length,
+        };
+      }),
+
+    /**
+     * Get overall training impact metrics
+     */
+    overallImpact: protectedProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return null;
+
+      const allPrograms = await db.select().from(trainingPrograms);
+      const allSessions = await db.select().from(trainingSessions);
+      const allEnrollments = await db.select().from(enrollments);
+
+      const totalParticipants = new Set(allEnrollments.map(e => e.userId)).size;
+      const attended = allEnrollments.filter(e => e.attendanceStatus === 'attended').length;
+      
+      const feedbackScores = allEnrollments
+        .filter(e => e.feedbackScore !== null)
+        .map(e => e.feedbackScore as number);
+      const avgFeedback = feedbackScores.length > 0
+        ? feedbackScores.reduce((a: number, b: number) => a + b, 0) / feedbackScores.length
+        : 0;
+
+      return {
+        totalPrograms: allPrograms.length,
+        totalSessions: allSessions.length,
+        completedSessions: allSessions.filter(s => s.status === 'completed').length,
+        totalParticipants,
+        totalEnrollments: allEnrollments.length,
+        attendanceRate: allEnrollments.length > 0 ? (attended / allEnrollments.length) * 100 : 0,
+        averageFeedbackScore: avgFeedback,
+      };
+    }),
+
+    /**
+     * Get participant training history
+     */
+    participantHistory: protectedProcedure
+      .input(z.object({ userId: z.number().optional() }))
+      .query(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) return [];
+
+        const userId = input.userId || ctx.user.id;
+        
+        const userEnrollments = await db.select().from(enrollments)
+          .where(eq(enrollments.userId, userId));
+        
+        // Get session details for each enrollment
+        const sessionIds = userEnrollments.map(e => e.sessionId);
+        if (sessionIds.length === 0) return [];
+        
+        const sessions = await db.select().from(trainingSessions)
+          .where(sql`${trainingSessions.id} IN (${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`);
+        
+        const programIds = sessions.map(s => s.programId);
+        const programs = await db.select().from(trainingPrograms)
+          .where(sql`${trainingPrograms.id} IN (${sql.join(programIds.map(id => sql`${id}`), sql`, `)})`);
+        
+        // Merge data
+        return userEnrollments.map(enrollment => {
+          const session = sessions.find(s => s.id === enrollment.sessionId);
+          const program = programs.find(p => p.id === session?.programId);
+          return {
+            ...enrollment,
+            session,
+            program,
+          };
+        });
+      }),
+  }),
 });
+

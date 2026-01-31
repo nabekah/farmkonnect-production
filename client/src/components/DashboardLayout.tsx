@@ -27,7 +27,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout } from 'lucide-react';
+import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield } from 'lucide-react';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { NotificationCenter } from './NotificationCenter';
 
@@ -46,6 +46,7 @@ const menuItems = [
   { icon: LineChart, label: "Weather Trends", path: "/weather-trends" },
   { icon: Sprout, label: "Crop Planning", path: "/crop-planning" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: Shield, label: "Role Management", path: "/role-management", adminOnly: true },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
@@ -198,7 +199,9 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {menuItems
+                .filter(item => !(item as any).adminOnly || user?.role === 'admin')
+                .map(item => {
                 const isActive = location === item.path;
                 return (
                   <SidebarMenuItem key={item.path}>

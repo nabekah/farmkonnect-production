@@ -10,10 +10,13 @@ import { weatherRouter } from "./weatherRouter";
 import { weatherNotificationRouter } from "./weatherNotificationRouter";
 import { cropPlanningRouter } from "./cropPlanningRouter";
 import { inventoryRouter } from "./inventoryRouter";
+import { roleManagementRouter } from "./roleManagementRouter";
 import { trainingRouter } from "./trainingRouter";
 import { merlRouter } from "./merlRouter";
 import { transportRouter } from "./transportRouter";
 import { businessRouter } from "./businessRouter";
+import { paymentRouter } from "./paymentRouter";
+import { smsRouter } from "./smsRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -506,9 +509,12 @@ export const appRouter = router({
   cropPlanning: cropPlanningRouter,
   inventory: inventoryRouter,
   training: trainingRouter,
+  roleManagement: roleManagementRouter,
   merl: merlRouter,
   transport: transportRouter,
   business: businessRouter,
+  payment: paymentRouter,
+  sms: smsRouter,
 });
 
 export type AppRouter = typeof appRouter;
