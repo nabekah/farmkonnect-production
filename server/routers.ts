@@ -31,6 +31,8 @@ import {
   soilTests,
   fertilizerApplications,
   yieldRecords,
+  cropHealthRecords,
+  cropTreatments,
   animals,
   animalTypes,
   animalHealthRecords,
@@ -309,6 +311,113 @@ export const appRouter = router({
             qualityGrade: input.qualityGrade,
             notes: input.notes,
           });
+        }),
+    }),
+
+    health: router({
+      list: protectedProcedure
+        .input(z.object({ cycleId: z.number() }))
+        .query(async ({ input }) => {
+          const db = await getDb();
+          if (!db) return [];
+          return await db.select().from(cropHealthRecords).where(eq(cropHealthRecords.cycleId, input.cycleId));
+        }),
+
+      create: protectedProcedure
+        .input(z.object({
+          cycleId: z.number(),
+          recordDate: z.date(),
+          issueType: z.enum(["disease", "pest", "nutrient_deficiency", "weather_damage", "other"]),
+          issueName: z.string(),
+          severity: z.enum(["low", "medium", "high", "critical"]),
+          affectedArea: z.string().optional(),
+          symptoms: z.string().optional(),
+          photoUrls: z.string().optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+          return await db.insert(cropHealthRecords).values({
+            cycleId: input.cycleId,
+            recordDate: input.recordDate,
+            issueType: input.issueType,
+            issueName: input.issueName,
+            severity: input.severity,
+            affectedArea: input.affectedArea,
+            symptoms: input.symptoms,
+            photoUrls: input.photoUrls,
+            notes: input.notes,
+            status: "active",
+          });
+        }),
+
+      update: protectedProcedure
+        .input(z.object({
+          id: z.number(),
+          status: z.enum(["active", "treated", "resolved"]).optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+          return await db.update(cropHealthRecords)
+            .set({ status: input.status, notes: input.notes })
+            .where(eq(cropHealthRecords.id, input.id));
+        }),
+    }),
+
+    treatments: router({
+      list: protectedProcedure
+        .input(z.object({ healthRecordId: z.number() }))
+        .query(async ({ input }) => {
+          const db = await getDb();
+          if (!db) return [];
+          return await db.select().from(cropTreatments).where(eq(cropTreatments.healthRecordId, input.healthRecordId));
+        }),
+
+      create: protectedProcedure
+        .input(z.object({
+          healthRecordId: z.number(),
+          treatmentDate: z.date(),
+          treatmentType: z.string(),
+          productName: z.string().optional(),
+          dosage: z.string().optional(),
+          applicationMethod: z.string().optional(),
+          cost: z.string().optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+          return await db.insert(cropTreatments).values({
+            healthRecordId: input.healthRecordId,
+            treatmentDate: input.treatmentDate,
+            treatmentType: input.treatmentType,
+            productName: input.productName,
+            dosage: input.dosage,
+            applicationMethod: input.applicationMethod,
+            cost: input.cost as any,
+            appliedByUserId: ctx.user?.id,
+            notes: input.notes,
+          });
+        }),
+
+      updateEffectiveness: protectedProcedure
+        .input(z.object({
+          id: z.number(),
+          effectiveness: z.enum(["not_evaluated", "ineffective", "partially_effective", "effective", "very_effective"]),
+        }))
+        .mutation(async ({ input }) => {
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+          return await db.update(cropTreatments)
+            .set({ effectiveness: input.effectiveness })
+            .where(eq(cropTreatments.id, input.id));
         }),
     }),
   }),

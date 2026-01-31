@@ -166,6 +166,43 @@ export const yieldRecords = mysqlTable("yieldRecords", {
 export type YieldRecord = typeof yieldRecords.$inferSelect;
 export type InsertYieldRecord = typeof yieldRecords.$inferInsert;
 
+export const cropHealthRecords = mysqlTable("cropHealthRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  cycleId: int("cycleId").notNull(),
+  recordDate: date("recordDate").notNull(),
+  issueType: mysqlEnum("issueType", ["disease", "pest", "nutrient_deficiency", "weather_damage", "other"]).notNull(),
+  issueName: varchar("issueName", { length: 255 }).notNull(),
+  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).notNull(),
+  affectedArea: varchar("affectedArea", { length: 255 }),
+  symptoms: text("symptoms"),
+  photoUrls: text("photoUrls"),
+  notes: text("notes"),
+  status: mysqlEnum("status", ["active", "treated", "resolved"]).default("active"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CropHealthRecord = typeof cropHealthRecords.$inferSelect;
+export type InsertCropHealthRecord = typeof cropHealthRecords.$inferInsert;
+
+export const cropTreatments = mysqlTable("cropTreatments", {
+  id: int("id").autoincrement().primaryKey(),
+  healthRecordId: int("healthRecordId").notNull(),
+  treatmentDate: date("treatmentDate").notNull(),
+  treatmentType: varchar("treatmentType", { length: 255 }).notNull(),
+  productName: varchar("productName", { length: 255 }),
+  dosage: varchar("dosage", { length: 255 }),
+  applicationMethod: varchar("applicationMethod", { length: 255 }),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  appliedByUserId: int("appliedByUserId"),
+  effectiveness: mysqlEnum("effectiveness", ["not_evaluated", "ineffective", "partially_effective", "effective", "very_effective"]).default("not_evaluated"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CropTreatment = typeof cropTreatments.$inferSelect;
+export type InsertCropTreatment = typeof cropTreatments.$inferInsert;
+
 // ============================================================================
 // ANIMAL MANAGEMENT
 // ============================================================================

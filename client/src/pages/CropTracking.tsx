@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { Bar, Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { DatePickerPopover } from "@/components/DatePickerPopover";
+import { CropHealthMonitoring } from "@/components/CropHealthMonitoring";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
@@ -32,9 +33,15 @@ export default function CropTracking() {
     { enabled: !!selectedFarmId }
   );
   const { data: yields = [] } = trpc.crops.yields.list.useQuery(
-    { cycleId: selectedCycleId! },
+    { cycleId: selectedCycleId || 0 },
     { enabled: !!selectedCycleId }
   );
+
+  // Fetch health records for all cycles to show indicators
+  const cycleHealthRecords = cycles.map((cycle: any) => {
+    const { data: healthRecords = [] } = trpc.crops.health.list.useQuery({ cycleId: cycle.id });
+    return { cycleId: cycle.id, healthRecords };
+  });
   const { data: crops = [], isLoading: cropsLoading } = trpc.crops.list.useQuery();
 
   const utils = trpc.useUtils();
@@ -196,10 +203,11 @@ export default function CropTracking() {
       </div>
 
       <Tabs value={tabValue} onValueChange={setTabValue}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="cycles">Cycles</TabsTrigger>
           <TabsTrigger value="soil">Soil</TabsTrigger>
           <TabsTrigger value="yields">Yields</TabsTrigger>
+          <TabsTrigger value="health">Health</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -297,7 +305,7 @@ export default function CropTracking() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-sm text-gray-600">Area</p>
                         <p className="font-semibold">{cycle.areaPlantedHectares} ha</p>
@@ -305,6 +313,25 @@ export default function CropTracking() {
                       <div>
                         <p className="text-sm text-gray-600">Status</p>
                         <p className="font-semibold capitalize">{cycle.status}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Health</p>
+                        {(() => {
+                          const healthData = cycleHealthRecords.find((h: any) => h.cycleId === cycle.id);
+                          const activeIssues = healthData?.healthRecords.filter((r: any) => r.status === "active") || [];
+                          const criticalIssues = activeIssues.filter((r: any) => r.severity === "critical");
+                          const highIssues = activeIssues.filter((r: any) => r.severity === "high");
+                          
+                          if (criticalIssues.length > 0) {
+                            return <p className="font-semibold text-red-600">⚠️ Critical ({criticalIssues.length})</p>;
+                          } else if (highIssues.length > 0) {
+                            return <p className="font-semibold text-orange-600">⚠️ High ({highIssues.length})</p>;
+                          } else if (activeIssues.length > 0) {
+                            return <p className="font-semibold text-yellow-600">⚠️ Issues ({activeIssues.length})</p>;
+                          } else {
+                            return <p className="font-semibold text-green-600">✓ Healthy</p>;
+                          }
+                        })()}
                       </div>
                     </div>
                     {cycle.crop?.cultivarParameters && (
@@ -489,6 +516,18 @@ export default function CropTracking() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="health" className="space-y-4">
+          {selectedCycleId ? (
+            <CropHealthMonitoring cycleId={selectedCycleId} />
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                <p>Select a crop cycle to view health records</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">

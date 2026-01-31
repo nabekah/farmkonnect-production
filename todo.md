@@ -1217,3 +1217,16 @@
 - [x] Implement expected yield tracking from active (not due) crop cycles
 - [x] Display expected vs actual yield comparison in analytics
 - [x] Add yield forecasting based on crop cycle progress
+
+## Crop Health Monitoring System
+- [x] Create cropHealthRecords table schema with photo URLs
+- [x] Create cropTreatments table schema for treatment logging
+- [x] Add backend procedures for health record CRUD operations
+- [x] Add backend procedures for treatment logging
+- [x] Build crop health monitoring UI component
+- [x] Implement photo upload for health issues
+- [x] Add disease/pest type selection with severity ratings
+- [x] Create treatment logging form with product and dosage
+- [x] Display health history timeline for each crop cycle
+- [x] Add health status indicators to crop cycle cards
+- [x] Implement health alerts for severe issues
