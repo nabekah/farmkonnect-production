@@ -372,8 +372,12 @@ export default function DataManagement() {
       accessorKey: "price",
       header: "Price (GHS)",
       cell: ({ row }) => {
-        const price = row.getValue("price") as number | null;
-        return price != null ? `₵${price.toFixed(2)}` : "N/A";
+        const price = row.getValue("price");
+        // More robust null/undefined/type checking
+        if (price == null || price === "" || typeof price !== "number" || isNaN(price)) {
+          return "N/A";
+        }
+        return `₵${Number(price).toFixed(2)}`;
       },
       meta: {
         filterType: "number",
