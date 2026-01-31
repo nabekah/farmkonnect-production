@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "../lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -8,11 +8,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "../components/ui/label";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Shield, Users, Key, Activity, AlertTriangle, CheckCircle, XCircle, Clock, Lock } from "lucide-react";
+import { Checkbox } from "../components/ui/checkbox";
+import { Shield, Users, Key, Activity, AlertTriangle, CheckCircle, XCircle, Lock, Settings as SettingsIcon } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 
 export default function SecurityDashboard() {
   const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const utils = trpc.useUtils();
 
   // Toast function
@@ -33,13 +36,26 @@ export default function SecurityDashboard() {
 
   const seedSystem = trpc.security.system.seedSecuritySystem.useMutation({
     onSuccess: (data) => {
-      toast({ title: "Success", description: data.message });
-      utils.security.invalidate();
+      if (data.success) {
+        toast({ title: "Success", description: data.message });
+        setIsInitialized(true);
+        utils.security.invalidate();
+      } else {
+        toast({ title: "Info", description: data.message });
+        setIsInitialized(true);
+      }
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  // Auto-initialize on first load
+  useEffect(() => {
+    if (!isInitialized && !seedSystem.isPending) {
+      seedSystem.mutate();
+    }
+  }, []);
 
   // ============================================================================
   // USER APPROVAL TAB
@@ -93,19 +109,76 @@ export default function SecurityDashboard() {
   const [accountAction, setAccountAction] = useState<{ userId: number; action: string; reason?: string } | null>(null);
 
   // ============================================================================
-  // RBAC TAB
+  // RBAC TAB - ENHANCED
   // ============================================================================
   const { data: roles } = trpc.security.rbac.listRoles.useQuery();
   const { data: modules } = trpc.security.rbac.listModulePermissions.useQuery();
+  const { data: rolePermissions } = trpc.security.rbac.getRolePermissions.useQuery(
+    { roleId: selectedRoleId! },
+    { enabled: !!selectedRoleId }
+  );
 
   const createRole = trpc.security.rbac.createRole.useMutation({
     onSuccess: () => {
       toast({ title: "Role Created" });
       utils.security.rbac.listRoles.invalidate();
+      setNewRole({ roleName: "", displayName: "", description: "" });
+    },
+  });
+
+  const setRolePermissions = trpc.security.rbac.setRolePermissions.useMutation({
+    onSuccess: () => {
+      toast({ title: "Permissions Updated" });
+      utils.security.rbac.getRolePermissions.invalidate();
+    },
+  });
+
+  const deleteRole = trpc.security.rbac.deleteRole.useMutation({
+    onSuccess: () => {
+      toast({ title: "Role Deleted" });
+      utils.security.rbac.listRoles.invalidate();
+      setSelectedRoleId(null);
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
   const [newRole, setNewRole] = useState({ roleName: "", displayName: "", description: "" });
+
+  // Helper to get current permission for a module
+  const getPermissionForModule = (moduleId: number) => {
+    return rolePermissions?.find((rp: any) => rp.permissionId === moduleId) || {
+      canView: false,
+      canCreate: false,
+      canEdit: false,
+      canDelete: false,
+      canExport: false,
+    };
+  };
+
+  // Helper to update permission
+  const updatePermission = (moduleId: number, field: string, value: boolean) => {
+    const currentPerm = getPermissionForModule(moduleId);
+    setRolePermissions.mutate({
+      roleId: selectedRoleId!,
+      permissionId: moduleId,
+      canView: field === "canView" ? value : currentPerm.canView,
+      canCreate: field === "canCreate" ? value : currentPerm.canCreate,
+      canEdit: field === "canEdit" ? value : currentPerm.canEdit,
+      canDelete: field === "canDelete" ? value : currentPerm.canDelete,
+      canExport: field === "canExport" ? value : currentPerm.canExport,
+    });
+  };
+
+  // Group modules by category
+  const groupedModules = modules?.reduce((acc: any, module: any) => {
+    if (!acc[module.category]) {
+      acc[module.category] = [];
+    }
+    acc[module.category].push(module);
+    return acc;
+  }, {});
 
   // ============================================================================
   // AUDIT LOGS TAB
@@ -129,12 +202,14 @@ export default function SecurityDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Security Dashboard</h1>
-          <p className="text-muted-foreground">Manage system security, users, and permissions</p>
+          <p className="text-muted-foreground">Manage system security, users, roles, and permissions</p>
         </div>
-        <Button onClick={() => seedSystem.mutate()} disabled={seedSystem.isPending}>
-          <Shield className="mr-2 h-4 w-4" />
-          Initialize Security System
-        </Button>
+        {!isInitialized && (
+          <Button onClick={() => seedSystem.mutate()} disabled={seedSystem.isPending}>
+            <Shield className="mr-2 h-4 w-4" />
+            {seedSystem.isPending ? "Initializing..." : "Initialize Security System"}
+          </Button>
+        )}
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
@@ -221,8 +296,12 @@ export default function SecurityDashboard() {
                   <Badge variant="default">High</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Last Security Scan</span>
-                  <span className="text-sm text-muted-foreground">Just now</span>
+                  <span className="text-sm font-medium">Roles Configured</span>
+                  <span className="text-sm text-muted-foreground">{roles?.length || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Modules Protected</span>
+                  <span className="text-sm text-muted-foreground">{modules?.length || 0}</span>
                 </div>
               </div>
             </CardContent>
@@ -412,18 +491,17 @@ export default function SecurityDashboard() {
           </Card>
         </TabsContent>
 
-        {/* RBAC TAB */}
+        {/* RBAC TAB - ENHANCED WITH MODULE PERMISSION ASSIGNMENT */}
         <TabsContent value="rbac" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Role-Based Access Control</CardTitle>
-              <CardDescription>Manage roles and permissions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Left: Roles List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Roles</CardTitle>
+                <CardDescription>Select a role to manage its permissions</CardDescription>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="mt-2">
                       <Shield className="mr-2 h-4 w-4" />
                       Create New Role
                     </Button>
@@ -435,7 +513,7 @@ export default function SecurityDashboard() {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label>Role Name</Label>
+                        <Label>Role Name (lowercase, underscores)</Label>
                         <Input
                           value={newRole.roleName}
                           onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
@@ -459,33 +537,133 @@ export default function SecurityDashboard() {
                         />
                       </div>
                       <Button
-                        onClick={() => {
-                          createRole.mutate(newRole);
-                          setNewRole({ roleName: "", displayName: "", description: "" });
-                        }}
-                        disabled={!newRole.roleName || !newRole.displayName}
+                        onClick={() => createRole.mutate(newRole)}
+                        disabled={!newRole.roleName || !newRole.displayName || createRole.isPending}
                       >
                         Create Role
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
-
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-2">
-                  <h3 className="font-medium">Existing Roles</h3>
                   {roles?.map((role: any) => (
-                    <div key={role.id} className="flex items-center justify-between border-b pb-2">
-                      <div>
-                        <p className="font-medium">{role.displayName}</p>
-                        <p className="text-sm text-muted-foreground">{role.description}</p>
-                        {role.isSystemRole && <Badge variant="outline">System Role</Badge>}
+                    <div
+                      key={role.id}
+                      className={`p-3 border rounded-lg cursor-pointer hover:bg-accent ${
+                        selectedRoleId === role.id ? "bg-accent" : ""
+                      }`}
+                      onClick={() => setSelectedRoleId(role.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{role.displayName}</p>
+                          <p className="text-sm text-muted-foreground">{role.description}</p>
+                          {role.isSystemRole && (
+                            <Badge variant="outline" className="mt-1">
+                              System Role
+                            </Badge>
+                          )}
+                        </div>
+                        {!role.isSystemRole && selectedRoleId === role.id && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Delete role "${role.displayName}"?`)) {
+                                deleteRole.mutate({ roleId: role.id });
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Right: Module Permissions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Module Permissions</CardTitle>
+                <CardDescription>
+                  {selectedRoleId
+                    ? `Configure permissions for ${roles?.find((r: any) => r.id === selectedRoleId)?.displayName}`
+                    : "Select a role to configure permissions"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedRoleId && groupedModules ? (
+                  <div className="space-y-6">
+                    {Object.entries(groupedModules).map(([category, categoryModules]: [string, any]) => (
+                      <div key={category}>
+                        <h4 className="font-semibold mb-2">{category}</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Module</TableHead>
+                              <TableHead className="text-center w-16">View</TableHead>
+                              <TableHead className="text-center w-16">Create</TableHead>
+                              <TableHead className="text-center w-16">Edit</TableHead>
+                              <TableHead className="text-center w-16">Delete</TableHead>
+                              <TableHead className="text-center w-16">Export</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {categoryModules.map((module: any) => {
+                              const perm = getPermissionForModule(module.id);
+                              return (
+                                <TableRow key={module.id}>
+                                  <TableCell className="font-medium">{module.displayName}</TableCell>
+                                  <TableCell className="text-center">
+                                    <Checkbox
+                                      checked={perm.canView}
+                                      onCheckedChange={(checked) => updatePermission(module.id, "canView", !!checked)}
+                                    />
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Checkbox
+                                      checked={perm.canCreate}
+                                      onCheckedChange={(checked) => updatePermission(module.id, "canCreate", !!checked)}
+                                    />
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Checkbox
+                                      checked={perm.canEdit}
+                                      onCheckedChange={(checked) => updatePermission(module.id, "canEdit", !!checked)}
+                                    />
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Checkbox
+                                      checked={perm.canDelete}
+                                      onCheckedChange={(checked) => updatePermission(module.id, "canDelete", !!checked)}
+                                    />
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <Checkbox
+                                      checked={perm.canExport}
+                                      onCheckedChange={(checked) => updatePermission(module.id, "canExport", !!checked)}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">Select a role to configure permissions</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* AUDIT LOGS TAB */}

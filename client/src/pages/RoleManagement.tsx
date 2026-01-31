@@ -1,436 +1,300 @@
 import { useState } from "react";
-import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Shield, UserCheck, UserCog, Users, Search, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
-
+import { trpc } from "../lib/trpc";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { Checkbox } from "../components/ui/checkbox";
+import { Shield, UserPlus, X } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 
 export default function RoleManagement() {
-  const toast = ({ title, description, variant }: { title: string; description: string; variant?: string }) => {
-    console.log(`${title}: ${description}`);
-  };
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [newRole, setNewRole] = useState<string>("");
-  const [selectedProfile, setSelectedProfile] = useState<any>(null);
-  const [newAccreditationStatus, setNewAccreditationStatus] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+  const utils = trpc.useUtils();
 
-  // Queries
-  const { data: allUsers, refetch: refetchUsers } = trpc.roleManagement.getAllUsers.useQuery({
-    role: roleFilter === "all" ? undefined : (roleFilter as any),
-    search: searchQuery || undefined,
+  // Toast function
+  const toast = (props: { title: string; description?: string; variant?: "default" | "destructive" }) => {
+    const toastEl = document.createElement("div");
+    toastEl.className = `fixed bottom-4 right-4 bg-${props.variant === "destructive" ? "red" : "green"}-600 text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+    toastEl.innerHTML = `<strong>${props.title}</strong>${props.description ? `<br/><span class="text-sm">${props.description}</span>` : ""}`;
+    document.body.appendChild(toastEl);
+    setTimeout(() => toastEl.remove(), 3000);
+  };
+
+  // Fetch data
+  const { data: users } = trpc.security.account.listUsers.useQuery({
+    status: "all",
+    approvalStatus: "approved", // Only show approved users
   });
 
-  const { data: specialists, refetch: refetchSpecialists } =
-    trpc.roleManagement.getAllSpecialists.useQuery();
+  const { data: roles } = trpc.security.rbac.listRoles.useQuery();
 
-  const { data: myRole } = trpc.roleManagement.getMyRole.useQuery();
+  const { data: userRoles } = trpc.security.rbac.getUserRoles.useQuery(
+    { userId: selectedUserId! },
+    { enabled: !!selectedUserId }
+  );
 
   // Mutations
-  const updateRoleMutation = trpc.roleManagement.updateUserRole.useMutation({
+  const assignRole = trpc.security.rbac.assignRoleToUser.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Role Updated",
-        description: "User role has been updated successfully.",
-      });
-      refetchUsers();
-      setSelectedUser(null);
+      toast({ title: "Role Assigned", description: "Role has been assigned to user" });
+      utils.security.rbac.getUserRoles.invalidate();
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
-  const updateAccreditationMutation = trpc.roleManagement.updateAccreditationStatus.useMutation({
+  const removeRole = trpc.security.rbac.removeRoleFromUser.useMutation({
     onSuccess: () => {
-      toast({
-        title: "Accreditation Updated",
-        description: "Accreditation status has been updated successfully.",
-      });
-      refetchSpecialists();
-      refetchUsers();
-      setSelectedProfile(null);
+      toast({ title: "Role Removed", description: "Role has been removed from user" });
+      utils.security.rbac.getUserRoles.invalidate();
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
-  const handleUpdateRole = () => {
-    if (selectedUser && newRole) {
-      updateRoleMutation.mutate({
-        userId: selectedUser.id,
-        role: newRole as any,
-      });
-    }
+  // Helper to check if user has a role
+  const userHasRole = (roleId: number) => {
+    return userRoles?.some((ur: any) => ur.roleId === roleId) || false;
   };
 
-  const handleUpdateAccreditation = () => {
-    if (selectedProfile && newAccreditationStatus) {
-      updateAccreditationMutation.mutate({
-        profileId: selectedProfile.id,
-        status: newAccreditationStatus as any,
-      });
-    }
+  // Helper to get role name
+  const getRoleName = (roleId: number) => {
+    return roles?.find((r: any) => r.id === roleId)?.displayName || "Unknown";
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    const colors: Record<string, string> = {
-      admin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-      farmer: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      agent: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      veterinarian: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-      buyer: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      transporter: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-      user: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
-    };
-    return colors[role] || colors.user;
+  // Handle assign multiple roles
+  const handleAssignRoles = () => {
+    if (!selectedUserId || selectedRoles.length === 0) return;
+
+    // Assign each selected role
+    selectedRoles.forEach((roleId) => {
+      if (!userHasRole(roleId)) {
+        assignRole.mutate({ userId: selectedUserId, roleId });
+      }
+    });
+
+    setSelectedRoles([]);
   };
 
-  const getAccreditationIcon = (status: string) => {
-    switch (status) {
-      case "verified":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-      case "expired":
-        return <AlertCircle className="h-4 w-4 text-orange-600" />;
-      case "revoked":
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      default:
-        return null;
-    }
-  };
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Role Management</h1>
+          <p className="text-muted-foreground">Assign roles to users and manage role assignments</p>
+        </div>
+      </div>
 
-  // Check if current user is admin
-  const isAdmin = myRole?.role === "admin";
-
-  if (!isAdmin) {
-    return (
-      <div className="container py-8">
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left: Users List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Access Denied
-            </CardTitle>
+            <CardTitle>Users</CardTitle>
+            <CardDescription>Select a user to manage their roles</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              You do not have permission to access role management. This feature is restricted to administrators.
-            </p>
+            <div className="space-y-2">
+              {users?.map((user: any) => (
+                <div
+                  key={user.id}
+                  className={`p-3 border rounded-lg cursor-pointer hover:bg-accent ${
+                    selectedUserId === user.id ? "bg-accent" : ""
+                  }`}
+                  onClick={() => setSelectedUserId(user.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium">{user.name || `User ${user.id}`}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <div className="flex gap-2 mt-2 flex-wrap">
+                        <Badge variant="outline">{user.role}</Badge>
+                        {user.accountStatus === "active" && <Badge variant="default">Active</Badge>}
+                        {user.accountStatus === "disabled" && <Badge variant="destructive">Disabled</Badge>}
+                        {user.accountStatus === "suspended" && <Badge variant="secondary">Suspended</Badge>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Right: Role Assignment */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Role Assignment</CardTitle>
+            <CardDescription>
+              {selectedUserId
+                ? `Manage roles for ${users?.find((u: any) => u.id === selectedUserId)?.name || "selected user"}`
+                : "Select a user to manage their roles"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedUserId ? (
+              <div className="space-y-6">
+                {/* Current Roles */}
+                <div>
+                  <h4 className="font-semibold mb-3">Current Roles</h4>
+                  {userRoles && userRoles.length > 0 ? (
+                    <div className="space-y-2">
+                      {userRoles.map((ur: any) => {
+                        const role = roles?.find((r: any) => r.id === ur.roleId);
+                        return (
+                          <div key={ur.id} className="flex items-center justify-between p-2 border rounded">
+                            <div>
+                              <p className="font-medium">{role?.displayName || "Unknown Role"}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Assigned: {new Date(ur.assignedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => removeRole.mutate({ userId: selectedUserId, roleId: ur.roleId })}
+                              disabled={removeRole.isPending}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No roles assigned yet</p>
+                  )}
+                </div>
+
+                {/* Assign New Roles */}
+                <div>
+                  <h4 className="font-semibold mb-3">Assign New Roles</h4>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Assign Roles
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Assign Roles to User</DialogTitle>
+                        <DialogDescription>Select one or more roles to assign to this user</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid gap-3">
+                          {roles?.map((role: any) => {
+                            const hasRole = userHasRole(role.id);
+                            const isSelected = selectedRoles.includes(role.id);
+                            return (
+                              <div
+                                key={role.id}
+                                className={`flex items-center space-x-3 p-3 border rounded-lg ${
+                                  hasRole ? "opacity-50 bg-muted" : ""
+                                }`}
+                              >
+                                <Checkbox
+                                  id={`role-${role.id}`}
+                                  checked={isSelected}
+                                  disabled={hasRole}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setSelectedRoles([...selectedRoles, role.id]);
+                                    } else {
+                                      setSelectedRoles(selectedRoles.filter((id) => id !== role.id));
+                                    }
+                                  }}
+                                />
+                                <div className="flex-1">
+                                  <Label htmlFor={`role-${role.id}`} className="font-medium cursor-pointer">
+                                    {role.displayName}
+                                  </Label>
+                                  <p className="text-sm text-muted-foreground">{role.description}</p>
+                                  {role.isSystemRole && (
+                                    <Badge variant="outline" className="mt-1">
+                                      System Role
+                                    </Badge>
+                                  )}
+                                  {hasRole && (
+                                    <Badge variant="default" className="mt-1 ml-2">
+                                      Already Assigned
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            onClick={handleAssignRoles}
+                            disabled={selectedRoles.length === 0 || assignRole.isPending}
+                          >
+                            Assign {selectedRoles.length > 0 && `(${selectedRoles.length})`} Role
+                            {selectedRoles.length !== 1 ? "s" : ""}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {/* Available Roles Reference */}
+                <div>
+                  <h4 className="font-semibold mb-3">Available Roles</h4>
+                  <div className="space-y-2">
+                    {roles?.map((role: any) => (
+                      <div key={role.id} className="p-2 border rounded text-sm">
+                        <p className="font-medium">{role.displayName}</p>
+                        <p className="text-xs text-muted-foreground">{role.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">Select a user to manage their roles</p>
+            )}
           </CardContent>
         </Card>
       </div>
-    );
-  }
 
-  return (
-    <div className="container py-8 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <UserCog className="h-8 w-8" />
-          Role Management
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Manage user roles, permissions, and specialist accreditations
-        </p>
-      </div>
-
-      {/* Filters */}
+      {/* All Users with Roles Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <div className="flex-1">
-            <Label>Search Users</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <div className="w-48">
-            <Label>Filter by Role</Label>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="farmer">Farmer</SelectItem>
-                <SelectItem value="agent">Extension Agent</SelectItem>
-                <SelectItem value="veterinarian">Veterinarian</SelectItem>
-                <SelectItem value="buyer">Buyer</SelectItem>
-                <SelectItem value="transporter">Transporter</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            All Users ({allUsers?.length || 0})
-          </CardTitle>
-          <CardDescription>Manage user roles and permissions</CardDescription>
+          <CardTitle>User Role Overview</CardTitle>
+          <CardDescription>View all users and their assigned roles</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Accreditation</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allUsers?.map((user: any) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name || "N/A"}</TableCell>
-                  <TableCell>{user.email || "N/A"}</TableCell>
-                  <TableCell>{user.phone || "N/A"}</TableCell>
-                  <TableCell>
-                    <Badge className={getRoleBadgeColor(user.role)}>{user.role}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.specialistProfile ? (
-                      <div className="flex items-center gap-2">
-                        {getAccreditationIcon(user.specialistProfile.accreditationStatus)}
-                        <span className="text-sm capitalize">
-                          {user.specialistProfile.accreditationStatus}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">N/A</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setNewRole(user.role);
-                          }}
-                        >
-                          Edit Role
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Update User Role</DialogTitle>
-                          <DialogDescription>
-                            Change the role for {user.name || user.email}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div>
-                            <Label>Current Role</Label>
-                            <Badge className={`${getRoleBadgeColor(user.role)} mt-2`}>
-                              {user.role}
-                            </Badge>
-                          </div>
-                          <div>
-                            <Label>New Role</Label>
-                            <Select value={newRole} onValueChange={setNewRole}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="farmer">Farmer</SelectItem>
-                                <SelectItem value="agent">Extension Agent</SelectItem>
-                                <SelectItem value="veterinarian">Veterinarian</SelectItem>
-                                <SelectItem value="buyer">Buyer</SelectItem>
-                                <SelectItem value="transporter">Transporter</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="user">User</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button
-                            onClick={handleUpdateRole}
-                            disabled={updateRoleMutation.isPending}
-                            className="w-full"
-                          >
-                            {updateRoleMutation.isPending ? "Updating..." : "Update Role"}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Specialists Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserCheck className="h-5 w-5" />
-            Specialists ({specialists?.length || 0})
-          </CardTitle>
-          <CardDescription>Manage extension agents and veterinarians accreditation</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>License Number</TableHead>
-                <TableHead>Specialization</TableHead>
-                <TableHead>Expiry Date</TableHead>
+                <TableHead>Base Role</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Custom Roles</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {specialists?.map((specialist: any) => (
-                <TableRow key={specialist.id}>
-                  <TableCell className="font-medium">{specialist.name || "N/A"}</TableCell>
+              {users?.map((user: any) => (
+                <TableRow key={user.id} className="cursor-pointer hover:bg-accent" onClick={() => setSelectedUserId(user.id)}>
+                  <TableCell className="font-medium">{user.name || `User ${user.id}`}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Badge className={getRoleBadgeColor(specialist.role)}>{specialist.role}</Badge>
-                  </TableCell>
-                  <TableCell>{specialist.profile?.licenseNumber || "N/A"}</TableCell>
-                  <TableCell>{specialist.profile?.specialization || "N/A"}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {specialist.profile?.licenseExpiryDate
-                      ? new Date(specialist.profile.licenseExpiryDate).toLocaleDateString()
-                      : "N/A"}
+                    <Badge variant="outline">{user.role}</Badge>
                   </TableCell>
                   <TableCell>
-                    {specialist.profile ? (
-                      <div className="flex items-center gap-2">
-                        {getAccreditationIcon(specialist.profile.accreditationStatus)}
-                        <span className="text-sm capitalize">
-                          {specialist.profile.accreditationStatus}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">No Profile</span>
-                    )}
+                    <Badge variant={user.accountStatus === "active" ? "default" : "destructive"}>
+                      {user.accountStatus}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    {specialist.profile && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedProfile(specialist.profile);
-                              setNewAccreditationStatus(specialist.profile.accreditationStatus);
-                            }}
-                          >
-                            Update Status
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Update Accreditation Status</DialogTitle>
-                            <DialogDescription>
-                              Change the accreditation status for {specialist.name}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div>
-                              <Label>Current Status</Label>
-                              <div className="flex items-center gap-2 mt-2">
-                                {getAccreditationIcon(specialist.profile.accreditationStatus)}
-                                <span className="capitalize">
-                                  {specialist.profile.accreditationStatus}
-                                </span>
-                              </div>
-                            </div>
-                            <div>
-                              <Label>New Status</Label>
-                              <Select
-                                value={newAccreditationStatus}
-                                onValueChange={setNewAccreditationStatus}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="verified">Verified</SelectItem>
-                                  <SelectItem value="expired">Expired</SelectItem>
-                                  <SelectItem value="revoked">Revoked</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              onClick={handleUpdateAccreditation}
-                              disabled={updateAccreditationMutation.isPending}
-                              className="w-full"
-                            >
-                              {updateAccreditationMutation.isPending
-                                ? "Updating..."
-                                : "Update Status"}
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
+                    <span className="text-sm text-muted-foreground">Click to view/edit</span>
                   </TableCell>
                 </TableRow>
               ))}
