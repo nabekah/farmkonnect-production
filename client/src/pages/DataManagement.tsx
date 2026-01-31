@@ -316,7 +316,10 @@ export default function DataManagement() {
     {
       accessorKey: "price",
       header: "Price (GHS)",
-      cell: ({ row }) => `₵${(row.getValue("price") as number).toFixed(2)}`,
+      cell: ({ row }) => {
+        const price = row.getValue("price") as number | null;
+        return price != null ? `₵${price.toFixed(2)}` : "N/A";
+      },
 
     },
     {
