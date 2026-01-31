@@ -451,3 +451,33 @@
 - [x] Add weatherNotificationRouter with checkAllFarmsWeather mutation
 - [x] Add getWeatherAlerts query for real-time alert display
 - [x] Test weather notifications with OpenWeatherMap API
+
+
+## Advanced Weather Management Features (Current)
+
+### Weather Alert Dashboard
+- [ ] Create WeatherAlerts page with dedicated route
+- [ ] Build alert cards with severity color coding
+- [ ] Add severity filtering (high/medium/low)
+- [ ] Implement farm filtering for multi-farm users
+- [ ] Add acknowledgment workflow for alerts
+- [ ] Display alert history with timestamps
+- [ ] Add to navigation menu
+
+### Historical Weather Data
+- [ ] Create weatherHistory database table
+- [ ] Add procedure to store daily weather readings
+- [ ] Implement automatic weather data archival
+- [ ] Build historical trends query with date range
+- [ ] Create Chart.js visualization for temperature trends
+- [ ] Add rainfall pattern analysis
+- [ ] Correlate weather with crop yield data
+
+### Scheduled Weather Monitoring
+- [ ] Implement scheduled weather check mutation
+- [ ] Add morning weather check (6 AM)
+- [ ] Add evening weather check (6 PM)
+- [ ] Create digest notification format
+- [ ] Send summary of all farm conditions
+- [ ] Include actionable recommendations
+- [ ] Add user preferences for notification timing

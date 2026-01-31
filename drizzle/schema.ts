@@ -816,3 +816,29 @@ export const inventoryAuditLogs = mysqlTable("inventory_audit_logs", {
 });
 export type InventoryAuditLog = typeof inventoryAuditLogs.$inferSelect;
 export type InsertInventoryAuditLog = typeof inventoryAuditLogs.$inferInsert;
+
+
+// ============================================================================
+// WEATHER HISTORY
+// ============================================================================
+export const weatherHistory = mysqlTable("weatherHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  recordedAt: timestamp("recordedAt").defaultNow().notNull(),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }),
+  feelsLike: decimal("feelsLike", { precision: 5, scale: 2 }),
+  humidity: int("humidity"),
+  pressure: int("pressure"),
+  windSpeed: decimal("windSpeed", { precision: 5, scale: 2 }),
+  windDirection: int("windDirection"),
+  cloudCover: int("cloudCover"),
+  precipitation: decimal("precipitation", { precision: 5, scale: 2 }),
+  weatherCondition: varchar("weatherCondition", { length: 100 }),
+  weatherDescription: text("weatherDescription"),
+  sunrise: timestamp("sunrise"),
+  sunset: timestamp("sunset"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WeatherHistory = typeof weatherHistory.$inferSelect;
+export type InsertWeatherHistory = typeof weatherHistory.$inferInsert;

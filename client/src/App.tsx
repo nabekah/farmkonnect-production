@@ -18,6 +18,8 @@ import MERL from "./pages/MERL";
 import IoTManagement from "./pages/IoTManagement";
 import TransportManagement from "./pages/TransportManagement";
 import BusinessStrategy from "./pages/BusinessStrategy";
+import WeatherAlerts from "./pages/WeatherAlerts";
+import WeatherTrends from "./pages/WeatherTrends";
 
 function Router() {
   return (
@@ -97,6 +99,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <BusinessStrategy />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/weather-alerts">
+        {() => (
+          <DashboardLayout>
+            <WeatherAlerts />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/weather-trends">
+        {() => (
+          <DashboardLayout>
+            <WeatherTrends />
           </DashboardLayout>
         )}
       </Route>
