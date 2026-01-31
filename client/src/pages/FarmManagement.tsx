@@ -24,6 +24,16 @@ export default function FarmManagement() {
     description: "",
   });
   const [open, setOpen] = useState(false);
+  const [editDialog, setEditDialog] = useState<{ open: boolean; farm: any | null }>({ open: false, farm: null });
+  const [editFormData, setEditFormData] = useState({
+    farmName: "",
+    location: "",
+    latitude: "",
+    longitude: "",
+    sizeHectares: "",
+    farmType: "mixed",
+    description: "",
+  });
 
   const { data: farms = [], isLoading } = trpc.farms.list.useQuery();
 
@@ -43,6 +53,16 @@ export default function FarmManagement() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create farm");
+    },
+  });
+
+  const updateFarmMutation = trpc.farms.update.useMutation({
+    onSuccess: () => {
+      setEditDialog({ open: false, farm: null });
+      toast.success("Farm updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update farm");
     },
   });
 
@@ -76,6 +96,36 @@ export default function FarmManagement() {
         }
       );
     }
+  };
+
+  const handleFarmDoubleClick = (farm: any) => {
+    setEditFormData({
+      farmName: farm.farmName || "",
+      location: farm.location || "",
+      latitude: farm.gpsLatitude || "",
+      longitude: farm.gpsLongitude || "",
+      sizeHectares: farm.sizeHectares || "",
+      farmType: farm.farmType || "mixed",
+      description: farm.description || "",
+    });
+    setEditDialog({ open: true, farm });
+  };
+
+  const handleUpdateFarm = async () => {
+    if (!editFormData.farmName) {
+      toast.error("Farm name is required");
+      return;
+    }
+
+    if (!editDialog.farm) return;
+
+    await updateFarmMutation.mutateAsync({
+      id: editDialog.farm.id,
+      farmName: editFormData.farmName,
+      location: editFormData.location,
+      sizeHectares: editFormData.sizeHectares,
+      farmType: editFormData.farmType as "crop" | "livestock" | "mixed",
+    });
   };
 
   if (!user) return null;
@@ -392,7 +442,11 @@ export default function FarmManagement() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {farms.map(farm => (
-            <Card key={farm.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={farm.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onDoubleClick={() => handleFarmDoubleClick(farm)}
+            >
               <CardHeader>
                 <CardTitle className="flex items-start justify-between">
                   <span className="flex-1">{farm.farmName}</span>
@@ -435,6 +489,72 @@ export default function FarmManagement() {
           ))}
         </div>
       )}
+
+      {/* Edit Farm Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog({ open, farm: null })}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Farm</DialogTitle>
+            <DialogDescription>Update farm information and details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-farmName">Farm Name *</Label>
+                <Input
+                  id="edit-farmName"
+                  placeholder="e.g., Green Valley Farm"
+                  value={editFormData.farmName}
+                  onChange={(e) => setEditFormData({ ...editFormData, farmName: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-farmType">Farm Type</Label>
+                <Select
+                  value={editFormData.farmType}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, farmType: value })}
+                >
+                  <SelectTrigger id="edit-farmType">
+                    <SelectValue placeholder="Select farm type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="crop">Crop</SelectItem>
+                    <SelectItem value="livestock">Livestock</SelectItem>
+                    <SelectItem value="mixed">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-location">Location</Label>
+              <Input
+                id="edit-location"
+                placeholder="e.g., Kumasi, Ashanti Region"
+                value={editFormData.location}
+                onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-sizeHectares">Farm Size (hectares)</Label>
+              <Input
+                id="edit-sizeHectares"
+                type="number"
+                step="0.01"
+                placeholder="e.g., 25.5"
+                value={editFormData.sizeHectares}
+                onChange={(e) => setEditFormData({ ...editFormData, sizeHectares: e.target.value })}
+              />
+            </div>
+
+            <Button onClick={handleUpdateFarm} disabled={updateFarmMutation.isPending} className="w-full">
+              {updateFarmMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Update Farm
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

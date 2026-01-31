@@ -80,6 +80,34 @@ export const appRouter = router({
           farmType: input.farmType || "mixed",
         });
       }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        farmName: z.string().min(1),
+        location: z.string().optional(),
+        sizeHectares: z.string().optional(),
+        farmType: z.enum(["crop", "livestock", "mixed"]).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+        // Verify ownership
+        const [farm] = await db.select().from(farms).where(eq(farms.id, input.id));
+        if (!farm || farm.farmerUserId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You can only edit your own farms" });
+        }
+
+        return await db.update(farms)
+          .set({
+            farmName: input.farmName,
+            location: input.location,
+            sizeHectares: input.sizeHectares as any,
+            farmType: input.farmType || "mixed",
+          })
+          .where(eq(farms.id, input.id));
+      }),
   }),
 
   // ============================================================================

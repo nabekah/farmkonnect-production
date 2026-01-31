@@ -164,8 +164,10 @@ export function WeatherWidget({ farmId, latitude, longitude, showForecast = fals
       {cropRecommendations && cropRecommendations.recommendations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Agricultural Recommendations</CardTitle>
-            <CardDescription>Weather-based farming advice</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              Agricultural Recommendations
+              <span className="text-sm font-normal text-muted-foreground">• Weather-based farming advice</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
