@@ -1,0 +1,279 @@
+import { getDb } from "./db";
+import { notifications, animals, breedingRecords, productListings } from "../drizzle/schema";
+import { eq, and, lte, gte, sql } from "drizzle-orm";
+
+/**
+ * Notification Service
+ * 
+ * Handles creation and management of notifications for critical events:
+ * - Breeding due dates
+ * - Low stock levels
+ * - Weather alerts
+ * - Vaccination reminders
+ * - Harvest reminders
+ * - IoT sensor alerts
+ */
+
+export interface CreateNotificationParams {
+  userId: number;
+  type: string;
+  title: string;
+  message: string;
+  priority?: "low" | "medium" | "high" | "critical";
+  actionUrl?: string;
+  relatedAnimalId?: number;
+  relatedBreedingId?: number;
+  relatedVaccinationId?: number;
+}
+
+/**
+ * Create a new notification
+ */
+export async function createNotification(params: CreateNotificationParams) {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+  
+  const [notification] = await db.insert(notifications).values({
+    userId: params.userId,
+    type: params.type as any,
+    title: params.title,
+    message: params.message,
+    priority: params.priority || "medium",
+    actionUrl: params.actionUrl,
+    relatedAnimalId: params.relatedAnimalId,
+    relatedBreedingId: params.relatedBreedingId,
+    relatedVaccinationId: params.relatedVaccinationId,
+    isRead: false,
+  });
+  
+  return notification;
+}
+
+/**
+ * Check for breeding due dates and create notifications
+ * Triggers: 7 days, 3 days, 1 day before due date
+ */
+export async function checkBreedingDueDates() {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+  
+  // Get all breeding records with due dates in the next 7 days
+  const now = new Date();
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  
+  const upcomingBreedings = await db
+    .select({
+      id: breedingRecords.id,
+      animalId: breedingRecords.animalId,
+      expectedDueDate: breedingRecords.expectedDueDate,
+      animal: animals,
+    })
+    .from(breedingRecords)
+    .leftJoin(animals, eq(breedingRecords.animalId, animals.id))
+    .where(
+      and(
+        gte(breedingRecords.expectedDueDate, now),
+        lte(breedingRecords.expectedDueDate, sevenDaysFromNow)
+      )
+    );
+  
+  const notificationsCreated = [];
+  
+  for (const breeding of upcomingBreedings) {
+    if (!breeding.expectedDueDate || !breeding.animal) continue;
+    
+    const daysUntilDue = Math.ceil(
+      (breeding.expectedDueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    // Only create notifications at specific intervals
+    if (![7, 3, 1].includes(daysUntilDue)) continue;
+    
+    // Check if notification already exists for this breeding and interval
+    const existingNotification = await db
+      .select()
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.relatedBreedingId, breeding.id),
+          eq(notifications.type, "breeding_due"),
+          gte(notifications.createdAt, new Date(now.getTime() - 24 * 60 * 60 * 1000)) // Last 24 hours
+        )
+      )
+      .limit(1);
+    
+    if (existingNotification.length > 0) continue;
+    
+    // Create notification
+    const priority = daysUntilDue === 1 ? "high" : daysUntilDue === 3 ? "medium" : "low";
+    
+    await createNotification({
+      userId: breeding.animal.farmId, // TODO: Join with farms table to get actual userId
+      type: "breeding_due",
+      title: `Breeding Due: ${breeding.animal?.uniqueTagId || "Animal"}`,
+      message: `${breeding.animal?.uniqueTagId || "Animal"} is due for breeding in ${daysUntilDue} day${daysUntilDue > 1 ? "s" : ""}. Please prepare for the event.`,
+      priority: priority as any,
+      actionUrl: `/livestock?tab=breeding&id=${breeding.id}`,
+      relatedAnimalId: breeding.animalId,
+      relatedBreedingId: breeding.id,
+    });
+    
+    notificationsCreated.push(breeding.id);
+  }
+  
+  return { count: notificationsCreated.length, breedingIds: notificationsCreated };
+}
+
+/**
+ * Check for low stock levels and create notifications
+ * Triggers: stock below threshold (configurable)
+ */
+export async function checkLowStockLevels(threshold: number = 10) {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+  
+  // Get all products with low stock
+  const lowStockProducts = await db
+    .select()
+    .from(productListings)
+    .where(
+      and(
+        lte(sql`CAST(${productListings.quantityAvailable} AS DECIMAL)`, threshold),
+        eq(productListings.status, "active")
+      )
+    );
+  
+  const notificationsCreated = [];
+  
+  for (const product of lowStockProducts) {
+    // Check if notification already exists in last 24 hours
+    const now = new Date();
+    const existingNotification = await db
+      .select()
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, product.farmId), // TODO: Join with farms table to get actual userId
+          sql`${notifications.message} LIKE ${`%${product.productName}%`}`,
+          gte(notifications.createdAt, new Date(now.getTime() - 24 * 60 * 60 * 1000))
+        )
+      )
+      .limit(1);
+    
+    if (existingNotification.length > 0) continue;
+    
+    // Determine priority based on stock level
+    const quantity = parseFloat(product.quantityAvailable);
+    const priority = quantity === 0 ? "critical" : quantity <= 5 ? "high" : "medium";
+    const type = quantity === 0 ? "stock_critical" : "stock_low";
+    
+    await createNotification({
+      userId: product.farmId, // TODO: Join with farms table to get actual userId // Note: Need to get userId from farm
+      type: type,
+      title: `Low Stock Alert: ${product.productName}`,
+      message: `Your product "${product.productName}" has ${quantity} ${product.unit} remaining. Consider restocking soon.`,
+      priority: priority as any,
+      actionUrl: `/marketplace?tab=my-listings&id=${product.id}`,
+    });
+    
+    notificationsCreated.push(product.id);
+  }
+  
+  return { count: notificationsCreated.length, productIds: notificationsCreated };
+}
+
+/**
+ * Create weather alert notification
+ */
+export async function createWeatherAlert(
+  userId: number,
+  alertType: "warning" | "alert",
+  title: string,
+  message: string,
+  severity: "low" | "medium" | "high" | "critical"
+) {
+  return await createNotification({
+    userId,
+    type: alertType === "warning" ? "weather_warning" : "weather_alert",
+    title,
+    message,
+    priority: severity,
+    actionUrl: "/weather-alerts",
+  });
+}
+
+/**
+ * Create IoT sensor alert notification
+ */
+export async function createIoTSensorAlert(
+  userId: number,
+  sensorId: number,
+  sensorName: string,
+  alertMessage: string,
+  severity: "low" | "medium" | "high" | "critical"
+) {
+  return await createNotification({
+    userId,
+    type: "iot_sensor_alert",
+    title: `Sensor Alert: ${sensorName}`,
+    message: alertMessage,
+    priority: severity,
+    actionUrl: `/iot-sensors?id=${sensorId}`,
+  });
+}
+
+/**
+ * Create marketplace order notification
+ */
+export async function createMarketplaceOrderNotification(
+  sellerId: number,
+  buyerName: string,
+  productName: string,
+  orderId: number
+) {
+  return await createNotification({
+    userId: sellerId,
+    type: "marketplace_order",
+    title: "New Order Received",
+    message: `${buyerName} has placed an order for ${productName}. Please review and process the order.`,
+    priority: "high",
+    actionUrl: `/marketplace?tab=orders&id=${orderId}`,
+  });
+}
+
+/**
+ * Create marketplace sale notification
+ */
+export async function createMarketplaceSaleNotification(
+  buyerId: number,
+  productName: string,
+  orderId: number,
+  status: string
+) {
+  return await createNotification({
+    userId: buyerId,
+    type: "marketplace_sale",
+    title: `Order ${status}`,
+    message: `Your order for ${productName} has been ${status.toLowerCase()}.`,
+    priority: "medium",
+    actionUrl: `/marketplace?tab=my-orders&id=${orderId}`,
+  });
+}
+
+/**
+ * Run all notification checks
+ * This should be called periodically (e.g., via cron job)
+ */
+export async function runNotificationChecks() {
+  console.log("[Notification Service] Running notification checks...");
+  
+  const results = {
+    breedingDueDates: await checkBreedingDueDates(),
+    lowStockLevels: await checkLowStockLevels(10),
+    timestamp: new Date().toISOString(),
+  };
+  
+  console.log("[Notification Service] Checks complete:", results);
+  
+  return results;
+}

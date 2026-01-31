@@ -1000,3 +1000,47 @@
 - [x] Set up automated greeting messages
 - [x] Test chat functionality
 - [x] Add chat availability hours
+
+
+## REAL-TIME NOTIFICATION SYSTEM - IN PROGRESS
+
+### Backend Notification Service
+- [ ] Enhance notification schema with priority levels
+- [ ] Create notification service module
+- [ ] Add notification CRUD procedures to notificationRouter
+- [ ] Implement notification polling endpoint
+- [ ] Add notification mark as read/unread functionality
+- [ ] Create notification deletion and bulk actions
+
+### Event Triggers
+- [ ] Breeding due date notifications (7 days, 3 days, 1 day before)
+- [ ] Low stock level alerts (configurable thresholds)
+- [ ] Weather alert notifications (extreme conditions)
+- [ ] Vaccination reminder notifications
+- [ ] Harvest reminder notifications
+- [ ] Marketplace order notifications
+- [ ] IoT sensor alert notifications
+
+### Browser Push Notifications
+- [ ] Set up service worker for push notifications
+- [ ] Add push notification subscription management
+- [ ] Implement push notification sending from backend
+- [ ] Add notification permission request UI
+- [ ] Handle notification click actions
+- [ ] Add notification sound and vibration
+
+### Notification Center UI
+- [ ] Create NotificationCenter component with dropdown
+- [ ] Add bell icon with badge count in header
+- [ ] Implement real-time polling (10-second interval)
+- [ ] Add notification list with filtering
+- [ ] Add mark all as read functionality
+- [ ] Add notification settings link
+
+### User Preferences
+- [ ] Add notification preferences to user settings
+- [ ] Allow users to enable/disable notification types
+- [ ] Add email notification preferences
+- [ ] Add push notification preferences
+- [ ] Add notification sound preferences
+- [ ] Save preferences to database

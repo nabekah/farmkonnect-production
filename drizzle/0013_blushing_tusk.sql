@@ -1,0 +1,1 @@
+ALTER TABLE `notifications` MODIFY COLUMN `type` enum('vaccination_due','vaccination_overdue','breeding_due','breeding_overdue','health_alert','performance_alert','feed_low','stock_low','stock_critical','harvest_reminder','weather_alert','weather_warning','iot_sensor_alert','marketplace_order','marketplace_sale','task_reminder','system_alert','security_alert') NOT NULL;

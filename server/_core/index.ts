@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { initializeWeatherCron } from "../weatherCron";
+import { initializeNotificationCron } from "../notificationCron";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -61,8 +62,9 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
     
-    // Initialize weather cron jobs after server starts
+    // Initialize cron jobs after server starts
     initializeWeatherCron();
+    initializeNotificationCron();
   });
 }
 
