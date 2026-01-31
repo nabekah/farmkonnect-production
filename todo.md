@@ -1209,3 +1209,11 @@
 - [x] Update currency formatting throughout the application
 - [x] Update marketplace product prices to use Ghana Cedis
 - [x] Update payment and transaction displays to use Ghana Cedis
+
+## Crop Management Fixes and Enhancements
+- [x] Fix yield saving issue - yields not displaying after save
+- [x] Fix analytics section in crop management
+- [x] Add expected yield field to crop cycles schema
+- [x] Implement expected yield tracking from active (not due) crop cycles
+- [x] Display expected vs actual yield comparison in analytics
+- [x] Add yield forecasting based on crop cycle progress

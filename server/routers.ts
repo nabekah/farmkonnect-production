@@ -193,6 +193,7 @@ export const appRouter = router({
           plantingDate: z.date(),
           expectedHarvestDate: z.date().optional(),
           areaPlantedHectares: z.string().optional(),
+          expectedYieldKg: z.string().optional(),
         }))
         .mutation(async ({ input }) => {
           const db = await getDb();
@@ -205,6 +206,7 @@ export const appRouter = router({
             plantingDate: input.plantingDate,
             expectedHarvestDate: input.expectedHarvestDate,
             areaPlantedHectares: input.areaPlantedHectares as any,
+            expectedYieldKg: input.expectedYieldKg as any,
             status: "planted",
           });
         }),

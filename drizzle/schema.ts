@@ -114,6 +114,7 @@ export const cropCycles = mysqlTable("cropCycles", {
   actualHarvestDate: date("actualHarvestDate"),
   status: mysqlEnum("status", ["planning", "planted", "growing", "harvesting", "completed", "abandoned"]).default("planning"),
   areaPlantedHectares: decimal("areaPlantedHectares", { precision: 10, scale: 2 }),
+  expectedYieldKg: decimal("expectedYieldKg", { precision: 10, scale: 2 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

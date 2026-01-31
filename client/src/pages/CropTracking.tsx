@@ -37,15 +37,29 @@ export default function CropTracking() {
   );
   const { data: crops = [], isLoading: cropsLoading } = trpc.crops.list.useQuery();
 
-  const createCycleMutation = trpc.crops.cycles.create.useMutation();
-  const createSoilTestMutation = trpc.crops.soilTests.create.useMutation();
-  const createYieldMutation = trpc.crops.yields.create.useMutation();
+  const utils = trpc.useUtils();
+  const createCycleMutation = trpc.crops.cycles.create.useMutation({
+    onSuccess: () => {
+      utils.crops.cycles.list.invalidate();
+    },
+  });
+  const createSoilTestMutation = trpc.crops.soilTests.create.useMutation({
+    onSuccess: () => {
+      utils.crops.soilTests.list.invalidate();
+    },
+  });
+  const createYieldMutation = trpc.crops.yields.create.useMutation({
+    onSuccess: () => {
+      utils.crops.yields.list.invalidate();
+    },
+  });
 
   const [cycleForm, setCycleForm] = useState({
     cropId: "",
     plantingDate: null as Date | null,
     expectedHarvestDate: null as Date | null,
     areaPlantedHectares: "",
+    expectedYieldKg: "",
   });
   const [soilForm, setSoilForm] = useState({
     testDate: null as Date | null,
@@ -68,8 +82,9 @@ export default function CropTracking() {
       plantingDate: cycleForm.plantingDate,
       expectedHarvestDate: cycleForm.expectedHarvestDate || undefined,
       areaPlantedHectares: cycleForm.areaPlantedHectares,
+      expectedYieldKg: cycleForm.expectedYieldKg,
     });
-    setCycleForm({ cropId: "", plantingDate: null, expectedHarvestDate: null, areaPlantedHectares: "" });
+    setCycleForm({ cropId: "", plantingDate: null, expectedHarvestDate: null, areaPlantedHectares: "", expectedYieldKg: "" });
   };
 
   const handleCreateSoilTest = async () => {
@@ -250,6 +265,16 @@ export default function CropTracking() {
                     step="0.01"
                     value={cycleForm.areaPlantedHectares}
                     onChange={(e) => setCycleForm({ ...cycleForm, areaPlantedHectares: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Expected Yield (kg)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={cycleForm.expectedYieldKg}
+                    onChange={(e) => setCycleForm({ ...cycleForm, expectedYieldKg: e.target.value })}
+                    placeholder="Estimated harvest quantity"
                   />
                 </div>
                 <Button onClick={handleCreateCycle} disabled={createCycleMutation.isPending}>
@@ -467,6 +492,57 @@ export default function CropTracking() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
+          {/* Expected vs Actual Yield Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Total Expected Yield</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {cycles
+                    .filter((c: any) => c.expectedYieldKg && c.status !== "completed")
+                    .reduce((sum: number, c: any) => sum + parseFloat(c.expectedYieldKg || "0"), 0)
+                    .toFixed(1)} kg
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  From {cycles.filter((c: any) => c.expectedYieldKg && c.status !== "completed").length} active cycles
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Total Actual Yield</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {yields.reduce((sum: number, y: any) => sum + parseFloat(y.yieldQuantityKg || "0"), 0).toFixed(1)} kg
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  From {yields.length} harvest records
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Yield per Hectare</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {(() => {
+                    const totalYield = yields.reduce((sum: number, y: any) => sum + parseFloat(y.yieldQuantityKg || "0"), 0);
+                    const totalArea = cycles.reduce((sum: number, c: any) => sum + parseFloat(c.areaPlantedHectares || "0"), 0);
+                    return totalArea > 0 ? (totalYield / totalArea).toFixed(1) : "0.0";
+                  })()} kg/ha
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Average productivity
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {yields.length > 0 && (
               <Card>
@@ -489,6 +565,40 @@ export default function CropTracking() {
               </Card>
             )}
           </div>
+
+          {/* Expected Yield by Crop Cycle */}
+          {cycles.filter((c: any) => c.expectedYieldKg && c.status !== "completed").length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Expected Yield by Active Crop Cycle</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {cycles
+                    .filter((c: any) => c.expectedYieldKg && c.status !== "completed")
+                    .map((cycle: any) => (
+                      <div key={cycle.id} className="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{cycle.crop?.cropName || "Unknown Crop"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Planted: {format(new Date(cycle.plantingDate), "MMM d, yyyy")}
+                            {cycle.expectedHarvestDate && ` • Expected: ${format(new Date(cycle.expectedHarvestDate), "MMM d, yyyy")}`}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold">{parseFloat(cycle.expectedYieldKg).toFixed(1)} kg</p>
+                          {cycle.areaPlantedHectares && (
+                            <p className="text-xs text-muted-foreground">
+                              {(parseFloat(cycle.expectedYieldKg) / parseFloat(cycle.areaPlantedHectares)).toFixed(1)} kg/ha
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
