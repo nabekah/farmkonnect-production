@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuth } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,13 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { Plus, DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 
 export function FarmFinance() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [farmId] = useState<number>(user?.farmId || 0);
+  const [farmId] = useState<number>(0);
   const [showExpense, setShowExpense] = useState(false);
   const [showRevenue, setShowRevenue] = useState(false);
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -36,7 +32,7 @@ export function FarmFinance() {
       paymentMethod: formData.get("paymentMethod"),
     };
     setExpenses([...expenses, expense]);
-    toast({ title: "Expense recorded successfully" });
+    // Toast notification would go here
     setShowExpense(false);
     (e.target as HTMLFormElement).reset();
   };
@@ -55,7 +51,7 @@ export function FarmFinance() {
       paymentMethod: formData.get("paymentMethod"),
     };
     setRevenues([...revenues, revenue]);
-    toast({ title: "Revenue recorded successfully" });
+    // Toast notification would go here
     setShowRevenue(false);
     (e.target as HTMLFormElement).reset();
   };

@@ -213,55 +213,6 @@ export const appRouter = router({
           });
         }),
 
-      recordActivity: protectedProcedure
-        .input(z.object({
-          cycleId: z.number(),
-          activityType: z.enum(["fertilization", "pest_control", "weeding", "irrigation", "harvesting", "other"]),
-          activityDate: z.date(),
-          details: z.string().optional(),
-          cost: z.string().optional(),
-        }))
-        .mutation(async ({ input }) => {
-          const db = await getDb();
-          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-          return await db.insert(cropTreatments).values({
-            cycleId: input.cycleId,
-            treatmentType: input.activityType,
-            treatmentDate: input.activityDate,
-            details: input.details,
-            cost: input.cost as any,
-          });
-        }),
-
-      recordYield: protectedProcedure
-        .input(z.object({
-          cycleId: z.number(),
-          harvestDate: z.date(),
-          yieldQuantityKg: z.string(),
-        }))
-        .mutation(async ({ input }) => {
-          const db = await getDb();
-          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-          await db.update(cropCycles).set({ status: "completed" }).where(eq(cropCycles.id, input.cycleId));
-          return await db.insert(yieldRecords).values({
-            cycleId: input.cycleId,
-            recordedDate: input.harvestDate,
-            yieldQuantityKg: input.yieldQuantityKg as any,
-          });
-        }),
-
-      getStatistics: protectedProcedure
-        .input(z.object({ farmId: z.number() }))
-        .query(async ({ input }) => {
-          const db = await getDb();
-          if (!db) return { activeCrops: 0, totalArea: "0", totalYield: "0" };
-          const cycles = await db.select().from(cropCycles).where(eq(cropCycles.farmId, input.farmId));
-          const activeCycles = cycles.filter(c => c.status === "planted" || c.status === "growing");
-          const totalArea = activeCycles.reduce((sum, c) => sum + (parseFloat(c.areaPlantedHectares as string) || 0), 0);
-          const yields = await db.select().from(yieldRecords);
-          const totalYield = yields.reduce((sum, y) => sum + (parseFloat(y.yieldQuantityKg as string) || 0), 0);
-          return { activeCrops: activeCycles.length, totalArea: totalArea.toFixed(2), totalYield: totalYield.toFixed(2) };
-        }),
     }),
 
     soilTests: router({
