@@ -27,11 +27,12 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield, DollarSign, Heart, CheckCircle, Wallet, Fish, Wrench, UserCog, PieChart } from 'lucide-react';
+import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield, DollarSign, Heart, CheckCircle, Wallet, Fish, Wrench, UserCog, PieChart, Brain } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Badge } from './ui/badge';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { NotificationCenter } from './NotificationCenter';
+import { RealtimeToast } from './RealtimeToast';
 import { CartButton } from './CartButton';
 
 const menuItems = [
@@ -45,6 +46,7 @@ const menuItems = [
   { icon: Fish, label: "Fish Farming", path: "/fish-farming" },
   { icon: Wrench, label: "Asset Mgmt", path: "/asset-management" },
   { icon: PieChart, label: "Analytics Dashboard", path: "/analytics-dashboard" },
+  { icon: Brain, label: "Predictive Analytics", path: "/predictive-analytics" },
   { icon: ShoppingCart, label: "Marketplace", path: "/marketplace" },
   { icon: Heart, label: "Wishlist", path: "/wishlist" },
   { icon: DollarSign, label: "Seller Payouts", path: "/seller-payouts" },
@@ -332,6 +334,7 @@ function DashboardLayoutContent({
           {children}
         </main>
       </SidebarInset>
+      <RealtimeToast />
     </>
   );
 }

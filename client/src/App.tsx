@@ -44,6 +44,7 @@ import WorkforceManagement from "./pages/WorkforceManagement";
 import FishFarming from "./pages/FishFarming";
 import AssetManagement from "./pages/AssetManagement";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import PredictiveAnalytics from "./pages/PredictiveAnalytics";
 
 function Router() {
   return (
@@ -287,6 +288,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <AnalyticsDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/predictive-analytics">
+        {() => (
+          <DashboardLayout>
+            <PredictiveAnalytics />
           </DashboardLayout>
         )}
       </Route>

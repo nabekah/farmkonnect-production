@@ -169,6 +169,13 @@
       "when": 1769975546577,
       "tag": "0023_grey_hitman",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1769980552938,
+      "tag": "0024_stormy_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

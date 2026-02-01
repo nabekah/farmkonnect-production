@@ -1397,3 +1397,21 @@ export const fishPondActivities = mysqlTable("fishPondActivities", {
 
 export type FishPondActivity = typeof fishPondActivities.$inferSelect;
 export type InsertFishPondActivity = typeof fishPondActivities.$inferInsert;
+
+// Notification Preferences
+export const notificationPreferences = mysqlTable("notificationPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  emailEnabled: boolean("emailEnabled").default(true).notNull(),
+  smsEnabled: boolean("smsEnabled").default(false).notNull(),
+  pushEnabled: boolean("pushEnabled").default(true).notNull(),
+  phoneNumber: varchar("phoneNumber", { length: 20 }),
+  criticalAlerts: boolean("criticalAlerts").default(true).notNull(),
+  warningAlerts: boolean("warningAlerts").default(true).notNull(),
+  infoAlerts: boolean("infoAlerts").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
