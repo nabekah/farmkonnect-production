@@ -1400,3 +1400,12 @@
 - [x] Add try-catch error handling for JSON parsing in order cards
 - [x] Add fallback display for non-JSON deliveryAddress values
 - [x] Test with various deliveryAddress formats (JSON and plain string)
+
+## Seller Order Visibility & Buyer Cancellation
+- [x] Investigate how sellers see orders from buyers
+- [x] Fix seller order query to properly show orders containing seller's products
+- [x] Add order cancellation button for buyers on pending orders
+- [x] Implement cancellation confirmation dialog
+- [x] Update order status to "cancelled" when buyer cancels
+- [x] Test seller view shows correct orders
+- [x] Test buyer can cancel pending orders only

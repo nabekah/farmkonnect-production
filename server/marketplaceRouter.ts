@@ -15,9 +15,9 @@ import {
   marketplaceDeliveryZones,
   users,
 } from "../drizzle/schema";
-import { eq, and, desc, like } from "drizzle-orm";
+import { eq, and, desc, like, inArray } from "drizzle-orm";
 import { storagePut } from "./storage";
-import { sendOrderNotificationToBuyer, sendOrderNotificationToSeller, validateGhanaPhone } from "./_core/sms";
+import { sendOrderNotificationToBuyer, sendOrderNotificationToSeller, validateGhanaPhone, sendSMS } from "./_core/sms";
 
 export const marketplaceRouter = router({
   // ========== IMAGE UPLOAD ==========
@@ -243,8 +243,24 @@ export const marketplaceRouter = router({
           .where(eq(marketplaceOrders.buyerId, ctx.user.id))
           .orderBy(desc(marketplaceOrders.createdAt));
       } else {
+        // Sellers see orders containing their products
+        const sellerProducts = await db.select({ id: marketplaceProducts.id })
+          .from(marketplaceProducts)
+          .where(eq(marketplaceProducts.sellerId, ctx.user.id));
+        
+        const productIds = sellerProducts.map(p => p.id);
+        if (productIds.length === 0) return [];
+        
+        // Find orders containing seller's products
+        const orderItems = await db.select({ orderId: marketplaceOrderItems.orderId })
+          .from(marketplaceOrderItems)
+          .where(inArray(marketplaceOrderItems.productId, productIds));
+        
+        const orderIds = Array.from(new Set(orderItems.map(item => item.orderId)));
+        if (orderIds.length === 0) return [];
+        
         return await db.select().from(marketplaceOrders)
-          .where(eq(marketplaceOrders.sellerId, ctx.user.id))
+          .where(inArray(marketplaceOrders.id, orderIds))
           .orderBy(desc(marketplaceOrders.createdAt));
       }
     }),
@@ -371,6 +387,52 @@ export const marketplaceRouter = router({
       }
 
       return result;
+    }),
+
+  cancelOrder: protectedProcedure
+    .input(z.object({ orderId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      // Verify order belongs to buyer and is pending
+      const order = await db.select().from(marketplaceOrders)
+        .where(and(
+          eq(marketplaceOrders.id, input.orderId),
+          eq(marketplaceOrders.buyerId, ctx.user.id),
+          eq(marketplaceOrders.status, "pending")
+        ))
+        .limit(1);
+      
+      if (!order[0]) {
+        throw new TRPCError({ 
+          code: "NOT_FOUND", 
+          message: "Order not found or cannot be cancelled" 
+        });
+      }
+      
+      // Update order status to cancelled
+      const result = await db.update(marketplaceOrders)
+        .set({ status: "cancelled" })
+        .where(eq(marketplaceOrders.id, input.orderId));
+      
+      // Send SMS notification to seller about cancellation
+      const seller = await db.select().from(users)
+        .where(eq(users.id, order[0].sellerId))
+        .limit(1);
+      
+      if (seller[0]?.phone) {
+        const phoneValidation = validateGhanaPhone(seller[0].phone);
+        if (phoneValidation.valid) {
+          // Send cancellation notification
+          await sendSMS({
+            to: phoneValidation.formatted!,
+            message: `Order ${order[0].orderNumber} has been cancelled by ${ctx.user.name || "Customer"}.`
+          });
+        }
+      }
+      
+      return { success: true, orderNumber: order[0].orderNumber };
     }),
 
   // ========== TRANSACTIONS ==========

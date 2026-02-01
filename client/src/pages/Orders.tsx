@@ -62,6 +62,22 @@ export default function Orders() {
     },
   });
 
+  const cancelOrder = trpc.marketplace.cancelOrder.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Order ${data.orderNumber} cancelled successfully`);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to cancel order");
+    },
+  });
+
+  const handleCancelOrder = (orderId: number, orderNumber: string) => {
+    if (confirm(`Are you sure you want to cancel order ${orderNumber}?`)) {
+      cancelOrder.mutate({ orderId });
+    }
+  };
+
   const handleStatusUpdate = (orderId: number, status: OrderStatus) => {
     updateOrderStatus.mutate({ orderId, status });
   };
@@ -151,6 +167,17 @@ export default function Orders() {
                         <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>
+                      {role === "buyer" && status === "pending" && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleCancelOrder(order.id, order.orderNumber)}
+                          disabled={cancelOrder.isPending}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Cancel Order
+                        </Button>
+                      )}
                       {role === "seller" && status !== "delivered" && status !== "cancelled" && (
                         <Select
                           value={status}
