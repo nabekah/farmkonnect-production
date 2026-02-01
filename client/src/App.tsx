@@ -38,6 +38,12 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import DataManagement from "./pages/DataManagement";
+import { FarmFinance } from "./pages/FarmFinance";
+import LivestockManagement from "./pages/LivestockManagement";
+import WorkforceManagement from "./pages/WorkforceManagement";
+import FishFarming from "./pages/FishFarming";
+import AssetManagement from "./pages/AssetManagement";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 
 function Router() {
   return (
@@ -239,6 +245,48 @@ function Router() {
         {() => (
           <DashboardLayout>
             <RoleManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/farm-finance">
+        {() => (
+          <DashboardLayout>
+            <FarmFinance />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/livestock-management">
+        {() => (
+          <DashboardLayout>
+            <LivestockManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/workforce-management">
+        {() => (
+          <DashboardLayout>
+            <WorkforceManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/fish-farming">
+        {() => (
+          <DashboardLayout>
+            <FishFarming />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/asset-management">
+        {() => (
+          <DashboardLayout>
+            <AssetManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/analytics-dashboard">
+        {() => (
+          <DashboardLayout>
+            <AnalyticsDashboard />
           </DashboardLayout>
         )}
       </Route>
