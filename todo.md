@@ -1409,3 +1409,35 @@
 - [x] Update order status to "cancelled" when buyer cancels
 - [x] Test seller view shows correct orders
 - [x] Test buyer can cancel pending orders only
+
+## Order Review & Rating System
+- [x] Create orderReviews database table (orderId, buyerId, rating, comment, sellerResponse, createdAt)
+- [x] Add review button for delivered orders in buyer view
+- [x] Create review dialog with 5-star rating and comment textarea
+- [x] Implement backend procedure to submit order review
+- [x] Add seller response functionality in seller order view
+- [x] Display aggregate ratings on product pages
+- [ ] Show review history in order details modal
+- [x] Prevent duplicate reviews for same order
+
+## Order Dispute Resolution System
+- [x] Create orderDisputes database table (orderId, buyerId, sellerId, reason, description, status, evidence, resolution, adminNotes)
+- [x] Add "File Dispute" button for problematic orders
+- [x] Create dispute filing dialog with reason selection and description
+- [ ] Add evidence upload functionality (photos, documents)
+- [ ] Build admin dispute management dashboard
+- [x] Implement dispute status workflow (pending, under_review, resolved, rejected)
+- [x] Add admin mediation interface with resolution notes
+- [ ] Send notifications to buyer/seller on dispute status changes
+- [ ] Display dispute status badge on orders
+
+## Seller Payout Tracking Dashboard
+- [x] Create sellerPayouts database table (sellerId, orderId, amount, status, payoutDate, transactionReference)
+- [x] Calculate pending payouts from delivered orders
+- [x] Build SellerPayouts page with financial summary cards
+- [x] Add payout history table with filters (pending, completed, all)
+- [ ] Implement payout request functionality
+- [x] Add transaction history with order references
+- [x] Create CSV export for accounting purposes
+- [x] Display total earnings, pending balance, and paid out amounts
+- [ ] Add date range filters for financial reports

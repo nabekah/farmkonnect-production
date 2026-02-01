@@ -14,10 +14,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Package, Eye, Truck, CheckCircle2, Clock, XCircle, BarChart3 } from "lucide-react";
+import { Package, Eye, Truck, CheckCircle2, Clock, XCircle, BarChart3, Star, MessageSquare, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -34,6 +36,12 @@ const statusConfig: Record<OrderStatus, { label: string; icon: any; color: strin
 export default function Orders() {
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [reviewOrderId, setReviewOrderId] = useState<number | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [disputeOrderId, setDisputeOrderId] = useState<number | null>(null);
+  const [disputeReason, setDisputeReason] = useState<"damaged_product" | "wrong_item" | "not_delivered" | "quality_issue">("quality_issue");
+  const [disputeDescription, setDisputeDescription] = useState("");
 
   // Safe JSON parser for deliveryAddress
   const parseDeliveryAddress = (address: string) => {
@@ -80,6 +88,49 @@ export default function Orders() {
 
   const handleStatusUpdate = (orderId: number, status: OrderStatus) => {
     updateOrderStatus.mutate({ orderId, status });
+  };
+
+  const createReview = trpc.marketplace.createOrderReview.useMutation({
+    onSuccess: () => {
+      toast.success("Review submitted successfully");
+      setReviewOrderId(null);
+      setRating(5);
+      setComment("");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to submit review");
+    },
+  });
+
+  const handleSubmitReview = () => {
+    if (reviewOrderId) {
+      createReview.mutate({ orderId: reviewOrderId, rating, comment });
+    }
+  };
+
+  const createDispute = trpc.marketplace.createDispute.useMutation({
+    onSuccess: () => {
+      toast.success("Dispute filed successfully");
+      setDisputeOrderId(null);
+      setDisputeReason("quality_issue");
+      setDisputeDescription("");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to file dispute");
+    },
+  });
+
+  const handleSubmitDispute = () => {
+    if (disputeOrderId && disputeDescription.trim()) {
+      createDispute.mutate({ 
+        orderId: disputeOrderId, 
+        reason: disputeReason, 
+        description: disputeDescription 
+      });
+    } else {
+      toast.error("Please provide a description");
+    }
   };
 
   return (
@@ -176,6 +227,26 @@ export default function Orders() {
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Cancel Order
+                        </Button>
+                      )}
+                      {role === "buyer" && status === "delivered" && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => setReviewOrderId(order.id)}
+                        >
+                          <Star className="h-4 w-4 mr-1" />
+                          Write Review
+                        </Button>
+                      )}
+                      {role === "buyer" && (status === "delivered" || status === "shipped") && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDisputeOrderId(order.id)}
+                        >
+                          <AlertTriangle className="h-4 w-4 mr-1" />
+                          File Dispute
                         </Button>
                       )}
                       {role === "seller" && status !== "delivered" && status !== "cancelled" && (
@@ -296,6 +367,97 @@ export default function Orders() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={!!reviewOrderId} onOpenChange={() => setReviewOrderId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Write a Review</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Rating</label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    className="focus:outline-none"
+                  >
+                    <Star
+                      className={`h-8 w-8 ${
+                        star <= rating
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Comment (Optional)</label>
+              <Textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Share your experience with this order..."
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewOrderId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitReview} disabled={createReview.isPending}>
+              Submit Review
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dispute Dialog */}
+      <Dialog open={!!disputeOrderId} onOpenChange={() => setDisputeOrderId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>File a Dispute</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Reason</label>
+              <Select value={disputeReason} onValueChange={(v: any) => setDisputeReason(v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="damaged_product">Damaged Product</SelectItem>
+                  <SelectItem value="wrong_item">Wrong Item</SelectItem>
+                  <SelectItem value="not_delivered">Not Delivered</SelectItem>
+                  <SelectItem value="quality_issue">Quality Issue</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Description</label>
+              <Textarea
+                value={disputeDescription}
+                onChange={(e) => setDisputeDescription(e.target.value)}
+                placeholder="Please describe the issue in detail..."
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDisputeOrderId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmitDispute} disabled={createDispute.isPending}>
+              Submit Dispute
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

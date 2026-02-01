@@ -13,6 +13,9 @@ import {
   marketplaceReviews,
   marketplaceBulkPricingTiers,
   marketplaceDeliveryZones,
+  marketplaceOrderReviews,
+  marketplaceOrderDisputes,
+  marketplaceSellerPayouts,
   users,
 } from "../drizzle/schema";
 import { eq, and, desc, like, inArray } from "drizzle-orm";
@@ -435,6 +438,222 @@ export const marketplaceRouter = router({
       return { success: true, orderNumber: order[0].orderNumber };
     }),
 
+  // ========== ORDER REVIEWS ==========
+  createOrderReview: protectedProcedure
+    .input(z.object({
+      orderId: z.number(),
+      rating: z.number().min(1).max(5),
+      comment: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      // Verify order belongs to buyer and is delivered
+      const order = await db.select().from(marketplaceOrders)
+        .where(and(
+          eq(marketplaceOrders.id, input.orderId),
+          eq(marketplaceOrders.buyerId, ctx.user.id),
+          eq(marketplaceOrders.status, "delivered")
+        ))
+        .limit(1);
+      
+      if (!order[0]) {
+        throw new TRPCError({ 
+          code: "NOT_FOUND", 
+          message: "Order not found or not eligible for review" 
+        });
+      }
+      
+      // Check if review already exists
+      const existing = await db.select().from(marketplaceOrderReviews)
+        .where(eq(marketplaceOrderReviews.orderId, input.orderId))
+        .limit(1);
+      
+      if (existing[0]) {
+        throw new TRPCError({ 
+          code: "CONFLICT", 
+          message: "Review already exists for this order" 
+        });
+      }
+      
+      // Create review
+      await db.insert(marketplaceOrderReviews).values({
+        orderId: input.orderId,
+        buyerId: ctx.user.id,
+        sellerId: order[0].sellerId,
+        rating: input.rating,
+        comment: input.comment,
+      });
+      
+      return { success: true };
+    }),
+
+  getOrderReview: protectedProcedure
+    .input(z.object({ orderId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return null;
+      
+      const review = await db.select().from(marketplaceOrderReviews)
+        .where(eq(marketplaceOrderReviews.orderId, input.orderId))
+        .limit(1);
+      
+      return review[0] || null;
+    }),
+
+  addSellerResponse: protectedProcedure
+    .input(z.object({
+      reviewId: z.number(),
+      response: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      // Verify review belongs to seller
+      const review = await db.select().from(marketplaceOrderReviews)
+        .where(and(
+          eq(marketplaceOrderReviews.id, input.reviewId),
+          eq(marketplaceOrderReviews.sellerId, ctx.user.id)
+        ))
+        .limit(1);
+      
+      if (!review[0]) {
+        throw new TRPCError({ 
+          code: "NOT_FOUND", 
+          message: "Review not found or not authorized" 
+        });
+      }
+      
+      // Update with seller response
+      await db.update(marketplaceOrderReviews)
+        .set({ 
+          sellerResponse: input.response,
+          sellerResponseAt: new Date()
+        })
+        .where(eq(marketplaceOrderReviews.id, input.reviewId));
+      
+      return { success: true };
+    }),
+
+  getProductAggregateRating: protectedProcedure
+    .input(z.object({ productId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { averageRating: 0, totalReviews: 0 };
+      
+      // Get all orders containing this product
+      const orderItems = await db.select({ orderId: marketplaceOrderItems.orderId })
+        .from(marketplaceOrderItems)
+        .where(eq(marketplaceOrderItems.productId, input.productId));
+      
+      const orderIds = orderItems.map(item => item.orderId);
+      if (orderIds.length === 0) return { averageRating: 0, totalReviews: 0 };
+      
+      // Get reviews for these orders
+      const reviews = await db.select({ rating: marketplaceOrderReviews.rating })
+        .from(marketplaceOrderReviews)
+        .where(inArray(marketplaceOrderReviews.orderId, orderIds));
+      
+      if (reviews.length === 0) return { averageRating: 0, totalReviews: 0 };
+      
+      const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+      const averageRating = totalRating / reviews.length;
+      
+      return { 
+        averageRating: Math.round(averageRating * 10) / 10, 
+        totalReviews: reviews.length 
+      };
+    }),
+
+  // ========== ORDER DISPUTES ==========
+  createDispute: protectedProcedure
+    .input(z.object({
+      orderId: z.number(),
+      reason: z.enum(["damaged_product", "wrong_item", "not_delivered", "quality_issue"]),
+      description: z.string(),
+      evidence: z.array(z.string()).optional(), // Array of file URLs
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      // Verify order belongs to buyer
+      const order = await db.select().from(marketplaceOrders)
+        .where(and(
+          eq(marketplaceOrders.id, input.orderId),
+          eq(marketplaceOrders.buyerId, ctx.user.id)
+        ))
+        .limit(1);
+      
+      if (!order[0]) {
+        throw new TRPCError({ 
+          code: "NOT_FOUND", 
+          message: "Order not found" 
+        });
+      }
+      
+      // Create dispute
+      await db.insert(marketplaceOrderDisputes).values({
+        orderId: input.orderId,
+        buyerId: ctx.user.id,
+        sellerId: order[0].sellerId,
+        reason: input.reason,
+        description: input.description,
+        evidence: input.evidence ? JSON.stringify(input.evidence) : null,
+        status: "pending",
+      });
+      
+      return { success: true };
+    }),
+
+  listDisputes: protectedProcedure
+    .input(z.object({ role: z.enum(["buyer", "seller", "admin"]).default("buyer") }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      if (input.role === "buyer") {
+        return await db.select().from(marketplaceOrderDisputes)
+          .where(eq(marketplaceOrderDisputes.buyerId, ctx.user.id))
+          .orderBy(desc(marketplaceOrderDisputes.createdAt));
+      } else if (input.role === "seller") {
+        return await db.select().from(marketplaceOrderDisputes)
+          .where(eq(marketplaceOrderDisputes.sellerId, ctx.user.id))
+          .orderBy(desc(marketplaceOrderDisputes.createdAt));
+      } else {
+        // Admin sees all disputes
+        return await db.select().from(marketplaceOrderDisputes)
+          .orderBy(desc(marketplaceOrderDisputes.createdAt));
+      }
+    }),
+
+  resolveDispute: protectedProcedure
+    .input(z.object({
+      disputeId: z.number(),
+      status: z.enum(["resolved", "rejected"]),
+      resolution: z.string(),
+      adminNotes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      // Update dispute
+      await db.update(marketplaceOrderDisputes)
+        .set({
+          status: input.status,
+          resolution: input.resolution,
+          adminNotes: input.adminNotes,
+          resolvedBy: ctx.user.id,
+          resolvedAt: new Date(),
+        })
+        .where(eq(marketplaceOrderDisputes.id, input.disputeId));
+      
+      return { success: true };
+    }),
+
   // ========== TRANSACTIONS ==========
   recordTransaction: protectedProcedure
     .input(z.object({
@@ -761,4 +980,126 @@ export const marketplaceRouter = router({
       averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
     };
   }),
+
+  // ========== SELLER PAYOUTS ==========
+  getSellerPayouts: protectedProcedure
+    .input(z.object({ status: z.enum(["all", "pending", "completed"]).default("all") }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      if (input.status === "all") {
+        return await db.select().from(marketplaceSellerPayouts)
+          .where(eq(marketplaceSellerPayouts.sellerId, ctx.user.id))
+          .orderBy(desc(marketplaceSellerPayouts.createdAt));
+      } else {
+        return await db.select().from(marketplaceSellerPayouts)
+          .where(and(
+            eq(marketplaceSellerPayouts.sellerId, ctx.user.id),
+            eq(marketplaceSellerPayouts.status, input.status)
+          ))
+          .orderBy(desc(marketplaceSellerPayouts.createdAt));
+      }
+    }),
+
+  calculatePendingPayouts: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return { pendingAmount: 0, deliveredOrders: 0 };
+      
+      // Get seller's products
+      const sellerProducts = await db.select({ id: marketplaceProducts.id })
+        .from(marketplaceProducts)
+        .where(eq(marketplaceProducts.sellerId, ctx.user.id));
+      
+      const productIds = sellerProducts.map(p => p.id);
+      if (productIds.length === 0) return { pendingAmount: 0, deliveredOrders: 0 };
+      
+      // Find delivered orders containing seller's products
+      const orderItems = await db.select({ orderId: marketplaceOrderItems.orderId })
+        .from(marketplaceOrderItems)
+        .where(inArray(marketplaceOrderItems.productId, productIds));
+      
+      const orderIds = Array.from(new Set(orderItems.map(item => item.orderId)));
+      if (orderIds.length === 0) return { pendingAmount: 0, deliveredOrders: 0 };
+      
+      const deliveredOrders = await db.select()
+        .from(marketplaceOrders)
+        .where(and(
+          inArray(marketplaceOrders.id, orderIds),
+          eq(marketplaceOrders.status, "delivered")
+        ));
+      
+      // Check which orders don't have payouts yet
+      const existingPayouts = await db.select({ orderId: marketplaceSellerPayouts.orderId })
+        .from(marketplaceSellerPayouts)
+        .where(eq(marketplaceSellerPayouts.sellerId, ctx.user.id));
+      
+      const paidOrderIds = new Set(existingPayouts.map(p => p.orderId));
+      const unpaidOrders = deliveredOrders.filter(o => !paidOrderIds.has(o.id));
+      
+      const pendingAmount = unpaidOrders.reduce((sum, order) => sum + parseFloat(order.totalAmount), 0);
+      
+      return { 
+        pendingAmount, 
+        deliveredOrders: unpaidOrders.length 
+      };
+    }),
+
+  getPayoutSummary: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return { totalEarnings: 0, pendingBalance: 0, paidOut: 0 };
+      
+      const payouts = await db.select().from(marketplaceSellerPayouts)
+        .where(eq(marketplaceSellerPayouts.sellerId, ctx.user.id));
+      
+      const pending = payouts
+        .filter(p => p.status === "pending" || p.status === "processing")
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      
+      const completed = payouts
+        .filter(p => p.status === "completed")
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      
+      // Get pending from delivered orders
+      const pendingData = await db.select({ id: marketplaceProducts.id })
+        .from(marketplaceProducts)
+        .where(eq(marketplaceProducts.sellerId, ctx.user.id));
+      
+      const productIds = pendingData.map(p => p.id);
+      let unpaidAmount = 0;
+      
+      if (productIds.length > 0) {
+        const orderItems = await db.select({ orderId: marketplaceOrderItems.orderId })
+          .from(marketplaceOrderItems)
+          .where(inArray(marketplaceOrderItems.productId, productIds));
+        
+        const orderIds = Array.from(new Set(orderItems.map(item => item.orderId)));
+        
+        if (orderIds.length > 0) {
+          const deliveredOrders = await db.select()
+            .from(marketplaceOrders)
+            .where(and(
+              inArray(marketplaceOrders.id, orderIds),
+              eq(marketplaceOrders.status, "delivered")
+            ));
+          
+          const existingPayouts = await db.select({ orderId: marketplaceSellerPayouts.orderId })
+            .from(marketplaceSellerPayouts)
+            .where(eq(marketplaceSellerPayouts.sellerId, ctx.user.id));
+          
+          const paidOrderIds = new Set(existingPayouts.map(p => p.orderId));
+          const unpaidOrders = deliveredOrders.filter(o => !paidOrderIds.has(o.id));
+          
+          unpaidAmount = unpaidOrders.reduce((sum, order) => sum + parseFloat(order.totalAmount), 0);
+        }
+      }
+      
+      return {
+        totalEarnings: completed + pending + unpaidAmount,
+        pendingBalance: pending + unpaidAmount,
+        paidOut: completed,
+      };
+    }),
 });

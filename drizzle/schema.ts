@@ -660,6 +660,65 @@ export type MarketplaceBulkPricingTier = typeof marketplaceBulkPricingTiers.$inf
 export type InsertMarketplaceBulkPricingTier = typeof marketplaceBulkPricingTiers.$inferInsert;
 
 // ============================================================================
+// MARKETPLACE - ORDER REVIEWS
+// ============================================================================
+export const marketplaceOrderReviews = mysqlTable("marketplaceOrderReviews", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull().unique(), // One review per order
+  buyerId: int("buyerId").notNull(),
+  sellerId: int("sellerId").notNull(),
+  rating: int("rating").notNull(), // 1-5 stars
+  comment: text("comment"),
+  sellerResponse: text("sellerResponse"),
+  sellerResponseAt: timestamp("sellerResponseAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MarketplaceOrderReview = typeof marketplaceOrderReviews.$inferSelect;
+export type InsertMarketplaceOrderReview = typeof marketplaceOrderReviews.$inferInsert;
+
+// ============================================================================
+// MARKETPLACE - ORDER DISPUTES
+// ============================================================================
+export const marketplaceOrderDisputes = mysqlTable("marketplaceOrderDisputes", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("orderId").notNull(),
+  buyerId: int("buyerId").notNull(),
+  sellerId: int("sellerId").notNull(),
+  reason: varchar("reason", { length: 100 }).notNull(), // damaged_product, wrong_item, not_delivered, quality_issue
+  description: text("description").notNull(),
+  evidence: text("evidence"), // JSON array of file URLs
+  status: mysqlEnum("status", ["pending", "under_review", "resolved", "rejected"]).default("pending").notNull(),
+  resolution: text("resolution"),
+  adminNotes: text("adminNotes"),
+  resolvedBy: int("resolvedBy"), // Admin user ID
+  resolvedAt: timestamp("resolvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MarketplaceOrderDispute = typeof marketplaceOrderDisputes.$inferSelect;
+export type InsertMarketplaceOrderDispute = typeof marketplaceOrderDisputes.$inferInsert;
+
+// ============================================================================
+// MARKETPLACE - SELLER PAYOUTS
+// ============================================================================
+export const marketplaceSellerPayouts = mysqlTable("marketplaceSellerPayouts", {
+  id: int("id").autoincrement().primaryKey(),
+  sellerId: int("sellerId").notNull(),
+  orderId: int("orderId").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  payoutDate: date("payoutDate"),
+  transactionReference: varchar("transactionReference", { length: 255 }),
+  paymentMethod: varchar("paymentMethod", { length: 100 }), // mobile_money, bank_transfer
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MarketplaceSellerPayout = typeof marketplaceSellerPayouts.$inferSelect;
+export type InsertMarketplaceSellerPayout = typeof marketplaceSellerPayouts.$inferInsert;
+
+// ============================================================================
 // MARKETPLACE - DELIVERY ZONES
 // ============================================================================
 export const marketplaceDeliveryZones = mysqlTable("marketplaceDeliveryZones", {

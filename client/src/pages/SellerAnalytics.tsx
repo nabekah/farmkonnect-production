@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, Package, Star, DollarSign, ShoppingCart, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 export default function SellerAnalytics() {
   const [timeRange, setTimeRange] = useState("month");
@@ -121,16 +123,21 @@ export default function SellerAnalytics() {
           <h1 className="text-3xl font-bold">Seller Analytics</h1>
           <p className="text-muted-foreground">Track your marketplace performance</p>
         </div>
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[180px]">
+        <div className="flex gap-3">
+          <Link href="/seller-payouts">
+            <Button variant="outline">View Payouts</Button>
+          </Link>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[180px]">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="week">Last 7 Days</SelectItem>
-            <SelectItem value="month">Last 30 Days</SelectItem>
-            <SelectItem value="year">Last 12 Months</SelectItem>
-          </SelectContent>
-        </Select>
+            <SelectContent>
+              <SelectItem value="week">Last 7 Days</SelectItem>
+              <SelectItem value="month">Last 30 Days</SelectItem>
+              <SelectItem value="year">Last 12 Months</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Key Metrics */}
