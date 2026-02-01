@@ -2069,3 +2069,37 @@
 - [x] Create API key validation
 - [x] Add route to navigation menu
 - [x] Test notification sending
+
+
+## Phase 8: API Keys, Reports Export, and Automated Alerts
+
+### Notification API Keys Setup
+- [x] Request SendGrid API key from user
+- [x] Request Twilio Account SID from user
+- [x] Request Twilio Auth Token from user
+- [x] Request Twilio Phone Number from user
+- [x] Test email notification sending
+- [x] Test SMS notification sending
+
+### Farm Reports Export
+- [x] Install PDF generation library (jsPDF or pdfmake)
+- [x] Install Excel generation library (xlsx)
+- [x] Create report generation router
+- [x] Build PDF export for financial reports
+- [x] Build PDF export for livestock reports
+- [x] Build Excel export for all farm data
+- [ ] Add export buttons to Analytics Dashboard
+- [ ] Add date range selector for reports
+- [x] Test PDF generation
+- [x] Test Excel generation
+
+### Automated Alert Triggers
+- [x] Create alert monitoring service
+- [x] Add health check triggers (temperature > 39°C)
+- [x] Add water quality triggers (pH < 6.5, DO < 5 mg/L)
+- [x] Integrate with WebSocket broadcasting
+- [x] Integrate with email notifications
+- [x] Integrate with SMS notifications
+- [ ] Add alert history logging
+- [x] Test automated health alerts
+- [x] Test automated water quality alerts
