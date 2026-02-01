@@ -59,7 +59,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user && items.length > 0) {
-      syncCart.mutate({ items });
+      // Filter out incomplete items before syncing
+      const validItems = items.filter(item => 
+        item.productId && 
+        item.productName && 
+        item.price && 
+        item.unit && 
+        typeof item.quantity === 'number'
+      );
+      
+      if (validItems.length > 0) {
+        syncCart.mutate({ items: validItems });
+      }
+      
+      // Clean up invalid items from state if any were filtered out
+      if (validItems.length < items.length) {
+        setItems(validItems);
+      }
     }
   }, [user, items]);
 
