@@ -52,24 +52,24 @@ export default function SellerPayouts() {
   };
 
   return (
-    <div className="container max-w-7xl py-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Seller Payouts</h1>
-        <Button onClick={exportToCSV} variant="outline">
+    <div className="container max-w-7xl py-4 sm:py-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Seller Payouts</h1>
+        <Button onClick={exportToCSV} variant="outline" className="w-full sm:w-auto">
           <Download className="h-4 w-4 mr-2" />
           Export CSV
         </Button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6 mb-4 sm:mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GH₵{summary?.totalEarnings.toFixed(2) || "0.00"}</div>
+            <div className="text-xl sm:text-2xl font-bold">GH₵{summary?.totalEarnings.toFixed(2) || "0.00"}</div>
             <p className="text-xs text-muted-foreground mt-1">Lifetime earnings</p>
           </CardContent>
         </Card>
@@ -114,62 +114,113 @@ export default function SellerPayouts() {
         </Select>
       </div>
 
-      {/* Payouts Table */}
-      <Card>
-        <CardContent className="p-0">
-          {payouts.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+      {/* Payouts Table/Cards */}
+      {payouts.length === 0 ? (
+        <Card>
+          <CardContent className="p-12">
+            <div className="text-center text-muted-foreground">
               No payout records found
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr className="text-left">
-                    <th className="p-4 font-medium">Date</th>
-                    <th className="p-4 font-medium">Order ID</th>
-                    <th className="p-4 font-medium">Amount</th>
-                    <th className="p-4 font-medium">Status</th>
-                    <th className="p-4 font-medium">Payment Method</th>
-                    <th className="p-4 font-medium">Reference</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payouts.map((payout: any) => {
-                    const config = statusConfig[payout.status as keyof typeof statusConfig];
-                    const Icon = config.icon;
-                    return (
-                      <tr key={payout.id} className="border-b hover:bg-accent/50">
-                        <td className="p-4">
-                          {new Date(payout.createdAt).toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="p-4 font-mono text-sm">{payout.orderId}</td>
-                        <td className="p-4 font-semibold">
-                          GH₵{parseFloat(payout.amount).toFixed(2)}
-                        </td>
-                        <td className="p-4">
-                          <Badge className={`${config.color} text-white`}>
-                            <Icon className="h-3 w-3 mr-1" />
-                            {config.label}
-                          </Badge>
-                        </td>
-                        <td className="p-4 capitalize">{payout.paymentMethod || "N/A"}</td>
-                        <td className="p-4 text-sm text-muted-foreground">
-                          {payout.transactionReference || "N/A"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <Card className="hidden md:block">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="border-b">
+                    <tr className="text-left">
+                      <th className="p-4 font-medium">Date</th>
+                      <th className="p-4 font-medium">Order ID</th>
+                      <th className="p-4 font-medium">Amount</th>
+                      <th className="p-4 font-medium">Status</th>
+                      <th className="p-4 font-medium">Payment Method</th>
+                      <th className="p-4 font-medium">Reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payouts.map((payout: any) => {
+                      const config = statusConfig[payout.status as keyof typeof statusConfig];
+                      const Icon = config.icon;
+                      return (
+                        <tr key={payout.id} className="border-b hover:bg-accent/50">
+                          <td className="p-4">
+                            {new Date(payout.createdAt).toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </td>
+                          <td className="p-4 font-mono text-sm">{payout.orderId}</td>
+                          <td className="p-4 font-semibold">
+                            GH₵{parseFloat(payout.amount).toFixed(2)}
+                          </td>
+                          <td className="p-4">
+                            <Badge className={`${config.color} text-white`}>
+                              <Icon className="h-3 w-3 mr-1" />
+                              {config.label}
+                            </Badge>
+                          </td>
+                          <td className="p-4 capitalize">{payout.paymentMethod || "N/A"}</td>
+                          <td className="p-4 text-sm text-muted-foreground">
+                            {payout.transactionReference || "N/A"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {payouts.map((payout: any) => {
+              const config = statusConfig[payout.status as keyof typeof statusConfig];
+              const Icon = config.icon;
+              return (
+                <Card key={payout.id}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Order #{payout.orderId}</p>
+                        <p className="text-lg font-bold">GH₵{parseFloat(payout.amount).toFixed(2)}</p>
+                      </div>
+                      <Badge className={`${config.color} text-white`}>
+                        <Icon className="h-3 w-3 mr-1" />
+                        {config.label}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Date</p>
+                        <p>{new Date(payout.createdAt).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Payment Method</p>
+                        <p className="capitalize">{payout.paymentMethod || "N/A"}</p>
+                      </div>
+                    </div>
+                    {payout.transactionReference && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Reference</p>
+                        <p className="text-xs font-mono">{payout.transactionReference}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

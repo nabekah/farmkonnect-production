@@ -1551,6 +1551,7 @@ export const marketplaceRouter = router({
       period: z.enum(["month", "year", "all"]).optional(),
       category: z.enum(["revenue", "ratings", "sales"]).optional(),
       limit: z.number().optional(),
+      offset: z.number().optional(),
     }))
     .query(async ({ input }) => {
       const db = await getDb();
@@ -1558,6 +1559,7 @@ export const marketplaceRouter = router({
       
       const period = input.period || "all";
       const category = input.category || "revenue";
+      const offset = input.offset || 0;
       const limit = input.limit || 10;
       
       // Calculate date filter
@@ -1652,7 +1654,7 @@ export const marketplaceRouter = router({
       });
       
       // Add rank and badges
-      const rankedSellers = sellerStats.slice(0, limit).map((seller, index) => {
+      const rankedSellers = sellerStats.slice(offset, offset + limit).map((seller, index) => {
         const badges = [];
         
         // Top 3 badges

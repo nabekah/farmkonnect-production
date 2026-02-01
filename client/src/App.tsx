@@ -22,6 +22,7 @@ import OrderTracking from "./pages/OrderTracking";
 import SellerVerification from "./pages/SellerVerification";
 import InventoryAlerts from "./pages/InventoryAlerts";
 import SellerLeaderboard from "./pages/SellerLeaderboard";
+import AdminVerification from "./pages/AdminVerification";
 import Training from "./pages/Training";
 import MERL from "./pages/MERL";
 import IoTManagement from "./pages/IoTManagement";
@@ -147,6 +148,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <SellerLeaderboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/admin-verification">
+        {() => (
+          <DashboardLayout>
+            <AdminVerification />
           </DashboardLayout>
         )}
       </Route>

@@ -9,12 +9,17 @@ import { Trophy, Star, TrendingUp, Award, Crown, Medal } from "lucide-react";
 export default function SellerLeaderboard() {
   const [period, setPeriod] = useState<"month" | "year" | "all">("all");
   const [category, setCategory] = useState<"revenue" | "ratings" | "sales">("revenue");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   const { data: topSellers = [], isLoading } = trpc.marketplace.getTopSellers.useQuery({
     period,
     category,
-    limit: 20,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
   });
+
+  const hasMore = topSellers.length === pageSize;
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown className="h-6 w-6 text-yellow-500" />;
@@ -179,6 +184,29 @@ export default function SellerLeaderboard() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {topSellers.length > 0 && (
+        <div className="flex justify-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <div className="flex items-center px-4 text-sm text-muted-foreground">
+            Page {page}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setPage(p => p + 1)}
+            disabled={!hasMore}
+          >
+            Next
+          </Button>
         </div>
       )}
 

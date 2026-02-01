@@ -1453,7 +1453,7 @@
 - [x] Add heart icon to product cards in marketplace
 - [x] Implement toggle favorite functionality with optimistic updates
 - [x] Create dedicated Wishlist page showing saved products
-- [ ] Add wishlist count badge in navigation
+- [x] Add wishlist count badge in navigation
 - [x] Show "Added to wishlist" toast notifications
 - [x] Display wishlist status on product detail view
 
@@ -1520,7 +1520,7 @@
 - [x] Review and fix listOrders query logic for seller role
 - [x] Implement mobile-first responsive design for Marketplace page
 - [x] Fix mobile layout for Orders page
-- [ ] Optimize SellerAnalytics for mobile screens
+- [x] Optimize SellerAnalytics for mobile screens with responsive charts
 - [ ] Make SellerPayouts mobile-friendly
 - [x] Fix SellerLeaderboard mobile layout
 - [x] Optimize ProductCard for small screens
@@ -1529,3 +1529,48 @@
 - [ ] Ensure all forms are mobile-friendly
 - [ ] Fix table layouts for mobile (use cards instead)
 - [ ] Test all touch interactions
+
+## Outstanding Features - Complete Implementation
+
+### High Priority - Core Functionality
+- [ ] Test seller order visibility with real order data
+- [ ] Test complete checkout flow on mobile devices
+- [ ] Add comprehensive form validation (product creation, checkout, profile)
+
+### Mobile Experience Completion
+- [x] Optimize SellerAnalytics for mobile screens with responsive charts with responsive charts
+- [x] Make SellerPayouts mobile-friendly with card-based layout
+- [x] Convert all data tables to card layouts on mobile
+
+### Admin & Verification Features
+- [x] Build admin verification dashboard to review seller requests
+- [ ] Display verification badges on seller profile pages
+- [ ] Add verification status indicator in seller analytics dashboard
+
+### Wishlist & Reviews
+- [x] Add wishlist count badge in navigation
+- [ ] Show review history in order details modal
+
+### Dispute System Completion
+- [ ] Add evidence upload (photos/documents) for dispute filing
+- [ ] Send SMS/email notifications on dispute status changes
+- [ ] Display dispute status badge on orders
+
+### Order Tracking Enhancement
+- [ ] Add courier information and contact details to tracking page
+
+### Bulk Pricing & Cart
+- [ ] Add bulk pricing configuration UI in product creation/edit
+- [ ] Show savings amount in cart for bulk discounts
+
+### Leaderboard & Pagination
+- [ ] I- [x] Implement pagination for leaderboard (beyond top 20)
+
+### Inventory Alerts Enhancement
+- [ ] Implement email notifications for low stock alerts
+- [ ] Create alert history/log tracking
+- [ ] Add low stock warning badges on seller's product list
+
+### Financial Features
+- [ ] Add date range filters for financial reports in seller payouts
+- [ ] Implement payout request functionality for sellers

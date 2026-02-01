@@ -27,7 +27,9 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield, DollarSign, Heart } from 'lucide-react';
+import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield, DollarSign, Heart, CheckCircle } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { Badge } from './ui/badge';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { NotificationCenter } from './NotificationCenter';
 import { CartButton } from './CartButton';
@@ -52,6 +54,7 @@ const menuItems = [
   { icon: Database, label: "Data Management", path: "/data-management" },
   { icon: Shield, label: "Security Dashboard", path: "/security", adminOnly: true },
   { icon: Shield, label: "Role Management", path: "/role-management", adminOnly: true },
+  { icon: CheckCircle, label: "Seller Verification", path: "/admin-verification", adminOnly: true },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
@@ -138,6 +141,11 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+  
+  // Get wishlist count
+  const { data: wishlistCount = 0 } = trpc.marketplace.getWishlistCount.useQuery(undefined, {
+    enabled: !!user,
+  });
 
   useEffect(() => {
     if (isCollapsed) {
@@ -219,7 +227,14 @@ function DashboardLayoutContent({
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
                       />
-                      <span>{item.label}</span>
+                      <span className="flex items-center gap-2">
+                        {item.label}
+                        {item.path === "/wishlist" && wishlistCount > 0 && (
+                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                            {wishlistCount}
+                          </Badge>
+                        )}
+                      </span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

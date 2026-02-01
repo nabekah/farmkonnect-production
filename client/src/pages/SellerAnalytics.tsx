@@ -124,18 +124,18 @@ export default function SellerAnalytics() {
   const totalReviews = 0; // TODO: Add review count
 
   return (
-    <div className="container py-8 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container py-4 sm:py-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Seller Analytics</h1>
-          <p className="text-muted-foreground">Track your marketplace performance</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Seller Analytics</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your marketplace performance</p>
         </div>
-        <div className="flex gap-3">
-          <Link href="/seller-payouts">
-            <Button variant="outline">View Payouts</Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          <Link href="/seller-payouts" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto">View Payouts</Button>
           </Link>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue />
           </SelectTrigger>
             <SelectContent>
@@ -200,14 +200,14 @@ export default function SellerAnalytics() {
       )}
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">GH₵{totalRevenue.toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold">GH₵{totalRevenue.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">From {completedOrders} completed orders</p>
           </CardContent>
         </Card>
@@ -218,7 +218,7 @@ export default function SellerAnalytics() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingOrders}</div>
+            <div className="text-lg sm:text-2xl font-bold">{pendingOrders}</div>
             <p className="text-xs text-muted-foreground">Awaiting confirmation</p>
           </CardContent>
         </Card>
@@ -229,7 +229,7 @@ export default function SellerAnalytics() {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgRating.toFixed(1)} ⭐</div>
+            <div className="text-lg sm:text-2xl font-bold">{avgRating.toFixed(1)} ⭐</div>
             <p className="text-xs text-muted-foreground">From {totalReviews} reviews</p>
           </CardContent>
         </Card>
@@ -240,7 +240,7 @@ export default function SellerAnalytics() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+            <div className="text-lg sm:text-2xl font-bold">{products.length}</div>
             <p className="text-xs text-muted-foreground">{lowStockProducts.length} low stock</p>
           </CardContent>
         </Card>
