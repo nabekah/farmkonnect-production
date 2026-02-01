@@ -180,6 +180,7 @@ export default defineConfig({
       "127.0.0.1",
     ],
     hmr: {
+      host: '3000-it2pp2qsec6lz0nam8vhi-df3dfe7c.us1.manus.computer',
       clientPort: 443,
       protocol: 'wss',
     },
