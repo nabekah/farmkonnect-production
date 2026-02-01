@@ -1531,4 +1531,229 @@ export const marketplaceRouter = router({
       
       return { success: true };
     }),
+
+  // ========== SELLER LEADERBOARD ==========
+  getTopSellers: publicProcedure
+    .input(z.object({
+      period: z.enum(["month", "year", "all"]).optional(),
+      category: z.enum(["revenue", "ratings", "sales"]).optional(),
+      limit: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      const period = input.period || "all";
+      const category = input.category || "revenue";
+      const limit = input.limit || 10;
+      
+      // Calculate date filter
+      let dateFilter;
+      if (period === "month") {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        dateFilter = startOfMonth;
+      } else if (period === "year") {
+        const startOfYear = new Date();
+        startOfYear.setMonth(0, 1);
+        startOfYear.setHours(0, 0, 0, 0);
+        dateFilter = startOfYear;
+      }
+      
+      // Get all sellers with products
+      const sellers = await db.select().from(users);
+      
+      const sellerStats = [];
+      
+      for (const seller of sellers) {
+        // Get seller's products
+        const products = await db.select().from(marketplaceProducts)
+          .where(eq(marketplaceProducts.sellerId, seller.id));
+        
+        if (products.length === 0) continue;
+        
+        const productIds = products.map(p => p.id);
+        
+        // Get orders containing seller's products
+        let orderItems = await db.select().from(marketplaceOrderItems)
+          .where(inArray(marketplaceOrderItems.productId, productIds));
+        
+        if (dateFilter) {
+          const orderItemsWithDates = [];
+          for (const item of orderItems) {
+            const order = await db.select().from(marketplaceOrders)
+              .where(eq(marketplaceOrders.id, item.orderId))
+              .limit(1);
+            
+            if (order[0] && new Date(order[0].createdAt) >= dateFilter) {
+              orderItemsWithDates.push(item);
+            }
+          }
+          orderItems = orderItemsWithDates;
+        }
+        
+        // Calculate revenue
+        const revenue = orderItems.reduce((sum, item) => {
+          return sum + (parseFloat(item.unitPrice) * parseFloat(item.quantity));
+        }, 0);
+        
+        // Calculate sales volume
+        const salesVolume = orderItems.length;
+        
+        // Get average rating
+        const reviews = await db.select().from(marketplaceOrderReviews)
+          .where(eq(marketplaceOrderReviews.sellerId, seller.id));
+        
+        const avgRating = reviews.length > 0
+          ? reviews.reduce((sum, r) => sum + parseFloat(r.rating.toString()), 0) / reviews.length
+          : 0;
+        
+        // Check if verified
+        const verification = await db.select().from(sellerVerifications)
+          .where(and(
+            eq(sellerVerifications.sellerId, seller.id),
+            eq(sellerVerifications.status, "approved")
+          ))
+          .limit(1);
+        
+        sellerStats.push({
+          id: seller.id,
+          name: seller.name || "Unknown Seller",
+          email: seller.email,
+          revenue,
+          salesVolume,
+          avgRating,
+          totalReviews: reviews.length,
+          totalProducts: products.length,
+          isVerified: verification.length > 0,
+        });
+      }
+      
+      // Sort by selected category
+      sellerStats.sort((a, b) => {
+        if (category === "revenue") return b.revenue - a.revenue;
+        if (category === "ratings") return b.avgRating - a.avgRating;
+        if (category === "sales") return b.salesVolume - a.salesVolume;
+        return 0;
+      });
+      
+      // Add rank and badges
+      const rankedSellers = sellerStats.slice(0, limit).map((seller, index) => {
+        const badges = [];
+        
+        // Top 3 badges
+        if (index === 0) badges.push("🏆 Top Seller");
+        if (index === 1) badges.push("🥈 Second Place");
+        if (index === 2) badges.push("🥉 Third Place");
+        
+        // Achievement badges
+        if (seller.avgRating >= 4.5) badges.push("⭐ Customer Favorite");
+        if (seller.revenue > 10000) badges.push("💰 High Revenue");
+        if (seller.salesVolume > 100) badges.push("📈 High Volume");
+        if (seller.isVerified) badges.push("✓ Verified");
+        
+        return {
+          ...seller,
+          rank: index + 1,
+          badges,
+        };
+      });
+      
+      return rankedSellers;
+    }),
+
+  getSellerRank: protectedProcedure
+    .input(z.object({
+      period: z.enum(["month", "year", "all"]).optional(),
+      category: z.enum(["revenue", "ratings", "sales"]).optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      
+      // Get all sellers ranked
+      const allSellers = await db.select().from(users);
+      const period = input.period || "all";
+      const category = input.category || "revenue";
+      
+      // Calculate date filter
+      let dateFilter;
+      if (period === "month") {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        dateFilter = startOfMonth;
+      } else if (period === "year") {
+        const startOfYear = new Date();
+        startOfYear.setMonth(0, 1);
+        startOfYear.setHours(0, 0, 0, 0);
+        dateFilter = startOfYear;
+      }
+      
+      const sellerStats = [];
+      
+      for (const seller of allSellers) {
+        const products = await db.select().from(marketplaceProducts)
+          .where(eq(marketplaceProducts.sellerId, seller.id));
+        
+        if (products.length === 0) continue;
+        
+        const productIds = products.map(p => p.id);
+        
+        let orderItems = await db.select().from(marketplaceOrderItems)
+          .where(inArray(marketplaceOrderItems.productId, productIds));
+        
+        if (dateFilter) {
+          const orderItemsWithDates = [];
+          for (const item of orderItems) {
+            const order = await db.select().from(marketplaceOrders)
+              .where(eq(marketplaceOrders.id, item.orderId))
+              .limit(1);
+            
+            if (order[0] && new Date(order[0].createdAt) >= dateFilter) {
+              orderItemsWithDates.push(item);
+            }
+          }
+          orderItems = orderItemsWithDates;
+        }
+        
+        const revenue = orderItems.reduce((sum, item) => {
+          return sum + (parseFloat(item.unitPrice) * parseFloat(item.quantity));
+        }, 0);
+        
+        const salesVolume = orderItems.length;
+        
+        const reviews = await db.select().from(marketplaceOrderReviews)
+          .where(eq(marketplaceOrderReviews.sellerId, seller.id));
+        
+        const avgRating = reviews.length > 0
+          ? reviews.reduce((sum, r) => sum + parseFloat(r.rating.toString()), 0) / reviews.length
+          : 0;
+        
+        sellerStats.push({
+          id: seller.id,
+          revenue,
+          salesVolume,
+          avgRating,
+        });
+      }
+      
+      // Sort by category
+      sellerStats.sort((a, b) => {
+        if (category === "revenue") return b.revenue - a.revenue;
+        if (category === "ratings") return b.avgRating - a.avgRating;
+        if (category === "sales") return b.salesVolume - a.salesVolume;
+        return 0;
+      });
+      
+      // Find current seller's rank
+      const rank = sellerStats.findIndex(s => s.id === ctx.user.id) + 1;
+      
+      return rank > 0 ? {
+        rank,
+        total: sellerStats.length,
+        percentile: Math.round((1 - (rank / sellerStats.length)) * 100),
+      } : null;
+    }),
 });

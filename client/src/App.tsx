@@ -21,6 +21,7 @@ import Wishlist from "./pages/Wishlist";
 import OrderTracking from "./pages/OrderTracking";
 import SellerVerification from "./pages/SellerVerification";
 import InventoryAlerts from "./pages/InventoryAlerts";
+import SellerLeaderboard from "./pages/SellerLeaderboard";
 import Training from "./pages/Training";
 import MERL from "./pages/MERL";
 import IoTManagement from "./pages/IoTManagement";
@@ -139,6 +140,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <InventoryAlerts />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/seller-leaderboard">
+        {() => (
+          <DashboardLayout>
+            <SellerLeaderboard />
           </DashboardLayout>
         )}
       </Route>

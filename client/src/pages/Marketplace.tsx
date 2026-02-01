@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ShoppingCart, Plus, Trash2, Search, Package, Truck } from "lucide-react";
+import { ShoppingCart, Plus, Trash2, Search, Package, Truck, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { ProductImageCarousel } from "@/components/ProductImageCarousel";
 import { ProductCard } from "@/components/ProductCard";
@@ -366,6 +366,16 @@ export default function Marketplace() {
 
   return (
     <div className="container mx-auto py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Marketplace</h1>
+          <p className="text-muted-foreground">Browse and purchase agricultural products</p>
+        </div>
+        <Button onClick={() => window.location.href = "/seller-leaderboard"} variant="outline">
+          <Trophy className="mr-2 h-4 w-4" />
+          Seller Leaderboard
+        </Button>
+      </div>
       <Tabs defaultValue="browse" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="browse">Browse Products</TabsTrigger>

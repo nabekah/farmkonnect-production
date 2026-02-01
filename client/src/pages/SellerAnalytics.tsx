@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 
 export default function SellerAnalytics() {
   const [timeRange, setTimeRange] = useState("month");
+  const [rankPeriod, setRankPeriod] = useState<"month" | "year" | "all">("all");
+  const [rankCategory, setRankCategory] = useState<"revenue" | "ratings" | "sales">("revenue");
+  
+  const { data: sellerRank } = trpc.marketplace.getSellerRank.useQuery({
+    period: rankPeriod,
+    category: rankCategory,
+  });
 
   const { data: sellerStats } = trpc.marketplace.getSellerStats.useQuery();
   const { data: orders = [] } = trpc.marketplace.listOrders.useQuery({ role: "seller" });
@@ -139,6 +146,58 @@ export default function SellerAnalytics() {
           </Select>
         </div>
       </div>
+
+      {/* Seller Rank Card */}
+      {sellerRank && (
+        <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Your Seller Ranking
+            </CardTitle>
+            <CardDescription>See how you compare to other sellers</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Current Rank</p>
+                <p className="text-4xl font-bold">#{sellerRank.rank}</p>
+                <p className="text-xs text-muted-foreground">out of {sellerRank.total} sellers</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Percentile</p>
+                <p className="text-2xl font-bold text-primary">{sellerRank.percentile}%</p>
+                <p className="text-xs text-muted-foreground">Top {100 - sellerRank.percentile}%</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Select value={rankPeriod} onValueChange={(v: any) => setRankPeriod(v)}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={rankCategory} onValueChange={(v: any) => setRankCategory(v)}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="revenue">Revenue</SelectItem>
+                  <SelectItem value="ratings">Ratings</SelectItem>
+                  <SelectItem value="sales">Sales</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={() => window.location.href = "/seller-leaderboard"} className="w-full" variant="outline">
+              View Full Leaderboard
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

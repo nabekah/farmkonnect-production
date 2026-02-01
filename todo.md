@@ -1500,3 +1500,17 @@
 - [ ] Add alert history/log tracking
 - [x] Implement alert frequency control (don't spam daily)
 - [ ] Show low stock warning badge on seller's product list
+
+## Seller Performance Rankings & Leaderboard
+- [x] Create seller rankings calculation logic (revenue, ratings, sales volume)
+- [x] Add backend procedures to fetch top sellers with filters (monthly, yearly, all-time)
+- [x] Calculate seller performance metrics (total revenue, avg rating, total orders)
+- [x] Create SellerLeaderboard page with ranking display
+- [x] Add time period filters (this month, this year, all time)
+- [x] Implement ranking categories (revenue, ratings, sales volume)
+- [x] Add achievement badges (Top Seller, Rising Star, Customer Favorite)
+- [x] Display seller profile cards with key metrics
+- [x] Add navigation link to leaderboard in marketplace
+- [x] Show seller rank on their analytics dashboard
+- [ ] Implement pagination for large leaderboards
+- [ ] Add search/filter by category or location
