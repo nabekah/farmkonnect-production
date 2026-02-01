@@ -15,6 +15,7 @@ import { Analytics } from "./pages/Analytics";
 import Marketplace from "./pages/Marketplace";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import SellerAnalytics from "./pages/SellerAnalytics";
 import Training from "./pages/Training";
 import MERL from "./pages/MERL";
 import IoTManagement from "./pages/IoTManagement";
@@ -91,6 +92,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <Orders />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/seller-analytics">
+        {() => (
+          <DashboardLayout>
+            <SellerAnalytics />
           </DashboardLayout>
         )}
       </Route>

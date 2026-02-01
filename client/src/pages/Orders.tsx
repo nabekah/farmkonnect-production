@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Package, Eye, Truck, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Package, Eye, Truck, CheckCircle2, Clock, XCircle, BarChart3 } from "lucide-react";
+import { Link } from "wouter";
 import { toast } from "sonner";
 
 type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
@@ -59,15 +60,25 @@ export default function Orders() {
     <div className="container max-w-7xl py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Orders</h1>
-        <Select value={role} onValueChange={(v) => setRole(v as "buyer" | "seller")}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="buyer">My Orders</SelectItem>
-            <SelectItem value="seller">Seller Orders</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-3">
+          {role === "seller" && (
+            <Link href="/seller-analytics">
+              <Button variant="outline">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                View Analytics
+              </Button>
+            </Link>
+          )}
+          <Select value={role} onValueChange={(v) => setRole(v as "buyer" | "seller")}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="buyer">My Orders</SelectItem>
+              <SelectItem value="seller">Seller Orders</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {orders.length === 0 ? (

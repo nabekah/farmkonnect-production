@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,8 @@ export default function Marketplace() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isTransportDialogOpen, setIsTransportDialogOpen] = useState(false);
@@ -55,11 +57,50 @@ export default function Marketplace() {
   });
 
   // Queries
-  const { data: products = [], refetch: refetchProducts } = trpc.marketplace.listProducts.useQuery({
+  const { data: allProducts = [], refetch: refetchProducts } = trpc.marketplace.listProducts.useQuery({
     category: selectedCategory || undefined,
     search: searchQuery || undefined,
     limit: 50,
   });
+
+  // Client-side filtering and sorting
+  const products = useMemo(() => {
+    let filtered = [...allProducts];
+
+    // Price range filter
+    filtered = filtered.filter(p => {
+      const price = parseFloat(p.price);
+      return price >= priceRange[0] && price <= priceRange[1];
+    });
+
+    // Sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return parseFloat(a.price) - parseFloat(b.price);
+        case "price-high":
+          return parseFloat(b.price) - parseFloat(a.price);
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "newest":
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+
+    return filtered;
+  }, [allProducts, priceRange, sortBy]);
+
+  // Update active filters
+  useEffect(() => {
+    const filters: string[] = [];
+    if (selectedCategory) filters.push(`Category: ${selectedCategory}`);
+    if (searchQuery) filters.push(`Search: "${searchQuery}"`);
+    if (priceRange[0] > 0 || priceRange[1] < 10000) {
+      filters.push(`Price: GH₵${priceRange[0]} - GH₵${priceRange[1]}`);
+    }
+    setActiveFilters(filters);
+  }, [selectedCategory, searchQuery, priceRange]);
 
   const { data: cart = [], refetch: refetchCart } = trpc.marketplace.getCart.useQuery();
   const { data: sellerStats } = trpc.marketplace.getSellerStats.useQuery();
@@ -364,14 +405,110 @@ export default function Marketplace() {
                 <SelectItem value="newest">Newest</SelectItem>
                 <SelectItem value="price-low">Price: Low to High</SelectItem>
                 <SelectItem value="price-high">Price: High to Low</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* Price Range Filter */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label>Price Range</Label>
+                  <span className="text-sm text-muted-foreground">
+                    GH₵{priceRange[0]} - GH₵{priceRange[1]}
+                  </span>
+                </div>
+                <div className="flex gap-4">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={priceRange[0]}
+                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                    className="w-24"
+                  />
+                  <span className="self-center">-</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 10000])}
+                    className="w-24"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPriceRange([0, 10000])}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Filters */}
+          {activeFilters.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {activeFilters.map((filter, idx) => (
+                <Badge key={idx} variant="secondary" className="px-3 py-1">
+                  {filter}
+                  <button
+                    className="ml-2 hover:text-destructive"
+                    onClick={() => {
+                      if (filter.startsWith("Category:")) setSelectedCategory("");
+                      if (filter.startsWith("Search:")) setSearchQuery("");
+                      if (filter.startsWith("Price:")) setPriceRange([0, 10000]);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedCategory("");
+                  setSearchQuery("");
+                  setPriceRange([0, 10000]);
+                }}
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
+
+          {/* Results Count */}
+          <div className="text-sm text-muted-foreground">
+            Showing {products.length} product{products.length !== 1 ? 's' : ''}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProducts.map((product: any) => (
-              <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
-            ))}
+            {products.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No products found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Try adjusting your filters or search query
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedCategory("");
+                    setSearchQuery("");
+                    setPriceRange([0, 10000]);
+                  }}
+                >
+                  Clear all filters
+                </Button>
+              </div>
+            ) : (
+              products.map((product: any) => (
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+              ))
+            )}
           </div>
         </TabsContent>
 

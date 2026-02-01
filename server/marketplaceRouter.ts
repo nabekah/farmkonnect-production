@@ -4,18 +4,20 @@ import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
 import {
   marketplaceProducts,
-  marketplaceProductImages,
+  marketplaceCart,
   marketplaceOrders,
   marketplaceOrderItems,
   marketplaceTransactions,
-  marketplaceCart,
-  marketplaceReviews,
+  marketplaceProductImages,
   marketplaceProductReviews,
+  marketplaceReviews,
   marketplaceBulkPricingTiers,
   marketplaceDeliveryZones,
+  users,
 } from "../drizzle/schema";
 import { eq, and, desc, like } from "drizzle-orm";
 import { storagePut } from "./storage";
+import { sendOrderNotificationToBuyer, sendOrderNotificationToSeller, validateGhanaPhone } from "./_core/sms";
 
 export const marketplaceRouter = router({
   // ========== IMAGE UPLOAD ==========
@@ -310,6 +312,34 @@ export const marketplaceRouter = router({
         });
       }
       
+      // Send SMS notifications
+      // Get buyer and seller phone numbers
+      const buyer = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      const seller = await db.select().from(users).where(eq(users.id, input.sellerId)).limit(1);
+
+      if (buyer[0]?.phone) {
+        const phoneValidation = validateGhanaPhone(buyer[0].phone);
+        if (phoneValidation.valid) {
+          await sendOrderNotificationToBuyer(
+            phoneValidation.formatted!,
+            orderNumber,
+            "pending"
+          );
+        }
+      }
+
+      if (seller[0]?.phone) {
+        const phoneValidation = validateGhanaPhone(seller[0].phone);
+        if (phoneValidation.valid) {
+          await sendOrderNotificationToSeller(
+            phoneValidation.formatted!,
+            orderNumber,
+            ctx.user.name || "Customer",
+            totalAmount.toString()
+          );
+        }
+      }
+
       return { orderId, orderNumber, totalAmount };
     }),
 
@@ -319,9 +349,28 @@ export const marketplaceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       
-      return await db.update(marketplaceOrders)
+      const result = await db.update(marketplaceOrders)
         .set({ status: input.status })
         .where(and(eq(marketplaceOrders.id, input.orderId), eq(marketplaceOrders.sellerId, ctx.user.id)));
+
+      // Send SMS notification to buyer about status change
+      const order = await db.select().from(marketplaceOrders).where(eq(marketplaceOrders.id, input.orderId)).limit(1);
+      if (order[0]) {
+        const buyer = await db.select().from(users).where(eq(users.id, order[0].buyerId)).limit(1);
+        if (buyer[0]?.phone) {
+          const phoneValidation = validateGhanaPhone(buyer[0].phone);
+          if (phoneValidation.valid) {
+            await sendOrderNotificationToBuyer(
+              phoneValidation.formatted!,
+              order[0].orderNumber,
+              input.status,
+              order[0].trackingNumber || undefined
+            );
+          }
+        }
+      }
+
+      return result;
     }),
 
   // ========== TRANSACTIONS ==========
@@ -361,9 +410,9 @@ export const marketplaceRouter = router({
       const db = await getDb();
       if (!db) return [];
       
-      return await db.select().from(marketplaceReviews)
-        .where(eq(marketplaceReviews.productId, input.productId))
-        .orderBy(desc(marketplaceReviews.createdAt));
+      return await db.select().from(marketplaceProductReviews)
+        .where(eq(marketplaceProductReviews.productId, input.productId))
+        .orderBy(desc(marketplaceProductReviews.createdAt));
     }),
 
   createOldReview: protectedProcedure

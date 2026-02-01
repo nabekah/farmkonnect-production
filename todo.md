@@ -1362,3 +1362,35 @@
 - [x] Implement order details modal with status updates
 - [x] Add revenue analytics from completed orders
 - [x] Test entire cart-to-order flow end-to-end
+
+
+## Product Search & Advanced Filters
+- [x] Add full-text search input in marketplace header
+- [x] Implement search across product names and descriptions
+- [x] Add multi-select category filter
+- [x] Add price range slider filter
+- [x] Add sorting options (price low-high, high-low, newest, popularity)
+- [x] Add filter chips showing active filters with remove option
+- [x] Implement search result highlighting
+- [x] Add "no results" state with suggestions
+
+## SMS Order Notifications
+- [x] Research and select Ghana SMS gateway (Hubtel/Mnotify)
+- [x] Add SMS notification configuration to env
+- [x] Create SMS service helper for sending messages
+- [x] Send SMS on order creation (to buyer and seller)
+- [x] Send SMS on order status change (confirmed, shipped, delivered)
+- [x] Add phone number validation for SMS recipients
+- [x] Create SMS notification settings in user profile
+- [x] Add SMS notification history/log
+
+## Seller Performance Analytics Dashboard
+- [x] Create seller analytics page with revenue charts
+- [x] Add daily/weekly/monthly revenue trend visualization
+- [x] Display best-selling products with sales count and revenue
+- [x] Show customer satisfaction scores from reviews
+- [x] Add inventory turnover rate calculation
+- [x] Display order fulfillment metrics (avg time to ship)
+- [x] Add product performance comparison table
+- [x] Show revenue by product category breakdown
+- [x] Add export analytics data to CSV functionality
