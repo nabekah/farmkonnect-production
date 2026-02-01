@@ -1574,3 +1574,147 @@
 ### Financial Features
 - [ ] Add date range filters for financial reports in seller payouts
 - [ ] Implement payout request functionality for sellers
+
+
+## Farm Operations Management System - Phase 1: Backend APIs
+
+### Crop Management Procedures
+- [ ] createCropCycle(input) - Start new crop cycle with planting date, expected harvest
+- [ ] recordCropActivity(input) - Log planting, fertilization, pest control, weeding
+- [ ] recordYield(input) - Record harvest yield and quality
+- [ ] getCropStatistics(farmId) - Calculate active crops, total area, yields
+- [ ] getPestDiseaseAlerts(farmId) - Get crop health issues
+- [ ] updateCropCycleStatus(id, status) - Update cycle status (planning, growing, harvesting, completed)
+
+### Livestock Management Procedures
+- [ ] recordFeedingActivity(input) - Log daily feeding with amount and type
+- [ ] recordHealthEvent(input) - Vaccination, treatment, illness
+- [ ] recordBreedingEvent(input) - Breeding records with outcomes
+- [ ] recordProductionMetrics(input) - Weight gain, milk, eggs, meat
+- [ ] recordMortality(input) - Death records with cause
+- [ ] getLivestockStatistics(farmId) - Herd size, productivity metrics
+- [ ] getProductionTrends(farmId) - Yield analysis over time
+
+### Fish Farming Procedures
+- [ ] createFishPond(input) - Register new pond/cage with specifications
+- [ ] stockPond(input) - Add fingerlings with species and quantity
+- [ ] recordWaterQuality(input) - pH, temperature, oxygen levels
+- [ ] recordFishFeeding(input) - Feed amount and type
+- [ ] recordFishMortality(input) - Dead fish count and cause
+- [ ] harvestPond(input) - Record harvest with weight and quality
+- [ ] getFishStatistics(farmId) - Pond metrics and production
+
+### Workforce Management Procedures
+- [ ] addFarmWorker(input) - Hire new worker with role and salary
+- [ ] recordAttendance(input) - Daily attendance tracking
+- [ ] recordPayment(input) - Salary/wage payment
+- [ ] assignTask(input) - Assign farm activity to worker
+- [ ] getWorkerStatistics(farmId) - Labor cost analysis
+
+### Asset Management Procedures
+- [ ] addFarmAsset(input) - Register equipment/machinery
+- [ ] recordMaintenance(input) - Maintenance log with cost
+- [ ] scheduleNextMaintenance(input) - Maintenance scheduling
+- [ ] getAssetStatistics(farmId) - Asset value and utilization
+
+### Financial Management Procedures
+- [ ] recordFarmExpense(input) - Log farm expense with category
+- [ ] recordFarmRevenue(input) - Log farm income with source
+- [ ] getFinancialSummary(farmId) - Revenue, expenses, profit summary
+- [ ] getExpenseBreakdown(farmId) - Expenses by category
+- [ ] getRevenueBreakdown(farmId) - Income by source
+- [ ] getProfitAnalysis(farmId) - Profit margins and ROI
+
+## Farm Operations Management System - Phase 2: Frontend UI
+
+### Crop Management Module
+- [ ] Create CropCycles.tsx page with list of active/completed cycles
+- [ ] Create CropCycleDetail.tsx for single cycle with full history
+- [ ] Create CropActivityLog.tsx for planting, fertilization, pest control timeline
+- [ ] Create CropYieldRecording.tsx form for harvest recording
+- [ ] Create CropHealthMonitoring.tsx for pest/disease tracking
+- [ ] Add crop activity cards component
+- [ ] Add crop health alert component
+- [ ] Add yield trend chart component
+
+### Livestock Management Module
+- [ ] Create LivestockRegistry.tsx page with animals by type/batch
+- [ ] Create AnimalDetail.tsx for individual animal profile
+- [ ] Create FeedingLog.tsx for daily feeding records
+- [ ] Create HealthRecords.tsx for vaccination/treatment history
+- [ ] Create BreedingManagement.tsx for breeding cycles
+- [ ] Create ProductionTracking.tsx for weight/milk/eggs/meat
+- [ ] Add animal card component
+- [ ] Add feeding chart component
+- [ ] Add health timeline component
+- [ ] Add production metrics component
+
+### Fish Farming Module
+- [ ] Create FishPonds.tsx page with list of all ponds/cages
+- [ ] Create PondDetail.tsx for single pond management
+- [ ] Create WaterQualityMonitoring.tsx for pH, temp, oxygen tracking
+- [ ] Create FishStocking.tsx for fingerling management
+- [ ] Create FishHarvest.tsx for harvest planning and recording
+- [ ] Add pond card component
+- [ ] Add water quality chart component
+- [ ] Add stocking timeline component
+
+### Workforce Management Module
+- [ ] Create FarmWorkers.tsx page with worker registry
+- [ ] Create WorkerDetail.tsx for individual worker profile
+- [ ] Create AttendanceTracking.tsx for daily attendance
+- [ ] Create PayrollManagement.tsx for salary/wage payments
+- [ ] Create TaskAssignment.tsx for assigning activities
+- [ ] Add worker card component
+- [ ] Add attendance chart component
+- [ ] Add payroll table component
+
+### Asset Management Module
+- [ ] Create FarmAssets.tsx page with equipment registry
+- [ ] Create AssetDetail.tsx for single asset profile
+- [ ] Create MaintenanceLog.tsx for maintenance history
+- [ ] Create AssetUtilization.tsx for equipment usage tracking
+- [ ] Add asset card component
+- [ ] Add maintenance timeline component
+
+### Financial Management Module
+- [ ] Create FarmFinance.tsx page with financial dashboard
+- [ ] Create ExpenseTracking.tsx for expense recording
+- [ ] Create RevenueTracking.tsx for income recording
+- [ ] Create FinancialReports.tsx for profit/loss analysis
+- [ ] Add financial summary card component
+- [ ] Add expense chart component
+- [ ] Add revenue chart component
+- [ ] Add profit trend chart component
+
+### Main Farm Operations Dashboard
+- [ ] Create FarmOperations.tsx main dashboard page
+- [ ] Add farm selection dropdown
+- [ ] Add statistics cards (crops, livestock, revenue, expenses)
+- [ ] Add tab-based navigation to all modules
+- [ ] Add recent activities feed
+- [ ] Add financial summary widget
+- [ ] Add quick action buttons
+
+## Farm Operations Management System - Phase 3: Testing & Optimization
+
+### Testing
+- [ ] Write vitest tests for all backend procedures
+- [ ] Write component tests for UI modules
+- [ ] Test data flows between backend and frontend
+- [ ] Test mobile responsiveness of all modules
+- [ ] Test offline functionality
+
+### Mobile Optimization
+- [ ] Responsive forms for mobile data entry
+- [ ] Optimize charts for mobile display
+- [ ] Add quick-entry shortcuts for daily tasks
+- [ ] Add photo upload for field conditions
+- [ ] Add GPS location capture for activities
+
+### Performance & Analytics
+- [ ] Add analytics for crop yields
+- [ ] Add livestock productivity metrics
+- [ ] Add financial trend analysis
+- [ ] Add ROI calculations
+- [ ] Add seasonal pattern analysis
