@@ -27,7 +27,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield, DollarSign, Heart, CheckCircle, Wallet, Fish, Wrench, UserCog, PieChart, Brain, Bell } from 'lucide-react';
+import { Leaf, TrendingUp, BarChart3, ShoppingCart, Settings, Users, Moon, Sun, BookOpen, Target, Cpu, Truck, Briefcase, CloudRain, LineChart, Sprout, Shield, DollarSign, Heart, CheckCircle, Wallet, Fish, Wrench, UserCog, PieChart, Brain, Bell, History } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Badge } from './ui/badge';
 import { useDarkMode } from '@/contexts/DarkModeContext';
@@ -64,6 +64,7 @@ const menuItems = [
   { icon: Shield, label: "Role Management", path: "/role-management", adminOnly: true },
   { icon: CheckCircle, label: "Seller Verification", path: "/admin-verification", adminOnly: true },
   { icon: Bell, label: "Notifications", path: "/notification-settings" },
+  { icon: History, label: "Alert History", path: "/alert-history" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 

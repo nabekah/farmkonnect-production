@@ -29,6 +29,8 @@ import { reportingRouter } from "./reportingRouter";
 import { analyticsRouter } from "./analyticsRouter";
 import { notificationSettingsRouter } from "./notificationSettingsRouter";
 import { exportRouter } from "./exportRouter";
+import { alertHistoryRouter } from "./alertHistoryRouter";
+import { fertilizerRouter } from "./fertilizerRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -65,6 +67,8 @@ export const appRouter = router({
   analytics: analyticsRouter,
   notificationSettings: notificationSettingsRouter,
   export: exportRouter,
+  alertHistory: alertHistoryRouter,
+  fertilizer: fertilizerRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -238,3 +238,21 @@ export function initializeWebSocketServer(server: any) {
 export function getWebSocketServer(): FarmKonnectWebSocketServer | null {
   return wsServer;
 }
+
+// Helper function to broadcast to a specific user
+export function broadcastToUser(userId: number, message: any) {
+  if (wsServer) {
+    wsServer.broadcastToUser(userId, message);
+  } else {
+    console.warn('[WebSocket] Server not initialized, cannot broadcast to user');
+  }
+}
+
+// Helper function to broadcast to a specific farm
+export function broadcastToFarm(farmId: number, message: any) {
+  if (wsServer) {
+    wsServer.broadcastToFarm(farmId, message);
+  } else {
+    console.warn('[WebSocket] Server not initialized, cannot broadcast to farm');
+  }
+}

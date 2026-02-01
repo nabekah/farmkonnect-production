@@ -46,6 +46,7 @@ import AssetManagement from "./pages/AssetManagement";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import PredictiveAnalytics from "./pages/PredictiveAnalytics";
 import NotificationSettings from "./pages/NotificationSettings";
+import AlertHistory from "./pages/AlertHistory";
 
 function Router() {
   return (
@@ -303,6 +304,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <NotificationSettings />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/alert-history">
+        {() => (
+          <DashboardLayout>
+            <AlertHistory />
           </DashboardLayout>
         )}
       </Route>

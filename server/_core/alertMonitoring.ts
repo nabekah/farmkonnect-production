@@ -1,4 +1,5 @@
 import { getDb } from "../db";
+import { broadcastToUser } from "./websocket";
 import { animalHealthRecords, fishPonds, notificationPreferences } from "../../drizzle/schema";
 import { eq, desc, gte } from "drizzle-orm";
 
@@ -17,7 +18,17 @@ interface AlertConfig {
 async function sendAlert(config: AlertConfig) {
   console.log(`[ALERT] ${config.severity.toUpperCase()} - ${config.title}: ${config.message}`);
   
-  // Future: Add WebSocket broadcasting here
+  // Broadcast real-time alert via WebSocket
+  broadcastToUser(config.userId, {
+    type: "alert",
+    severity: config.severity,
+    alertType: config.type,
+    title: config.title,
+    message: config.message,
+    farmId: config.farmId,
+    timestamp: new Date().toISOString(),
+  });
+  
   // Future: Add email notification via SendGrid
   // Future: Add SMS notification via Twilio
 }
