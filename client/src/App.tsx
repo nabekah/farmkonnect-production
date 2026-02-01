@@ -47,6 +47,7 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import PredictiveAnalytics from "./pages/PredictiveAnalytics";
 import NotificationSettings from "./pages/NotificationSettings";
 import AlertHistory from "./pages/AlertHistory";
+import FertilizerTracking from "./pages/FertilizerTracking";
 
 function Router() {
   return (
@@ -311,6 +312,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <AlertHistory />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/fertilizer-tracking">
+        {() => (
+          <DashboardLayout>
+            <FertilizerTracking />
           </DashboardLayout>
         )}
       </Route>

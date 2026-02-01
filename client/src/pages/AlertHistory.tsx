@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle, Info, Trash2, Eye, Filter } from "lucide-react";
+import { AlertCircle, CheckCircle, Info, Trash2, Eye, Filter, Check } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export default function AlertHistory() {
@@ -56,6 +56,18 @@ export default function AlertHistory() {
       utils.alertHistory.list.invalidate();
       utils.alertHistory.unreadCount.invalidate();
     },
+  });
+
+  const acknowledgeAlert = trpc.alertHistory.acknowledge.useMutation({
+    onSuccess: () => {
+      utils.alertHistory.list.invalidate();
+      utils.alertHistory.getAcknowledgmentStats.invalidate();
+    },
+  });
+
+  // Fetch acknowledgment stats
+  const { data: ackStats } = trpc.alertHistory.getAcknowledgmentStats.useQuery({
+    farmId: selectedFarmId || undefined,
   });
 
   const getSeverityIcon = (severity: string) => {
@@ -249,6 +261,23 @@ export default function AlertHistory() {
                             disabled={markAsRead.isPending}
                           >
                             <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {!alert.isAcknowledged && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const actionTaken = prompt("What action did you take? (optional)");
+                              acknowledgeAlert.mutate({
+                                id: alert.id,
+                                actionTaken: actionTaken || undefined,
+                              });
+                            }}
+                            disabled={acknowledgeAlert.isPending}
+                            title="Acknowledge alert"
+                          >
+                            <Check className="w-4 h-4" />
                           </Button>
                         )}
                         <Button

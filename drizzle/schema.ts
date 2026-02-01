@@ -1427,6 +1427,11 @@ export const alertHistory = mysqlTable("alertHistory", {
   message: text("message").notNull(),
   isRead: boolean("isRead").default(false).notNull(),
   readAt: timestamp("readAt"),
+  isAcknowledged: boolean("isAcknowledged").default(false).notNull(),
+  acknowledgedAt: timestamp("acknowledgedAt"),
+  acknowledgedBy: int("acknowledgedBy").references(() => users.id),
+  actionTaken: text("actionTaken"),
+  responseTimeMinutes: int("responseTimeMinutes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

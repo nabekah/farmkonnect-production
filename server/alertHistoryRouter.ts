@@ -137,6 +137,92 @@ export const alertHistoryRouter = router({
       return { success: true };
     }),
 
+  // Acknowledge alert
+  acknowledge: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        actionTaken: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Get the alert to calculate response time
+      const [alert] = await db
+        .select()
+        .from(alertHistory)
+        .where(
+          and(
+            eq(alertHistory.id, input.id),
+            eq(alertHistory.userId, ctx.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!alert) {
+        throw new Error("Alert not found");
+      }
+
+      // Calculate response time in minutes
+      const responseTimeMinutes = Math.floor(
+        (Date.now() - new Date(alert.createdAt).getTime()) / (1000 * 60)
+      );
+
+      await db
+        .update(alertHistory)
+        .set({
+          isAcknowledged: true,
+          acknowledgedAt: new Date(),
+          acknowledgedBy: ctx.user.id,
+          actionTaken: input.actionTaken || null,
+          responseTimeMinutes,
+        })
+        .where(
+          and(
+            eq(alertHistory.id, input.id),
+            eq(alertHistory.userId, ctx.user.id)
+          )
+        );
+
+      return { success: true, responseTimeMinutes };
+    }),
+
+  // Get acknowledgment statistics
+  getAcknowledgmentStats: protectedProcedure
+    .input(z.object({ farmId: z.number().optional() }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const conditions = [eq(alertHistory.userId, ctx.user.id)];
+
+      if (input.farmId) {
+        conditions.push(eq(alertHistory.farmId, input.farmId));
+      }
+
+      const alerts = await db
+        .select()
+        .from(alertHistory)
+        .where(and(...conditions));
+
+      const total = alerts.length;
+      const acknowledged = alerts.filter((a) => a.isAcknowledged).length;
+      const avgResponseTime =
+        alerts
+          .filter((a) => a.responseTimeMinutes !== null)
+          .reduce((sum, a) => sum + (a.responseTimeMinutes || 0), 0) /
+          (alerts.filter((a) => a.responseTimeMinutes !== null).length || 1);
+
+      return {
+        total,
+        acknowledged,
+        acknowledgmentRate: total > 0 ? (acknowledged / total) * 100 : 0,
+        avgResponseTimeMinutes: Math.round(avgResponseTime),
+      };
+    }),
+
   // Delete alert
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))

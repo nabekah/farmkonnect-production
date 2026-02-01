@@ -1,5 +1,28 @@
-// Simplified notification service - ready for Twilio/SendGrid integration
-// Add your API keys to environment variables when ready to activate
+// Notification service with SendGrid and Twilio integration
+import sgMail from '@sendgrid/mail';
+import twilio from 'twilio';
+
+// Initialize SendGrid
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+// Initialize Twilio
+let twilioClient: any = null;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+  // Check if using API Key (starts with SK) or Account SID (starts with AC)
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  
+  if (accountSid.startsWith('SK')) {
+    // Using API Key - need actual Account SID
+    console.warn('[Twilio] API Key detected (SK*). Please provide the actual Account SID (AC*) as TWILIO_ACCOUNT_SID and use the API Key as TWILIO_API_KEY');
+    // For now, disable Twilio to prevent errors
+    twilioClient = null;
+  } else {
+    twilioClient = twilio(accountSid, authToken);
+  }
+}
 
 export interface NotificationPayload {
   userId: number;
@@ -11,29 +34,49 @@ export interface NotificationPayload {
 
 export class NotificationService {
   async sendEmail(to: string, subject: string, html: string) {
-    // TODO: Integrate SendGrid
-    // Requires: SENDGRID_API_KEY, SENDGRID_FROM_EMAIL in env
-    console.log(`[Notification] Email to ${to}: ${subject}`);
+    console.log(`[Notification] Sending email to ${to}: ${subject}`);
     
-    // Placeholder for SendGrid integration:
-    // import sgMail from '@sendgrid/mail';
-    // sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
-    // await sgMail.send({ to, from: process.env.SENDGRID_FROM_EMAIL!, subject, html });
-    
-    return { success: true, provider: 'sendgrid_placeholder' };
-  }
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn('[Notification] SendGrid API key not configured');
+      return { success: false, provider: 'sendgrid', error: 'API key not configured' };
+    }
 
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@farmkonnect.com';
+    
+    try {
+      await sgMail.send({ to, from: fromEmail, subject, html });
+      console.log(`[Notification] Email sent successfully to ${to}`);
+      return { success: true, provider: 'sendgrid' };
+    } catch (error: any) {
+      console.error('[Notification] SendGrid error:', error.message);
+      return { success: false, provider: 'sendgrid', error: error.message };
+    }
+  }
   async sendSMS(to: string, body: string) {
-    // TODO: Integrate Twilio
-    // Requires: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in env
-    console.log(`[Notification] SMS to ${to}: ${body}`);
+    console.log(`[Notification] Sending SMS to ${to}: ${body}`);
     
-    // Placeholder for Twilio integration:
-    // import twilio from 'twilio';
-    // const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    // await client.messages.create({ body, from: process.env.TWILIO_PHONE_NUMBER, to });
+    if (!twilioClient) {
+      console.warn('[Notification] Twilio not configured');
+      return { success: false, provider: 'twilio', error: 'Twilio not configured' };
+    }
+
+    if (!process.env.TWILIO_PHONE_NUMBER) {
+      console.warn('[Notification] Twilio phone number not configured');
+      return { success: false, provider: 'twilio', error: 'Phone number not configured' };
+    }
     
-    return { success: true, provider: 'twilio_placeholder' };
+    try {
+      await twilioClient.messages.create({
+        body,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to
+      });
+      console.log(`[Notification] SMS sent successfully to ${to}`);
+      return { success: true, provider: 'twilio' };
+    } catch (error: any) {
+      console.error('[Notification] Twilio error:', error.message);
+      return { success: false, provider: 'twilio', error: error.message };
+    }
   }
 
   async sendNotification(payload: NotificationPayload, userPreferences: any) {
