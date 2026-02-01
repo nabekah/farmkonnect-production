@@ -576,6 +576,39 @@ export const marketplaceRouter = router({
         .where(eq(marketplaceDeliveryZones.id, input.zoneId));
     }),
 
+  // ========== CART MANAGEMENT ==========
+  syncCart: protectedProcedure
+    .input(z.object({
+      items: z.array(z.object({
+        productId: z.number(),
+        productName: z.string(),
+        price: z.string(),
+        quantity: z.number(),
+        unit: z.string(),
+        imageUrl: z.string().optional(),
+      })),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      // Clear existing cart
+      await db.delete(marketplaceCart).where(eq(marketplaceCart.userId, ctx.user.id));
+      
+      // Insert new cart items
+      if (input.items.length > 0) {
+        await db.insert(marketplaceCart).values(
+          input.items.map(item => ({
+            userId: ctx.user.id,
+            productId: item.productId,
+            quantity: item.quantity.toString(),
+          }))
+        );
+      }
+      
+      return { success: true };
+    }),
+
   // ========== ANALYTICS ==========
   getSellerStats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();

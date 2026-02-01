@@ -1316,3 +1316,22 @@
 - [x] Add shipping cost calculation based on delivery zone
 - [x] Display estimated delivery time and cost at checkout
 - [x] Create unit tests for all new features
+
+
+## Shopping Cart Persistence & Order Tracking & Seller Analytics
+- [x] Create cart context with local storage persistence
+- [x] Implement cart database sync for logged-in users
+- [x] Add automatic bulk discount calculation in cart
+- [x] Create order status workflow (pending → confirmed → shipped → delivered)
+- [x] Add tracking number field to orders
+- [x] Add estimated delivery date field to orders
+- [ ] Add order tracking page with status timeline
+- [ ] Implement SMS/email notifications for order status changes
+- [ ] Calculate estimated delivery dates based on delivery zones
+- [ ] Build seller dashboard analytics page
+- [ ] Add revenue trends chart (daily/weekly/monthly)
+- [ ] Display best-selling products with sales count
+- [ ] Show customer reviews summary with average ratings
+- [ ] Add inventory alerts for low stock products
+- [ ] Create order management interface for sellers
+- [ ] Write unit tests for all new features
