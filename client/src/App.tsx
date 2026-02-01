@@ -45,6 +45,7 @@ import FishFarming from "./pages/FishFarming";
 import AssetManagement from "./pages/AssetManagement";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import PredictiveAnalytics from "./pages/PredictiveAnalytics";
+import NotificationSettings from "./pages/NotificationSettings";
 
 function Router() {
   return (
@@ -295,6 +296,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <PredictiveAnalytics />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/notification-settings">
+        {() => (
+          <DashboardLayout>
+            <NotificationSettings />
           </DashboardLayout>
         )}
       </Route>
