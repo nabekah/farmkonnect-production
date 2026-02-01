@@ -16,7 +16,7 @@ import { ProductImageCarousel } from "@/components/ProductImageCarousel";
 import { ProductCard } from "@/components/ProductCard";
 import { SellerProductCard } from "@/components/SellerProductCard";
 
-const CATEGORIES = ["Vegetables", "Dairy", "Meat", "Grains", "Fruits", "Herbs", "Eggs", "Other"];
+const CATEGORIES = ["Seeds", "Fertilizers", "Pesticides", "Equipment", "Tools"];
 const UNITS = ["kg", "liter", "dozen", "piece", "ton", "bag"];
 
 export default function Marketplace() {
