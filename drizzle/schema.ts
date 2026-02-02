@@ -1775,3 +1775,50 @@ export const soilHealthRecommendations = mysqlTable("soilHealthRecommendations",
 });
 export type SoilHealthRecommendation = typeof soilHealthRecommendations.$inferSelect;
 export type InsertSoilHealthRecommendation = typeof soilHealthRecommendations.$inferInsert;
+
+
+// ============================================================================
+// NAVIGATION ENHANCEMENTS - FAVORITES & BREADCRUMBS
+// ============================================================================
+export const userFavorites = mysqlTable("userFavorites", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  menuPath: varchar("menuPath", { length: 255 }).notNull(),
+  menuLabel: varchar("menuLabel", { length: 255 }).notNull(),
+  menuIcon: varchar("menuIcon", { length: 100 }),
+  position: int("position").notNull(),
+  isPinned: boolean("isPinned").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserFavorite = typeof userFavorites.$inferSelect;
+export type InsertUserFavorite = typeof userFavorites.$inferInsert;
+
+export const navigationHistory = mysqlTable("navigationHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  path: varchar("path", { length: 255 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  breadcrumbTrail: text("breadcrumbTrail").notNull(), // JSON array of breadcrumb items
+  visitedAt: timestamp("visitedAt").defaultNow().notNull(),
+  sessionId: varchar("sessionId", { length: 100 }),
+  referrerPath: varchar("referrerPath", { length: 255 }),
+});
+export type NavigationHistory = typeof navigationHistory.$inferSelect;
+export type InsertNavigationHistory = typeof navigationHistory.$inferInsert;
+
+export const searchIndexes = mysqlTable("searchIndexes", {
+  id: int("id").autoincrement().primaryKey(),
+  path: varchar("path", { length: 255 }).notNull().unique(),
+  label: varchar("label", { length: 255 }).notNull(),
+  description: text("description"),
+  keywords: text("keywords"), // JSON array of searchable keywords
+  category: varchar("category", { length: 100 }).notNull(),
+  icon: varchar("icon", { length: 100 }),
+  searchScore: decimal("searchScore", { precision: 5, scale: 2 }).default("1"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SearchIndex = typeof searchIndexes.$inferSelect;
+export type InsertSearchIndex = typeof searchIndexes.$inferInsert;

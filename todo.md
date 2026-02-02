@@ -2441,3 +2441,23 @@
 - [x] All core screens implemented and functional
 - [x] Enterprise-grade architecture with offline support
 - [x] Total files created: 18 (screens, services, components, docs)
+
+
+## Phase 27: Global Search & Quick Navigation
+- [ ] Create global search component with command palette
+- [ ] Implement search indexing and filtering logic
+- [ ] Add keyboard shortcuts (Cmd+K / Ctrl+K)
+- [ ] Integrate into sidebar header
+
+## Phase 28: Favorites & Pinned Items
+- [ ] Add favorites database schema
+- [ ] Create favorites management service
+- [ ] Build favorites tRPC router
+- [ ] Create pin/unpin UI component
+- [ ] Display favorites in sidebar
+
+## Phase 29: Breadcrumb Navigation
+- [ ] Create breadcrumb component
+- [ ] Implement breadcrumb context
+- [ ] Add breadcrumb routing integration
+- [ ] Display breadcrumbs on all pages

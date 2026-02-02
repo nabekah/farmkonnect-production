@@ -36,6 +36,8 @@ import { RealtimeToast } from './RealtimeToast';
 import { CartButton } from './CartButton';
 import { navigationStructure, getAllMenuItems, filterNavigationByRole } from './NavigationStructure';
 import { MenuGroup } from './MenuGroup';
+import { GlobalSearch } from './GlobalSearch';
+import { Breadcrumbs } from './Breadcrumbs';
 
 const menuItems = getAllMenuItems();
 

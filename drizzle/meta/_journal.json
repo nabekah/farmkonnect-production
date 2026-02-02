@@ -225,6 +225,20 @@
       "when": 1770033921487,
       "tag": "0031_loud_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1770039151671,
+      "tag": "0032_blue_mimic",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1770039453213,
+      "tag": "0033_third_sunfire",
+      "breakpoints": true
     }
   ]
 }
