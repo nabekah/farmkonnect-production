@@ -2282,3 +2282,25 @@
 - [x] Build report analytics tRPC router (7 procedures)
 - [x] Create Report Analytics Dashboard UI with charts and metrics
 - [x] Add delivery metrics, engagement tracking, and failure analysis
+
+
+## Phase 15: Report Scheduling UI Enhancement
+- [x] Add calendar interface with date/time pickers (AdvancedReportScheduling.tsx)
+- [x] Implement timezone support for report scheduling
+- [x] Add report preview before scheduling with next scheduled date calculation
+- [x] Create advanced scheduling UI component with recipient group support
+
+## Phase 16: Recipient Management & Groups
+- [x] Add recipientGroups and recipientGroupMembers database tables
+- [x] Create recipient group management service (recipientGroupService.ts)
+- [x] Build recipient management tRPC router (11 procedures)
+- [x] Create recipient group management UI page (RecipientGroupManagement.tsx)
+- [x] Add group selection to report scheduling with bulk operations
+
+## Phase 17: Report Export & Archival
+- [x] Add reportArchival and reportExportLog database tables
+- [x] Create report export and archival service (reportExportService.ts)
+- [x] Build report export tRPC router with S3 integration (7 procedures)
+- [x] Implement automatic archival with retention policies and expiry tracking
+- [x] Create report history and export UI (ReportHistoryExport.tsx)
+- [x] Add download and archival controls with statistics dashboard

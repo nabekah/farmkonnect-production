@@ -51,6 +51,9 @@ import FertilizerTracking from "./pages/FertilizerTracking";
 import ReportManagement from "./pages/ReportManagement";
 import ReportTemplates from "./pages/ReportTemplates";
 import ReportAnalyticsDashboard from "./pages/ReportAnalyticsDashboard";
+import AdvancedReportScheduling from "./pages/AdvancedReportScheduling";
+import RecipientGroupManagement from "./pages/RecipientGroupManagement";
+import ReportHistoryExport from "./pages/ReportHistoryExport";
 
 function Router() {
   return (
@@ -74,6 +77,27 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ReportAnalyticsDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/advanced-report-scheduling">
+        {() => (
+          <DashboardLayout>
+            <AdvancedReportScheduling />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/recipient-groups">
+        {() => (
+          <DashboardLayout>
+            <RecipientGroupManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/report-history-export">
+        {() => (
+          <DashboardLayout>
+            <ReportHistoryExport />
           </DashboardLayout>
         )}
       </Route>

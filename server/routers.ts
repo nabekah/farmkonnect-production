@@ -34,6 +34,8 @@ import { fertilizerRouter } from "./fertilizerRouter";
 import { reportSchedulingRouter } from "./routers/reportScheduling";
 import { reportTemplatesRouter } from "./routers/reportTemplates";
 import { reportAnalyticsRouter } from "./routers/reportAnalytics";
+import { recipientManagementRouter } from "./routers/recipientManagement";
+import { reportExportRouter } from "./routers/reportExport";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -75,6 +77,8 @@ export const appRouter = router({
   reportScheduling: reportSchedulingRouter,
   reportTemplates: reportTemplatesRouter,
   reportAnalytics: reportAnalyticsRouter,
+  recipientManagement: recipientManagementRouter,
+  reportExport: reportExportRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -1546,3 +1546,65 @@ export const reportDeliveryEvents = mysqlTable("reportDeliveryEvents", {
 });
 export type ReportDeliveryEvent = typeof reportDeliveryEvents.$inferSelect;
 export type InsertReportDeliveryEvent = typeof reportDeliveryEvents.$inferInsert;
+
+
+// ============================================================================
+// RECIPIENT GROUPS & MANAGEMENT
+// ============================================================================
+export const recipientGroups = mysqlTable("recipientGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull().references(() => farms.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type RecipientGroup = typeof recipientGroups.$inferSelect;
+export type InsertRecipientGroup = typeof recipientGroups.$inferInsert;
+
+export const groupMembers = mysqlTable("groupMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull().references(() => recipientGroups.id),
+  email: varchar("email", { length: 320 }).notNull(),
+  name: varchar("name", { length: 255 }),
+  role: varchar("role", { length: 50 }), // e.g., "manager", "accountant", "stakeholder"
+  isPrimary: boolean("isPrimary").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GroupMember = typeof groupMembers.$inferSelect;
+export type InsertGroupMember = typeof groupMembers.$inferInsert;
+
+// ============================================================================
+// REPORT ARCHIVAL & EXPORT
+// ============================================================================
+export const reportArchival = mysqlTable("reportArchival", {
+  id: int("id").autoincrement().primaryKey(),
+  reportHistoryId: int("reportHistoryId").notNull().references(() => reportHistory.id),
+  farmId: int("farmId").notNull().references(() => farms.id),
+  s3Key: varchar("s3Key", { length: 500 }).notNull(),
+  s3Url: text("s3Url").notNull(),
+  archivedAt: timestamp("archivedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"), // For retention policies
+  retentionDays: int("retentionDays"), // Number of days to keep
+  isRestored: boolean("isRestored").default(false).notNull(),
+  restoredAt: timestamp("restoredAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ReportArchival = typeof reportArchival.$inferSelect;
+export type InsertReportArchival = typeof reportArchival.$inferInsert;
+
+export const reportExportLog = mysqlTable("reportExportLog", {
+  id: int("id").autoincrement().primaryKey(),
+  reportHistoryId: int("reportHistoryId").notNull().references(() => reportHistory.id),
+  farmId: int("farmId").notNull().references(() => farms.id),
+  exportedBy: int("exportedBy").notNull().references(() => users.id),
+  exportFormat: mysqlEnum("exportFormat", ["pdf", "excel", "csv"]).notNull(),
+  downloadUrl: text("downloadUrl"),
+  expiresAt: timestamp("expiresAt"),
+  downloadCount: int("downloadCount").default(0).notNull(),
+  lastDownloadedAt: timestamp("lastDownloadedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ReportExportLog = typeof reportExportLog.$inferSelect;
+export type InsertReportExportLog = typeof reportExportLog.$inferInsert;
