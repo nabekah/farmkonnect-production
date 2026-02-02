@@ -867,6 +867,7 @@ export const marketplaceCart = mysqlTable("marketplaceCart", {
   quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
   addedAt: timestamp("addedAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
 });
 export type MarketplaceCart = typeof marketplaceCart.$inferSelect;
 export type InsertMarketplaceCart = typeof marketplaceCart.$inferInsert;

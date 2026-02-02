@@ -239,6 +239,13 @@
       "when": 1770039453213,
       "tag": "0033_third_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1770071558340,
+      "tag": "0034_high_lenny_balinger",
+      "breakpoints": true
     }
   ]
 }

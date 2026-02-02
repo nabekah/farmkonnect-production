@@ -41,6 +41,17 @@
 - [x] Verify cart initialization on app load - id field now included in cart items
 - [x] Test cart operations (add, remove, update) - removeFromCart now has valid cartId
 
+## Shopping Cart Enhancements (COMPLETED)
+- [x] Implement updateCartQuantity mutation in marketplace router
+- [x] Implement localStorage cart persistence hook (useCartPersistence.ts)
+- [x] Implement useLocalStorage hook for generic localStorage management
+- [x] Implement cart expiration logic with database cleanup (cartExpirationRouter.ts)
+- [x] Add expiration timestamp to cart items (expiresAt field)
+- [x] Update all cart operations to set 30-day expiration
+- [x] Create cart expiration cleanup procedures
+- [x] Test all cart enhancements (15/15 tests passing)
+- [x] Verify cart operations work end-to-end
+
 ## Livestock Management Implementation
 - [x] Extend tRPC routers with animals, health records, and vaccinations
 - [x] Create Livestock Management page component with animal listing

@@ -216,15 +216,18 @@ export const marketplaceRouter = router({
         .where(and(eq(marketplaceCart.userId, ctx.user.id), eq(marketplaceCart.productId, input.productId)));
       
       if (existing.length > 0) {
+        const thirtyDaysFromNow = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000);
         return await db.update(marketplaceCart)
-          .set({ quantity: (parseFloat(existing[0].quantity) + input.quantity).toString() })
+          .set({ quantity: (parseFloat(existing[0].quantity) + input.quantity).toString(), expiresAt: thirtyDaysFromNow })
           .where(eq(marketplaceCart.id, existing[0].id));
       }
       
+      const thirtyDaysFromNow = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000);
       return await db.insert(marketplaceCart).values({
         userId: ctx.user.id,
         productId: input.productId,
         quantity: input.quantity.toString(),
+        expiresAt: thirtyDaysFromNow,
       });
     }),
 
@@ -965,11 +968,13 @@ export const marketplaceRouter = router({
       
       // Insert new cart items
       if (input.items.length > 0) {
+        const thirtyDaysFromNow = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000);
         await db.insert(marketplaceCart).values(
           input.items.map(item => ({
             userId: ctx.user.id,
             productId: item.productId,
             quantity: item.quantity.toString(),
+            expiresAt: thirtyDaysFromNow,
           }))
         );
       }
@@ -1772,4 +1777,25 @@ export const marketplaceRouter = router({
         percentile: Math.round((1 - (rank / sellerStats.length)) * 100),
       } : null;
     }),
+
+  updateCartQuantity: protectedProcedure
+    .input(z.object({ cartId: z.number(), quantity: z.number().positive() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      
+      const cartItem = await db.select().from(marketplaceCart)
+        .where(and(eq(marketplaceCart.id, input.cartId), eq(marketplaceCart.userId, ctx.user.id)))
+        .limit(1);
+      
+      if (cartItem.length === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Cart item not found" });
+      }
+      
+      const thirtyDaysFromNow = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000);
+      return await db.update(marketplaceCart)
+        .set({ quantity: input.quantity.toString(), expiresAt: thirtyDaysFromNow })
+        .where(eq(marketplaceCart.id, input.cartId));
+    }),
 });
+
