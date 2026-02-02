@@ -49,6 +49,8 @@ import NotificationSettings from "./pages/NotificationSettings";
 import AlertHistory from "./pages/AlertHistory";
 import FertilizerTracking from "./pages/FertilizerTracking";
 import ReportManagement from "./pages/ReportManagement";
+import ReportTemplates from "./pages/ReportTemplates";
+import ReportAnalyticsDashboard from "./pages/ReportAnalyticsDashboard";
 
 function Router() {
   return (
@@ -58,6 +60,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ReportManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/report-templates">
+        {() => (
+          <DashboardLayout>
+            <ReportTemplates />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/report-analytics">
+        {() => (
+          <DashboardLayout>
+            <ReportAnalyticsDashboard />
           </DashboardLayout>
         )}
       </Route>

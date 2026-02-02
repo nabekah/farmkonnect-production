@@ -1474,3 +1474,75 @@ export const reportHistory = mysqlTable("reportHistory", {
 
 export type ReportHistory = typeof reportHistory.$inferSelect;
 export type InsertReportHistory = typeof reportHistory.$inferInsert;
+
+
+// ============================================================================
+// REPORT TEMPLATES & CUSTOMIZATION
+// ============================================================================
+export const reportTemplates = mysqlTable("reportTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull().references(() => farms.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  reportType: mysqlEnum("reportType", ["financial", "livestock", "complete"]).notNull(),
+  isDefault: boolean("isDefault").default(false).notNull(),
+  includeSections: text("includeSections").notNull(), // JSON array of section names
+  customBranding: text("customBranding"), // JSON object with logo, colors, etc.
+  dataFilters: text("dataFilters"), // JSON object with date ranges, categories, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ReportTemplate = typeof reportTemplates.$inferSelect;
+export type InsertReportTemplate = typeof reportTemplates.$inferInsert;
+
+export const reportTemplateFields = mysqlTable("reportTemplateFields", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull().references(() => reportTemplates.id),
+  fieldName: varchar("fieldName", { length: 255 }).notNull(),
+  displayName: varchar("displayName", { length: 255 }).notNull(),
+  fieldType: mysqlEnum("fieldType", ["text", "number", "date", "currency", "percentage", "chart"]).notNull(),
+  isVisible: boolean("isVisible").default(true).notNull(),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  aggregationType: mysqlEnum("aggregationType", ["sum", "average", "count", "min", "max", "none"]).default("none"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ReportTemplateField = typeof reportTemplateFields.$inferSelect;
+export type InsertReportTemplateField = typeof reportTemplateFields.$inferInsert;
+
+// ============================================================================
+// REPORT ANALYTICS & TRACKING
+// ============================================================================
+export const reportAnalytics = mysqlTable("reportAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  scheduleId: int("scheduleId").notNull().references(() => reportSchedules.id),
+  farmId: int("farmId").notNull().references(() => farms.id),
+  reportType: mysqlEnum("reportType", ["financial", "livestock", "complete"]).notNull(),
+  totalGenerated: int("totalGenerated").default(0).notNull(),
+  totalSent: int("totalSent").default(0).notNull(),
+  totalFailed: int("totalFailed").default(0).notNull(),
+  successRate: decimal("successRate", { precision: 5, scale: 2 }).default("0.00"),
+  averageGenerationTime: int("averageGenerationTime"), // in milliseconds
+  averageFileSize: int("averageFileSize"), // in bytes
+  lastGeneratedAt: timestamp("lastGeneratedAt"),
+  lastFailedAt: timestamp("lastFailedAt"),
+  lastFailureReason: text("lastFailureReason"),
+  recipientEngagement: text("recipientEngagement"), // JSON object with open counts, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ReportAnalytic = typeof reportAnalytics.$inferSelect;
+export type InsertReportAnalytic = typeof reportAnalytics.$inferInsert;
+
+export const reportDeliveryEvents = mysqlTable("reportDeliveryEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  reportHistoryId: int("reportHistoryId").notNull().references(() => reportHistory.id),
+  recipient: varchar("recipient", { length: 320 }).notNull(),
+  status: mysqlEnum("status", ["sent", "delivered", "opened", "failed", "bounced"]).notNull(),
+  sentAt: timestamp("sentAt"),
+  deliveredAt: timestamp("deliveredAt"),
+  openedAt: timestamp("openedAt"),
+  failureReason: text("failureReason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ReportDeliveryEvent = typeof reportDeliveryEvents.$inferSelect;
+export type InsertReportDeliveryEvent = typeof reportDeliveryEvents.$inferInsert;

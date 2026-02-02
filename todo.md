@@ -2260,3 +2260,25 @@
 - [x] Install pdf-lib and xlsx packages for report generation
 - [x] TypeScript compilation: 0 errors
 - [x] Create comprehensive unit tests for report scheduling (9 tests)
+
+
+## Phase 12: Report Templates & Customization
+- [x] Add reportTemplates and reportTemplateFields database tables
+- [x] Create template customization service (reportTemplateService.ts)
+- [x] Build report template tRPC router (8 procedures)
+- [x] Create Report Templates UI page with farm selection and management
+- [x] Integrated with App.tsx routing and DashboardLayout navigation
+
+## Phase 13: Scheduled Report Execution Service
+- [x] Install node-cron for job scheduling
+- [x] Create scheduled report executor service (scheduledReportExecutor.ts)
+- [x] Implement background job runner with minute-based polling
+- [x] Add execution logging, error handling, and analytics tracking
+- [x] Integrate with server startup in _core/index.ts
+
+## Phase 14: Report Analytics Dashboard
+- [x] Add reportAnalytics and reportDeliveryEvents database tables
+- [x] Create analytics tracking service integrated with executor
+- [x] Build report analytics tRPC router (7 procedures)
+- [x] Create Report Analytics Dashboard UI with charts and metrics
+- [x] Add delivery metrics, engagement tracking, and failure analysis

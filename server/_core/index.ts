@@ -11,6 +11,7 @@ import { initializeWeatherCron } from "../weatherCron";
 import { initializeNotificationCron } from "../notificationCron";
 import { initializeWebSocketServer } from "./websocket";
 import { initializeAlertScheduler } from "./alertScheduler";
+import { scheduledReportExecutor } from "./scheduledReportExecutor";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -69,6 +70,9 @@ async function startServer() {
   
   // Initialize alert scheduler
   initializeAlertScheduler();
+  
+  // Initialize scheduled report executor
+  scheduledReportExecutor.start();
     
     // Initialize cron jobs after server starts
     initializeWeatherCron();

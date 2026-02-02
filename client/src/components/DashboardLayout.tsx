@@ -67,6 +67,8 @@ const menuItems = [
   { icon: History, label: "Alert History", path: "/alert-history" },
   { icon: Droplets, label: "Fertilizer Tracking", path: "/fertilizer-tracking" },
   { icon: FileText, label: "Report Management", path: "/report-management" },
+  { icon: FileText, label: "Report Templates", path: "/report-templates" },
+  { icon: BarChart3, label: "Report Analytics", path: "/report-analytics" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
