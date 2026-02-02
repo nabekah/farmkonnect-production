@@ -181,6 +181,9 @@ export default defineConfig({
     ],
     hmr: {
       overlay: false,
+      protocol: "wss",
+      host: undefined, // Let browser determine host from current URL
+      port: undefined, // Use default port (443 for wss, 80 for ws)
     },
     fs: {
       strict: true,
