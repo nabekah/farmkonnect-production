@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useThemeColor } from "@/contexts/ThemeColorContext";
+import { themeList, ThemeName } from "@/config/themes";
+import { Check } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +12,81 @@ import { User, Bell, Shield, Palette, Key, Download, Copy, CheckCircle } from "l
 import { trpc } from "../lib/trpc";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+// Appearance Tab Component
+function AppearanceTab() {
+  const { currentTheme, setTheme } = useThemeColor();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Color Theme</CardTitle>
+        <CardDescription>
+          Choose your preferred color theme for the application
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Theme Selector Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {themeList.map((theme) => (
+            <button
+              key={theme.name}
+              onClick={() => setTheme(theme.name as ThemeName)}
+              className={`relative p-4 rounded-lg border-2 transition-all ${
+                currentTheme === theme.name
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              {/* Theme Color Preview */}
+              <div className="flex items-center gap-2 mb-2">
+                <div
+                  className="w-8 h-8 rounded-full border border-border"
+                  style={{
+                    backgroundColor: `hsl(${theme.colors.primary})`,
+                  }}
+                />
+              </div>
+
+              {/* Theme Label */}
+              <p className="text-sm font-medium text-center">{theme.label}</p>
+
+              {/* Check Mark */}
+              {currentTheme === theme.name && (
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                  <Check className="w-4 h-4" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Theme Preview */}
+        <div className="mt-8 pt-6 border-t">
+          <h3 className="text-sm font-semibold mb-4">Preview</h3>
+          <div className="space-y-4">
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="default">Primary Button</Button>
+              <Button variant="secondary">Secondary Button</Button>
+              <Button variant="outline">Outline Button</Button>
+            </div>
+            <Card className="bg-card">
+              <CardHeader>
+                <CardTitle className="text-base">Card Preview</CardTitle>
+                <CardDescription>This is how cards will look with the selected theme</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-foreground">
+                  Your selected theme will be applied throughout the application
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 // MFA Enrollment Component
 function MFAEnrollmentCard() {
@@ -397,22 +475,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Appearance Settings</CardTitle>
-              <CardDescription>
-                Customize the look and feel of the application
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Theme</Label>
-                <p className="text-sm text-muted-foreground">
-                  Theme settings are managed via the toggle in the sidebar
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <AppearanceTab />
         </TabsContent>
       </Tabs>
     </div>
