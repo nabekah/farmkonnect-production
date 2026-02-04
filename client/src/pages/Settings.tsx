@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 
 // Appearance Tab Component
 function AppearanceTab() {
-  const { currentTheme, setTheme } = useThemeColor();
+  const { currentTheme, setTheme, themeMode, setThemeMode } = useThemeColor();
 
   return (
     <Card>
@@ -26,6 +26,26 @@ function AppearanceTab() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Dark Mode Toggle */}
+        <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
+          <div>
+            <p className="text-sm font-medium">Dark Mode</p>
+            <p className="text-xs text-muted-foreground">Use system preference or toggle manually</p>
+          </div>
+          <button
+            onClick={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
+            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+              themeMode === 'dark' ? 'bg-primary' : 'bg-muted-foreground/30'
+            }`}
+          >
+            <span
+              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                themeMode === 'dark' ? 'translate-x-7' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
         {/* Theme Selector Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {themeList.map((theme) => (
@@ -63,7 +83,7 @@ function AppearanceTab() {
 
         {/* Theme Preview */}
         <div className="mt-8 pt-6 border-t">
-          <h3 className="text-sm font-semibold mb-4">Preview</h3>
+          <h3 className="text-sm font-semibold mb-4">Color Theme Preview</h3>
           <div className="space-y-4">
             <div className="flex gap-2 flex-wrap">
               <Button variant="default">Primary Button</Button>
@@ -73,11 +93,11 @@ function AppearanceTab() {
             <Card className="bg-card">
               <CardHeader>
                 <CardTitle className="text-base">Card Preview</CardTitle>
-                <CardDescription>This is how cards will look with the selected theme</CardDescription>
+                <CardDescription>This is how cards will look with the selected theme (currently {themeMode} mode)</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-foreground">
-                  Your selected theme will be applied throughout the application
+                  Your selected theme and dark mode preference will be applied throughout the application and persisted across sessions.
                 </p>
               </CardContent>
             </Card>

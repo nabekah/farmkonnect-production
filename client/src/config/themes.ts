@@ -207,9 +207,86 @@ export function applyTheme(theme: ThemeConfig) {
 
   // Save to localStorage
   localStorage.setItem('theme-name', theme.name);
+
+  // Force DOM repaint by triggering a reflow
+  // This ensures CSS variables are immediately applied
+  void root.offsetHeight;
 }
 
 export function getSavedTheme(): ThemeName {
   const saved = localStorage.getItem('theme-name');
   return (saved as ThemeName) || 'default';
+}
+
+/**
+ * Detect system theme preference (light/dark mode)
+ * Returns 'light' or 'dark' based on OS preference
+ */
+export function getSystemThemePreference(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light';
+  
+  // Check if user has set a preference in localStorage
+  const savedMode = localStorage.getItem('theme-mode');
+  if (savedMode === 'light' || savedMode === 'dark') {
+    return savedMode;
+  }
+  
+  // Check system preference
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  
+  return 'light';
+}
+
+/**
+ * Set theme mode preference (light/dark)
+ */
+export function setThemeMode(mode: 'light' | 'dark') {
+  localStorage.setItem('theme-mode', mode);
+  
+  // Update document class
+  const root = document.documentElement;
+  if (mode === 'dark') {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+}
+
+/**
+ * Initialize theme mode on app load
+ */
+export function initializeThemeMode() {
+  const mode = getSystemThemePreference();
+  setThemeMode(mode);
+}
+
+/**
+ * Listen for system theme changes
+ */
+export function subscribeToSystemThemeChanges(callback: (mode: 'light' | 'dark') => void) {
+  if (typeof window === 'undefined') return;
+  
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  
+  // Modern browsers
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener('change', (e) => {
+      const mode = e.matches ? 'dark' : 'light';
+      // Only apply if user hasn't manually set a preference
+      if (!localStorage.getItem('theme-mode')) {
+        callback(mode);
+      }
+    });
+  }
+  // Fallback for older browsers
+  else if (mediaQuery.addListener) {
+    mediaQuery.addListener((e) => {
+      const mode = e.matches ? 'dark' : 'light';
+      if (!localStorage.getItem('theme-mode')) {
+        callback(mode);
+      }
+    });
+  }
 }
