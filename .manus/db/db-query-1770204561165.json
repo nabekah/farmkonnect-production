@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, farmName, location FROM farms ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT id, farmName, location FROM farms ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "farmName": "Torgborme ",
+      "location": "Volta Region"
+    },
+    {
+      "id": "2",
+      "farmName": "GreenFarm",
+      "location": "ghana"
+    },
+    {
+      "id": "30001",
+      "farmName": "Ashanti Valley Farm",
+      "location": "Kumasi, Ashanti Region"
+    },
+    {
+      "id": "30002",
+      "farmName": "Volta Green Acres",
+      "location": "Ho, Volta Region"
+    },
+    {
+      "id": "30003",
+      "farmName": "Northern Savanna Farm",
+      "location": "Tamale, Northern Region"
+    },
+    {
+      "id": "30004",
+      "farmName": "Coastal Harvest Farm",
+      "location": "Cape Coast, Central Region"
+    },
+    {
+      "id": "30005",
+      "farmName": "Eastern Hills Farm",
+      "location": "Koforidua, Eastern Region"
+    },
+    {
+      "id": "30006",
+      "farmName": "Senegal Groundnut Farm",
+      "location": "Kaolack, Senegal"
+    },
+    {
+      "id": "30007",
+      "farmName": "Ivory Coast Cocoa Estate",
+      "location": "Daloa, Côte d'Ivoire"
+    },
+    {
+      "id": "30008",
+      "farmName": "Burkina Faso Millet Farm",
+      "location": "Bobo-Dioulasso, Burkina Faso"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfarmName\tlocation\n1\tTorgborme \tVolta Region\n2\tGreenFarm\tghana\n30001\tAshanti Valley Farm\tKumasi, Ashanti Region\n30002\tVolta Green Acres\tHo, Volta Region\n30003\tNorthern Savanna Farm\tTamale, Northern Region\n30004\tCoastal Harvest Farm\tCape Coast, Central Region\n30005\tEastern Hills Farm\tKoforidua, Eastern Region\n30006\tSenegal Groundnut Farm\tKaolack, Senegal\n30007\tIvory Coast Cocoa Estate\tDaloa, Côte d'Ivoire\n30008\tBurkina Faso Millet Farm\tBobo-Dioulasso, Burkina Faso\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

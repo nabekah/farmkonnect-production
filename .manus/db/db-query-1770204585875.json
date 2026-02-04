@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, farmName, location FROM farms ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT id, farmName, location FROM farms ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "farmName": "Torgborme ",
+      "location": "Volta Region"
+    },
+    {
+      "id": "2",
+      "farmName": "GreenFarm",
+      "location": "ghana"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfarmName\tlocation\n1\tTorgborme \tVolta Region\n2\tGreenFarm\tghana\n",
+  "stderr": "",
+  "execution_time_ms": 350
+}

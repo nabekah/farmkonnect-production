@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE marketplaceCart ADD COLUMN expiresAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute ALTER TABLE marketplaceCart ADD COLUMN expiresAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 837
+}

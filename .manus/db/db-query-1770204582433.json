@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total FROM farms;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT COUNT(*) as total FROM farms;",
+  "rows": [
+    {
+      "total": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n2\n",
+  "stderr": "",
+  "execution_time_ms": 351
+}

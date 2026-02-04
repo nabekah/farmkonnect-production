@@ -102,6 +102,21 @@ async function startServer() {
       createContext,
     })
   );
+  // Global error handling middleware
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('[Error Handler]', err);
+    
+    // Don't send error details in production
+    const isDev = process.env.NODE_ENV === 'development';
+    const message = isDev ? err.message : 'Internal Server Error';
+    const stack = isDev ? err.stack : undefined;
+    
+    res.status(err.status || 500).json({
+      error: message,
+      ...(stack && { stack }),
+    });
+  });
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
