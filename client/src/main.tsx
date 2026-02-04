@@ -8,7 +8,6 @@ import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
 import { CartProvider } from "@/contexts/CartContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const queryClient = new QueryClient();
 
@@ -57,11 +56,9 @@ const trpcClient = trpc.createClient({
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" switchable={true}>
-        <CartProvider>
-          <App />
-        </CartProvider>
-      </ThemeProvider>
+      <CartProvider>
+        <App />
+      </CartProvider>
     </QueryClientProvider>
   </trpc.Provider>
 );

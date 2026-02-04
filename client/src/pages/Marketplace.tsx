@@ -16,7 +16,6 @@ import { ProductImageCarousel } from "@/components/ProductImageCarousel";
 import { ProductCard } from "@/components/ProductCard";
 import { SellerProductCard } from "@/components/SellerProductCard";
 import { CartExpirationWarning } from "@/components/CartExpirationWarning";
-import { GridSkeleton, TableSkeleton, CardSkeleton } from "@/components/Skeletons";
 
 const CATEGORIES = ["Seeds", "Fertilizers", "Pesticides", "Equipment", "Tools"];
 const UNITS = ["kg", "liter", "dozen", "piece", "ton", "bag"];
@@ -59,7 +58,7 @@ export default function Marketplace() {
   });
 
   // Queries
-  const { data: allProducts = [], refetch: refetchProducts, isLoading: isProductsLoading } = trpc.marketplace.listProducts.useQuery({
+  const { data: allProducts = [], refetch: refetchProducts } = trpc.marketplace.listProducts.useQuery({
     category: selectedCategory || undefined,
     search: searchQuery || undefined,
     limit: 50,
@@ -104,9 +103,9 @@ export default function Marketplace() {
     setActiveFilters(filters);
   }, [selectedCategory, searchQuery, priceRange]);
 
-  const { data: cart = [], refetch: refetchCart, isLoading: isCartLoading } = trpc.marketplace.getCart.useQuery();
-  const { data: sellerStats, isLoading: isSellerStatsLoading } = trpc.marketplace.getSellerStats.useQuery();
-  const { data: orders = [], isLoading: isOrdersLoading } = trpc.marketplace.listOrders.useQuery({ role: "buyer" });
+  const { data: cart = [], refetch: refetchCart } = trpc.marketplace.getCart.useQuery();
+  const { data: sellerStats } = trpc.marketplace.getSellerStats.useQuery();
+  const { data: orders = [] } = trpc.marketplace.listOrders.useQuery({ role: "buyer" });
 
   // For now, we'll use imageUrl from products and fetch images on-demand in the component
   // This avoids violating React hooks rules by calling useQuery in a loop
@@ -370,14 +369,14 @@ export default function Marketplace() {
     <div className="container mx-auto py-4 md:py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
-          <p className="text-base text-gray-600 mt-1">Browse and purchase agricultural products</p>
+          <h1 className="text-2xl md:text-3xl font-bold">Marketplace</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Browse and purchase agricultural products</p>
         </div>
-        <button onClick={() => window.location.href = "/seller-leaderboard"} className="btn-secondary w-full sm:w-auto">
+        <Button onClick={() => window.location.href = "/seller-leaderboard"} variant="outline" className="w-full sm:w-auto">
           <Trophy className="mr-2 h-4 w-4" />
           <span className="hidden sm:inline">Seller Leaderboard</span>
           <span className="sm:hidden">Leaderboard</span>
-        </button>
+        </Button>
       </div>
       <Tabs defaultValue="browse" className="w-full">
         <TabsList className="grid w-full grid-cols-3 h-auto">
@@ -426,48 +425,51 @@ export default function Marketplace() {
           </div>
 
           {/* Price Range Filter */}
-          <div className="card">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="form-label mb-0">Price Range</label>
-                <span className="text-sm text-gray-600">
-                  GH₵{priceRange[0]} - GH₵{priceRange[1]}
-                </span>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label>Price Range</Label>
+                  <span className="text-sm text-muted-foreground">
+                    GH₵{priceRange[0]} - GH₵{priceRange[1]}
+                  </span>
+                </div>
+                <div className="flex gap-4">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={priceRange[0]}
+                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                    className="w-24"
+                  />
+                  <span className="self-center">-</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 10000])}
+                    className="w-24"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPriceRange([0, 10000])}
+                  >
+                    Reset
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-4">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={priceRange[0]}
-                  onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                  className="form-input w-24"
-                />
-                <span className="self-center">-</span>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 10000])}
-                  className="form-input w-24"
-                />
-                <button
-                  className="btn-outline px-4 py-2 text-sm"
-                  onClick={() => setPriceRange([0, 10000])}
-                >
-                  Reset
-                </button>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Active Filters */}
           {activeFilters.length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {activeFilters.map((filter, idx) => (
-                <span key={idx} className="badge badge-info">
+                <Badge key={idx} variant="secondary" className="px-3 py-1">
                   {filter}
                   <button
-                    className="ml-2 hover:text-red-600"
+                    className="ml-2 hover:text-destructive"
                     onClick={() => {
                       if (filter.startsWith("Category:")) setSelectedCategory("");
                       if (filter.startsWith("Search:")) setSearchQuery("");
@@ -476,10 +478,11 @@ export default function Marketplace() {
                   >
                     ×
                   </button>
-                </span>
+                </Badge>
               ))}
-              <button
-                className="btn-ghost text-sm"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => {
                   setSelectedCategory("");
                   setSearchQuery("");
@@ -487,7 +490,7 @@ export default function Marketplace() {
                 }}
               >
                 Clear all
-              </button>
+              </Button>
             </div>
           )}
 
@@ -496,18 +499,16 @@ export default function Marketplace() {
             Showing {products.length} product{products.length !== 1 ? 's' : ''}
           </div>
 
-          <div className="feature-grid">
-            {isProductsLoading ? (
-              <GridSkeleton count={6} columns={3} />
-            ) : products.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            {products.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-900">No products found</h3>
-                <p className="text-gray-600 mb-4">
+                <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No products found</h3>
+                <p className="text-muted-foreground mb-4">
                   Try adjusting your filters or search query
                 </p>
-                <button
-                  className="btn-outline"
+                <Button
+                  variant="outline"
                   onClick={() => {
                     setSelectedCategory("");
                     setSearchQuery("");
@@ -515,7 +516,7 @@ export default function Marketplace() {
                   }}
                 >
                   Clear all filters
-                </button>
+                </Button>
               </div>
             ) : (
               products.map((product: any) => (
@@ -527,9 +528,7 @@ export default function Marketplace() {
 
         {/* My Orders Tab */}
         <TabsContent value="orders" className="space-y-4">
-          {isOrdersLoading ? (
-            <TableSkeleton rows={3} columns={4} />
-          ) : orders.length === 0 ? (
+          {orders.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center text-muted-foreground">
                 No orders yet. Start shopping!

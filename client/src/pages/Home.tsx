@@ -368,33 +368,34 @@ function LandingPage() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       {/* Hero Section */}
-      <div className="hero-section">
+      <div className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6 max-w-3xl mx-auto">
-          <h1 className="hero-heading">
-            Welcome to <span className="text-emerald-600">FarmKonnect</span>
+          <h1 className="text-5xl font-bold text-gray-900">
+            Welcome to <span className="text-green-600">FarmKonnect</span>
           </h1>
-          <p className="hero-subheading">
+          <p className="text-xl text-gray-600">
             Comprehensive agricultural management platform for modern farmers across Ghana and West Africa
           </p>
           <div className="flex gap-4 justify-center">
-            <button
+            <Button
+              size="lg"
               onClick={() => {
                 window.location.href = getLoginUrl();
               }}
-              className="btn-primary"
+              className="bg-green-600 hover:bg-green-700"
             >
               Get Started <ArrowRight className="ml-2 w-4 h-4" />
-            </button>
-            <button onClick={() => setLocation("/marketplace")} className="btn-outline">
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => setLocation("/marketplace")}>
               Explore Marketplace
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Features Grid */}
-        <div className="mt-20 feature-grid">
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <FeatureCard
             icon={<Wallet className="w-10 h-10" />}
             title="Financial Management"
@@ -456,12 +457,14 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="feature-card">
-      <div className="w-16 h-16 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <h3 className="feature-title">{title}</h3>
-      <p className="feature-description">{description}</p>
-    </div>
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardHeader>
+        <div className="w-16 h-16 rounded-lg bg-green-100 text-green-600 flex items-center justify-center mb-4">
+          {icon}
+        </div>
+        <CardTitle className="text-xl">{title}</CardTitle>
+        <CardDescription className="text-base">{description}</CardDescription>
+      </CardHeader>
+    </Card>
   );
 }

@@ -34,7 +34,6 @@ import { useDarkMode } from '@/contexts/DarkModeContext';
 import { NotificationCenter } from './NotificationCenter';
 import { RealtimeToast } from './RealtimeToast';
 import { CartButton } from './CartButton';
-import { DarkModeToggle } from './DarkModeToggle';
 import { navigationStructure, getAllMenuItems, filterNavigationByRole } from './NavigationStructure';
 import { MenuGroup } from './MenuGroup';
 import { GlobalSearch } from './GlobalSearch';
@@ -292,7 +291,6 @@ function DashboardLayoutContent({
         <main className="flex-1 p-4 flex flex-col">
           {!isMobile && (
             <div className="flex justify-end mb-4 gap-2">
-              <DarkModeToggle />
               <CartButton />
               <NotificationCenter />
             </div>
