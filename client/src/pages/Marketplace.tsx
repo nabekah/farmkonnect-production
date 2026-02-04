@@ -369,14 +369,14 @@ export default function Marketplace() {
     <div className="container mx-auto py-4 md:py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Marketplace</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Browse and purchase agricultural products</p>
+          <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
+          <p className="text-base text-gray-600 mt-1">Browse and purchase agricultural products</p>
         </div>
-        <Button onClick={() => window.location.href = "/seller-leaderboard"} variant="outline" className="w-full sm:w-auto">
+        <button onClick={() => window.location.href = "/seller-leaderboard"} className="btn-secondary w-full sm:w-auto">
           <Trophy className="mr-2 h-4 w-4" />
           <span className="hidden sm:inline">Seller Leaderboard</span>
           <span className="sm:hidden">Leaderboard</span>
-        </Button>
+        </button>
       </div>
       <Tabs defaultValue="browse" className="w-full">
         <TabsList className="grid w-full grid-cols-3 h-auto">
@@ -425,51 +425,48 @@ export default function Marketplace() {
           </div>
 
           {/* Price Range Filter */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <Label>Price Range</Label>
-                  <span className="text-sm text-muted-foreground">
-                    GH₵{priceRange[0]} - GH₵{priceRange[1]}
-                  </span>
-                </div>
-                <div className="flex gap-4">
-                  <Input
-                    type="number"
-                    placeholder="Min"
-                    value={priceRange[0]}
-                    onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                    className="w-24"
-                  />
-                  <span className="self-center">-</span>
-                  <Input
-                    type="number"
-                    placeholder="Max"
-                    value={priceRange[1]}
-                    onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 10000])}
-                    className="w-24"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPriceRange([0, 10000])}
-                  >
-                    Reset
-                  </Button>
-                </div>
+          <div className="card">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="form-label mb-0">Price Range</label>
+                <span className="text-sm text-gray-600">
+                  GH₵{priceRange[0]} - GH₵{priceRange[1]}
+                </span>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex gap-4">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={priceRange[0]}
+                  onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                  className="form-input w-24"
+                />
+                <span className="self-center">-</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={priceRange[1]}
+                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 10000])}
+                  className="form-input w-24"
+                />
+                <button
+                  className="btn-outline px-4 py-2 text-sm"
+                  onClick={() => setPriceRange([0, 10000])}
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Active Filters */}
           {activeFilters.length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {activeFilters.map((filter, idx) => (
-                <Badge key={idx} variant="secondary" className="px-3 py-1">
+                <span key={idx} className="badge badge-info">
                   {filter}
                   <button
-                    className="ml-2 hover:text-destructive"
+                    className="ml-2 hover:text-red-600"
                     onClick={() => {
                       if (filter.startsWith("Category:")) setSelectedCategory("");
                       if (filter.startsWith("Search:")) setSearchQuery("");
@@ -478,11 +475,10 @@ export default function Marketplace() {
                   >
                     ×
                   </button>
-                </Badge>
+                </span>
               ))}
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                className="btn-ghost text-sm"
                 onClick={() => {
                   setSelectedCategory("");
                   setSearchQuery("");
@@ -490,7 +486,7 @@ export default function Marketplace() {
                 }}
               >
                 Clear all
-              </Button>
+              </button>
             </div>
           )}
 
@@ -499,16 +495,16 @@ export default function Marketplace() {
             Showing {products.length} product{products.length !== 1 ? 's' : ''}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div className="feature-grid">
             {products.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">No products found</h3>
-                <p className="text-muted-foreground mb-4">
+                <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">No products found</h3>
+                <p className="text-gray-600 mb-4">
                   Try adjusting your filters or search query
                 </p>
-                <Button
-                  variant="outline"
+                <button
+                  className="btn-outline"
                   onClick={() => {
                     setSelectedCategory("");
                     setSearchQuery("");
@@ -516,7 +512,7 @@ export default function Marketplace() {
                   }}
                 >
                   Clear all filters
-                </Button>
+                </button>
               </div>
             ) : (
               products.map((product: any) => (
