@@ -184,3 +184,120 @@
     }
   }
 }
+
+/* Responsive Design Utilities for Tablet & Small Laptop */
+
+/* Tablet Breakpoint (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+  
+  .container {
+    @apply px-3 md:px-4;
+  }
+  
+  .feature-grid {
+    @apply grid-cols-2 md:grid-cols-3;
+  }
+  
+  .stat-card {
+    @apply p-4 md:p-5;
+  }
+  
+  .card {
+    @apply p-4 md:p-5;
+  }
+  
+  h1 {
+    @apply text-2xl md:text-3xl;
+  }
+  
+  h2 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  .btn-primary {
+    @apply px-3 py-2 text-sm md:px-4 md:py-2.5 md:text-base;
+  }
+}
+
+/* Small Laptop Breakpoint (1024px - 1440px) */
+@media (min-width: 1024px) and (max-width: 1440px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+  
+  .container {
+    @apply max-w-6xl mx-auto px-4;
+  }
+  
+  .feature-grid {
+    @apply grid-cols-3 lg:grid-cols-4;
+  }
+  
+  .stat-card {
+    @apply p-5 lg:p-6;
+  }
+  
+  .card {
+    @apply p-5 lg:p-6;
+  }
+  
+  h1 {
+    @apply text-3xl lg:text-4xl;
+  }
+  
+  h2 {
+    @apply text-2xl lg:text-3xl;
+  }
+}
+
+/* Mobile-First Responsive Adjustments */
+@media (max-width: 1024px) {
+  /* Sidebar adjustments for tablet */
+  .sidebar {
+    @apply max-w-[200px] md:max-w-[240px];
+  }
+  
+  /* Navigation spacing */
+  .sidebar-menu {
+    @apply gap-1 md:gap-2;
+  }
+  
+  /* Content padding */
+  main {
+    @apply p-3 md:p-4;
+  }
+  
+  /* Grid layouts */
+  .grid {
+    @apply gap-3 md:gap-4;
+  }
+  
+  /* Form elements */
+  input, textarea, select {
+    @apply text-base; /* Prevents zoom on iOS */
+  }
+  
+  /* Touch targets */
+  button, a[role="button"] {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Modal/Dialog adjustments */
+  .dialog-content {
+    @apply w-[95vw] md:w-[90vw] lg:w-auto;
+  }
+}
+
+/* Large Laptop (1440px+) */
+@media (min-width: 1440px) {
+  .container {
+    @apply max-w-7xl mx-auto;
+  }
+  
+  .feature-grid {
+    @apply grid-cols-4;
+  }
+}

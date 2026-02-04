@@ -116,12 +116,12 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
       <div className="space-y-8">
         {/* Welcome Section */}
         <div className="space-y-2">
-        <h1 className="text-4xl font-bold">Welcome back, {user.name}!</h1>
-        <p className="text-lg text-muted-foreground">Manage your agricultural operations efficiently with FarmKonnect</p>
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Welcome back, {user.name}!</h1>
+        <p className="text-base md:text-lg text-muted-foreground">Manage your agricultural operations efficiently with FarmKonnect</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
         <KPICard
           title="Total Revenue"
           value={`GH₵ ${totalRevenue.toLocaleString()}`}
@@ -198,17 +198,19 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
 
       {/* Weather Widget */}
       <div className="mb-8">
-        <WeatherWidget
-          latitude={5.6037}
-          longitude={-0.1870}
-          showForecast={true}
-        />
+        <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4">
+          <WeatherWidget
+            latitude={5.6037}
+            longitude={-0.1870}
+            showForecast={true}
+          />
+        </div>
       </div>
 
       {/* Quick Actions Grid */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Quick Actions for Farm Management</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">Quick Actions for Farm Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
           <QuickActionCard
             icon={<Wallet className="w-8 h-8" />}
             title="Farm Finance"

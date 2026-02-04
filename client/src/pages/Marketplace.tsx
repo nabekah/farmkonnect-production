@@ -499,11 +499,11 @@ export default function Marketplace() {
             Showing {products.length} product{products.length !== 1 ? 's' : ''}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
             {products.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">No products found</h3>
+                <h3 className="text-base md:text-lg font-semibold mb-2">No products found</h3>
                 <p className="text-muted-foreground mb-4">
                   Try adjusting your filters or search query
                 </p>
@@ -836,7 +836,7 @@ export default function Marketplace() {
           )}
 
           {/* My Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
             {products
               .filter((p: any) => p.sellerId === user?.id)
               .map((product: any) => (
