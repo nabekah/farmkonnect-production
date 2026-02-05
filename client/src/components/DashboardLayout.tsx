@@ -38,6 +38,7 @@ import { navigationStructure, getAllMenuItems, filterNavigationByRole } from './
 import { MenuGroup } from './MenuGroup';
 import { GlobalSearch } from './GlobalSearch';
 import { Breadcrumbs } from './Breadcrumbs';
+import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
 
 const menuItems = getAllMenuItems();
 
@@ -270,6 +271,7 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
+        <ConnectionStatusIndicator />
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
