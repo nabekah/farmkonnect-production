@@ -62,6 +62,8 @@ import { FloatingElements } from "./components/FloatingElements";
 import { FieldWorkerDashboard } from "./pages/FieldWorkerDashboard";
 import { ActivityLogger } from "./pages/ActivityLogger";
 import { ManagerTaskAssignment } from "./pages/ManagerTaskAssignment";
+import { BatchTaskImport } from "./pages/BatchTaskImport";
+import { ActivityAnalyticsDashboard } from "./pages/ActivityAnalyticsDashboard";
 
 function Router() {
   return (
@@ -424,6 +426,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ManagerTaskAssignment />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/manager/batch-import">
+        {() => (
+          <DashboardLayout>
+            <BatchTaskImport />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/manager/analytics">
+        {() => (
+          <DashboardLayout>
+            <ActivityAnalyticsDashboard />
           </DashboardLayout>
         )}
       </Route>
