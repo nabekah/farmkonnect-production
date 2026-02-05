@@ -7,8 +7,8 @@ import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { getDb } from '../db';
-import { fieldWorkerTasks, taskHistory, users } from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { fieldWorkerTasks, taskHistory, users, fieldWorkerActivityLogs } from '../../drizzle/schema';
+import { eq, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
@@ -269,7 +269,7 @@ export const fieldWorkerRouter = router({
     }),
 
   /**
-   * Create activity log
+   * Create activity log - REAL DATABASE IMPLEMENTATION
    */
   createActivityLog: protectedProcedure
     .input(z.object({
@@ -298,15 +298,43 @@ export const fieldWorkerRouter = router({
       duration: z.number().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      const logId = uuidv4();
+
+      await db.insert(fieldWorkerActivityLogs).values({
+        logId,
+        userId: ctx.user!.id,
+        farmId: input.farmId,
+        fieldId: input.fieldId || null,
+        taskId: input.taskId || null,
+        activityType: input.activityType,
+        title: input.title,
+        description: input.description,
+        observations: input.observations || null,
+        gpsLatitude: input.gpsLatitude ? String(input.gpsLatitude) : null,
+        gpsLongitude: input.gpsLongitude ? String(input.gpsLongitude) : null,
+        photoUrls: input.photoUrls ? JSON.stringify(input.photoUrls) : null,
+        duration: input.duration || null,
+        status: 'submitted',
+        syncedToServer: true,
+      });
+
       return {
         success: true,
-        logId: `log-${Date.now()}`,
+        logId,
         message: 'Activity logged successfully',
       };
     }),
 
   /**
-   * Get recent activity logs
+   * Get recent activity logs - REAL DATABASE IMPLEMENTATION
    */
   getActivityLogs: protectedProcedure
     .input(z.object({
@@ -314,16 +342,34 @@ export const fieldWorkerRouter = router({
       limit: z.number().default(20),
     }))
     .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      const logs = await db.select().from(fieldWorkerActivityLogs)
+        .where(eq(fieldWorkerActivityLogs.farmId, input.farmId))
+        .orderBy(desc(fieldWorkerActivityLogs.createdAt))
+        .limit(input.limit);
+
       return {
-        logs: [
-          {
-            id: '1',
-            title: 'Crop health check',
-            activityType: 'crop_health',
-            description: 'Found healthy plants in Field A',
-            createdAt: new Date().toISOString(),
-          },
-        ],
+        logs: logs.map((log: any) => ({
+          id: log.logId,
+          logId: log.logId,
+          title: log.title,
+          activityType: log.activityType,
+          description: log.description,
+          observations: log.observations,
+          gpsLatitude: log.gpsLatitude,
+          gpsLongitude: log.gpsLongitude,
+          photoUrls: log.photoUrls ? JSON.parse(log.photoUrls) : [],
+          createdAt: log.createdAt,
+          updatedAt: log.updatedAt,
+          status: log.status,
+        })),
       };
     }),
 
