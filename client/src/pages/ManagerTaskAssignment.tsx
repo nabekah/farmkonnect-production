@@ -72,6 +72,8 @@ export function ManagerTaskAssignment() {
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const createTaskMutation = trpc.fieldWorker.createTask.useMutation();
+
   // Form state
   const [newTask, setNewTask] = useState<NewTask>({
     title: '',
@@ -149,24 +151,16 @@ export function ManagerTaskAssignment() {
 
     setIsSubmitting(true);
 
-    try {
-      // Call createTask mutation
-      await trpc.fieldWorker.createTask.useMutation({
-        onSuccess: () => {
-          // Refetch tasks after creation
-          window.location.reload();
-        },
-      }).mutateAsync({
-        farmId: farmId || 1,
-        title: newTask.title,
-        description: newTask.description,
-        taskType: newTask.taskType,
-        priority: newTask.priority as any,
-        dueDate: `${newTask.dueDate}T${newTask.dueTime}:00`,
-        assignedToUserId: newTask.assignedToUserId,
-        fieldId: newTask.fieldId,
-      });
-
+    await createTaskMutation.mutateAsync({
+      farmId: farmId || 1,
+      title: newTask.title,
+      description: newTask.description,
+      taskType: newTask.taskType,
+      priority: newTask.priority as any,
+      dueDate: `${newTask.dueDate}T${newTask.dueTime}:00`,
+      assignedToUserId: newTask.assignedToUserId,
+      fieldId: newTask.fieldId,
+    }).then(() => {
       // Reset form
       setNewTask({
         title: '',
@@ -179,12 +173,13 @@ export function ManagerTaskAssignment() {
         fieldId: undefined,
       });
       setIsDialogOpen(false);
-    } catch (error) {
+      alert('Task created successfully!');
+    }).catch((error) => {
       console.error('Failed to create task:', error);
       alert('Failed to create task. Please try again.');
-    } finally {
+    }).finally(() => {
       setIsSubmitting(false);
-    }
+    })
   };
 
   const getPriorityColor = (priority: string) => {

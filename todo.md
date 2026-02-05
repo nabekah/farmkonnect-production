@@ -2669,3 +2669,75 @@
 - [x] Identify database type and connection - Using TiDB (MySQL-compatible)
 - [x] Fix SQL parameter binding in createActivityLog - Using template literals
 - [x] Fix SQL parameter binding in createTask - Using template literals
+
+
+## QA Testing & Bug Fixes - In Progress
+
+### Authentication & User Management
+- [ ] Test user login flow
+- [ ] Test user logout
+- [ ] Test session persistence
+- [ ] Test role-based access control
+
+### Activity Logger Feature
+- [ ] Test activity creation with GPS data
+- [ ] Test activity creation with photos
+- [ ] Test activity list display
+- [ ] Test activity filtering and search
+- [ ] Test activity real-time updates
+
+### Task Management Feature
+- [ ] Test task creation
+- [ ] Test task list display
+- [ ] Test task detail page
+- [ ] Test task editing
+- [ ] Test task status updates
+- [ ] Test task deletion
+- [ ] Test task real-time updates
+
+### Dashboard Features
+- [ ] Test field worker dashboard
+- [ ] Test manager dashboard
+- [ ] Test dashboard data accuracy
+- [ ] Test dashboard real-time updates
+
+### WebSocket & Real-Time
+- [ ] Test WebSocket connection
+- [ ] Test real-time activity updates
+- [ ] Test real-time task updates
+- [ ] Test WebSocket reconnection
+
+### UI/UX Issues
+- [ ] Test responsive design
+- [ ] Test form validation
+- [ ] Test error messages
+- [ ] Test loading states
+- [ ] Test empty states
+
+
+## Identified Bugs & Issues - FIXED
+
+### Critical Issues
+- [x] ActivityLogger: Success redirect not implemented - FIXED with useEffect redirect
+- [x] ManagerTaskAssignment: Uses window.location.reload() - FIXED with proper state update
+- [x] ManagerTaskAssignment: Mutation hook created inside handler - FIXED moved to component level
+- [x] ViewAllActivities: May not auto-refetch after WebSocket updates - FIXED with invalidate
+- [x] ViewAllTasks: May not auto-refetch after WebSocket updates - FIXED with invalidate
+
+### UI/UX Issues
+- [ ] Form validation errors not displayed to user
+- [ ] Loading states may not show properly
+- [ ] Empty states may not be clear
+- [ ] Error messages could be more descriptive
+- [ ] Missing success toast notifications
+
+### Data Issues
+- [ ] Task/Activity filtering may not work correctly
+- [ ] Search functionality may have issues
+- [ ] Sorting may not be implemented
+- [ ] Pagination not implemented for large datasets
+
+### Performance Issues
+- [ ] WebSocket reconnection logic may need improvement
+- [ ] Memory leaks from event listeners
+- [ ] Unnecessary re-renders

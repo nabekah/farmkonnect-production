@@ -223,6 +223,14 @@ export function ActivityLogger() {
 
   // Show success state after submission
   if (submitSuccess) {
+    // Redirect after 2 seconds
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        navigate('/field-worker/activities');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }, [navigate]);
+
     return (
       <div className="flex items-center justify-center h-screen">
         <Card className="w-full max-w-md">
@@ -230,7 +238,7 @@ export function ActivityLogger() {
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Activity Logged!</h2>
             <p className="text-muted-foreground">Your activity has been recorded successfully.</p>
-            <p className="text-sm text-muted-foreground mt-4">Redirecting to dashboard...</p>
+            <p className="text-sm text-muted-foreground mt-4">Redirecting to activities list...</p>
           </CardContent>
         </Card>
       </div>
