@@ -39,6 +39,7 @@ import { MenuGroup } from './MenuGroup';
 import { GlobalSearch } from './GlobalSearch';
 import { Breadcrumbs } from './Breadcrumbs';
 import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
+import { RetryNotificationsContainer, OfflineQueueStatus } from './RetryNotification';
 
 const menuItems = getAllMenuItems();
 
@@ -301,6 +302,7 @@ function DashboardLayoutContent({
         </main>
       </SidebarInset>
       <RealtimeToast />
+      <RetryNotificationsContainer />
     </>
   );
 }
