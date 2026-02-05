@@ -33,6 +33,12 @@ import {
   Database,
   Settings,
   LucideIcon,
+  Smartphone,
+  MapPin,
+  Clock,
+  Camera,
+  ListTodo,
+  Upload,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -59,6 +65,31 @@ export const navigationStructure: MenuGroup[] = [
     collapsible: false,
     items: [
       { icon: LayoutDashboard, label: "Home", path: "/" },
+    ],
+  },
+
+  {
+    title: "Field Worker",
+    description: "Field operations and activity tracking",
+    collapsible: true,
+    defaultExpanded: true,
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/field-worker/dashboard" },
+      { icon: Camera, label: "Activity Logger", path: "/field-worker/activity-log" },
+      { icon: Clock, label: "Time Tracking", path: "/field-worker/dashboard" },
+      { icon: MapPin, label: "GPS Tracking", path: "/field-worker/gps-tracking" },
+    ],
+  },
+
+  {
+    title: "Task Management",
+    description: "Task assignment and tracking",
+    collapsible: true,
+    defaultExpanded: true,
+    items: [
+      { icon: ListTodo, label: "Tasks", path: "/manager/tasks" },
+      { icon: Upload, label: "Batch Import", path: "/manager/batch-import" },
+      { icon: BarChart3, label: "Analytics", path: "/manager/analytics" },
     ],
   },
 

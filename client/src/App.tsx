@@ -64,6 +64,7 @@ import { ActivityLogger } from "./pages/ActivityLogger";
 import { ManagerTaskAssignment } from "./pages/ManagerTaskAssignment";
 import { BatchTaskImport } from "./pages/BatchTaskImport";
 import { ActivityAnalyticsDashboard } from "./pages/ActivityAnalyticsDashboard";
+import { GPSTracking } from "./pages/GPSTracking";
 
 function Router() {
   return (
@@ -440,6 +441,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ActivityAnalyticsDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-worker/gps-tracking">
+        {() => (
+          <DashboardLayout>
+            <GPSTracking />
           </DashboardLayout>
         )}
       </Route>
