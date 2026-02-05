@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { AlertCircle, Camera, MapPin, Loader2, CheckCircle2, X } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { uploadPhotosToS3, validatePhotoFile } from '@/lib/photoUpload';
 
 interface Photo {
   file: File;
@@ -58,12 +59,22 @@ export function ActivityLogger() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const createActivityMutation = trpc.fieldWorker.createActivityLog.useMutation();
+  const createActivityMutation = trpc.fieldWorker.createActivityLog.useMutation({
+    onSuccess: () => {
+      // Activity logged successfully
+      setSubmitSuccess(true);
+    },
+    onError: (error) => {
+      console.error('Failed to create activity:', error);
+      alert('Failed to log activity. Please try again.');
+    },
+  });
 
   useEffect(() => {
-    // TODO: Get user's farm ID from profile
+    // Get user's farm ID from profile or use default
     if (user?.id) {
-      setFarmId(1); // Placeholder
+      // TODO: Fetch actual farm ID from user profile
+      setFarmId(1); // Placeholder - replace with actual farm ID from user profile
     }
   }, [user]);
 
@@ -87,15 +98,23 @@ export function ActivityLogger() {
     }
   }, []);
 
-  const handleCameraCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCameraCapture = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      
+      // Validate file before adding
+      const validation = validatePhotoFile(file);
+      if (!validation.valid) {
+        alert(validation.error);
+        continue;
+      }
+
       const preview = URL.createObjectURL(file);
 
-      // Try to extract GPS data from EXIF (simplified - would need exif library for production)
+      // Attach GPS data to photo
       const photo: Photo = {
         file,
         preview,
@@ -110,7 +129,7 @@ export function ActivityLogger() {
 
       setPhotos((prev) => [...prev, photo]);
     }
-  };
+  }, [gpsLocation]);
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => {
@@ -132,8 +151,22 @@ export function ActivityLogger() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Upload photos to S3 and get URLs
-      const photoUrls = photos.map((p) => p.preview); // Placeholder
+      // Upload photos to S3
+      let photoUrls: string[] = [];
+      if (photos.length > 0 && farmId) {
+        const uploadedPhotos = await uploadPhotosToS3(
+          photos.map((p) => p.file),
+          farmId,
+          gpsLocation
+            ? {
+                latitude: gpsLocation.lat,
+                longitude: gpsLocation.lng,
+                accuracy: 10,
+              }
+            : undefined
+        );
+        photoUrls = uploadedPhotos.map((p) => p.url);
+      }
 
       await createActivityMutation.mutateAsync({
         farmId,
@@ -146,14 +179,6 @@ export function ActivityLogger() {
         gpsLongitude: gpsLocation?.lng,
         photoUrls,
       });
-
-      setSubmitSuccess(true);
-      setTimeout(() => {
-        navigate('/field-worker/dashboard');
-      }, 2000);
-    } catch (error) {
-      console.error('Failed to create activity:', error);
-      alert('Failed to log activity. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

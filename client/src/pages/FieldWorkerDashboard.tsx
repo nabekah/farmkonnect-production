@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
@@ -24,19 +24,37 @@ export function FieldWorkerDashboard() {
   // Get dashboard data
   const dashboardQuery = trpc.fieldWorker.getDashboardData.useQuery(
     { farmId: farmId || 0 },
-    { enabled: !!farmId }
+    { enabled: !!farmId, refetchInterval: 30000 } // Refetch every 30 seconds
   );
 
   // Clock in/out mutations
-  const clockInMutation = trpc.fieldWorker.clockIn.useMutation();
-  const clockOutMutation = trpc.fieldWorker.clockOut.useMutation();
+  const clockInMutation = trpc.fieldWorker.clockIn.useMutation({
+    onSuccess: () => {
+      dashboardQuery.refetch();
+    },
+  });
+  const clockOutMutation = trpc.fieldWorker.clockOut.useMutation({
+    onSuccess: () => {
+      dashboardQuery.refetch();
+    },
+  });
 
   useEffect(() => {
-    // TODO: Get user's farm ID from profile
+    // Get user's farm ID from profile or use default
     if (user?.id) {
-      setFarmId(1); // Placeholder
+      // TODO: Fetch actual farm ID from user profile
+      setFarmId(1); // Placeholder - replace with actual farm ID from user profile
     }
   }, [user]);
+
+  // Update work duration every second when clocked in
+  useEffect(() => {
+    if (!isClockedIn) return;
+    const interval = setInterval(() => {
+      // Force component re-render to update duration
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isClockedIn, clockInTime]);
 
   const handleClockIn = async () => {
     if (!farmId) return;
@@ -66,6 +84,8 @@ export function FieldWorkerDashboard() {
     }
   };
 
+  const [, setForceUpdate] = useState(0);
+
   const calculateWorkDuration = () => {
     if (!clockInTime) return '0h 0m';
     const now = new Date();
@@ -74,6 +94,15 @@ export function FieldWorkerDashboard() {
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
   };
+
+  // Force update every second for duration display
+  useEffect(() => {
+    if (!isClockedIn) return;
+    const interval = setInterval(() => {
+      setForceUpdate((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isClockedIn]);
 
   if (!farmId) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;

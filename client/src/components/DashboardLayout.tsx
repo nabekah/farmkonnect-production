@@ -42,6 +42,7 @@ import { RetryNotificationsContainer, OfflineQueueStatus } from './RetryNotifica
 import { ToastContainer } from './ToastContainer';
 import { WebSocketReconnectionUI } from './WebSocketReconnectionUI';
 import { NotificationHistoryPanel } from './NotificationHistoryPanel';
+import { FieldWorkerNotificationCenter } from './FieldWorkerNotificationCenter';
 
 const menuItems = getAllMenuItems();
 
@@ -297,6 +298,7 @@ function DashboardLayoutContent({
         {!isMobile && (
           <div className="flex justify-end mb-4 gap-2">
             <CartButton />
+            {user && <FieldWorkerNotificationCenter workerId={user.id} />}
             <NotificationCenter />
             <NotificationHistoryPanel />
           </div>
