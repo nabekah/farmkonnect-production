@@ -60,8 +60,10 @@ import { SoilHealthRecommendations } from "./pages/SoilHealthRecommendations";
 import { FertilizerCostDashboard } from "./pages/FertilizerCostDashboard";
 import { FloatingElements } from "./components/FloatingElements";
 import { FieldWorkerDashboard } from "./pages/FieldWorkerDashboard";
-import { ActivityLogger } from "./pages/ActivityLogger";
-import { ManagerTaskAssignment } from "./pages/ManagerTaskAssignment";
+import { ActivityLogger } from './pages/ActivityLogger';
+import { ViewAllTasks } from './pages/ViewAllTasks';
+import { ViewAllActivities } from './pages/ViewAllActivities';
+import { ManagerTaskAssignment } from './pages/ManagerTaskAssignment';
 import { BatchTaskImport } from "./pages/BatchTaskImport";
 import { ActivityAnalyticsDashboard } from "./pages/ActivityAnalyticsDashboard";
 import { GPSTracking } from "./pages/GPSTracking";
@@ -421,6 +423,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ActivityLogger />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-worker/tasks">
+        {() => (
+          <DashboardLayout>
+            <ViewAllTasks />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-worker/activities">
+        {() => (
+          <DashboardLayout>
+            <ViewAllActivities />
           </DashboardLayout>
         )}
       </Route>

@@ -188,6 +188,16 @@ export function ActivityLogger() {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
+  // Redirect to dashboard after successful submission
+  useEffect(() => {
+    if (submitSuccess) {
+      const timer = setTimeout(() => {
+        navigate('/field-worker/dashboard');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitSuccess, navigate]);
+
   if (submitSuccess) {
     return (
       <div className="flex items-center justify-center h-screen">
