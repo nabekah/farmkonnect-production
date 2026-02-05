@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { MapPin, Camera, ChevronLeft, Search, Calendar, Loader2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 interface Activity {
   id: string;
@@ -61,6 +62,12 @@ export function ViewAllActivities() {
     { farmId, limit: 100 },
     { enabled: !!farmId }
   );
+
+  // Set up WebSocket listeners for real-time updates
+  useWebSocket({
+    onActivityCreated: () => refetch(),
+    onActivityUpdated: () => refetch(),
+  });
 
   // Update activities when data changes
   useEffect(() => {

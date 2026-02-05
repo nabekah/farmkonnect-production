@@ -10,6 +10,7 @@ import { getDb } from '../db';
 import { fieldWorkerTasks, taskHistory, users } from '../../drizzle/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { broadcastToFarm } from '../_core/websocket';
 
 // ============================================================================
 // FIELD WORKER TASK PROCEDURES
@@ -241,6 +242,25 @@ export const fieldWorkerRouter = router({
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         );
 
+        // Broadcast activity creation event to all connected clients
+        broadcastToFarm(input.farmId, {
+          type: 'activity_created',
+          data: {
+            logId,
+            farmId: input.farmId,
+            fieldId: input.fieldId,
+            activityType: input.activityType,
+            title: input.title,
+            description: input.description,
+            observations: input.observations,
+            gpsLatitude: input.gpsLatitude,
+            gpsLongitude: input.gpsLongitude,
+            photoUrls: input.photoUrls,
+            createdAt: now.toISOString(),
+          },
+          timestamp: now.toISOString(),
+        });
+
         return {
           success: true,
           logId,
@@ -405,6 +425,21 @@ export const fieldWorkerRouter = router({
             assignedToUserId, assignedByUserId, dueDate, createdAt, updatedAt
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         );
+
+        // Broadcast task creation event
+        broadcastToFarm(input.farmId, {
+          type: 'task_created',
+          data: {
+            taskId,
+            farmId: input.farmId,
+            title: input.title,
+            priority: input.priority,
+            dueDate: input.dueDate,
+            status: 'pending',
+            createdAt: now.toISOString(),
+          },
+          timestamp: now.toISOString(),
+        });
 
         return {
           success: true,

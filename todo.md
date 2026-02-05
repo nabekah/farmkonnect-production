@@ -2650,3 +2650,14 @@
 - [x] ManagerTaskAssignment form now calls createTask mutation to save tasks
 - [x] All pages now display real data from database instead of mock data
 - [x] All 247 tests passing after fixes
+
+
+## Real-Time WebSocket Updates - Completed
+- [x] Set up WebSocket server with ws library
+- [x] Create WebSocket event handlers for task creation and status changes
+- [x] Create WebSocket event handlers for activity creation
+- [x] Implement client-side useWebSocket hook with event callbacks
+- [x] Connect ViewAllActivities to real-time updates
+- [x] Connect ViewAllTasks to real-time updates
+- [x] Emit WebSocket events from task/activity mutations
+- [x] Test real-time updates end-to-end - all 247 tests passing

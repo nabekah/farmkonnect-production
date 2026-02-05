@@ -6,8 +6,16 @@ export interface WebSocketMessage {
   [key: string]: any;
 }
 
-export function useWebSocket() {
+interface UseWebSocketOptions {
+  onTaskCreated?: (data: any) => void;
+  onTaskUpdated?: (data: any) => void;
+  onActivityCreated?: (data: any) => void;
+  onActivityUpdated?: (data: any) => void;
+}
+
+export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { user } = useAuth();
+  const { onTaskCreated, onTaskUpdated, onActivityCreated, onActivityUpdated } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -46,6 +54,17 @@ export function useWebSocket() {
         const message = JSON.parse(event.data);
         console.log('[WebSocket] Received:', message);
         setLastMessage(message);
+
+        // Handle specific event types
+        if (message.type === 'task_created' && onTaskCreated) {
+          onTaskCreated(message.data);
+        } else if (message.type === 'task_updated' && onTaskUpdated) {
+          onTaskUpdated(message.data);
+        } else if (message.type === 'activity_created' && onActivityCreated) {
+          onActivityCreated(message.data);
+        } else if (message.type === 'activity_updated' && onActivityUpdated) {
+          onActivityUpdated(message.data);
+        }
       } catch (error) {
         console.error('[WebSocket] Error parsing message:', error);
       }

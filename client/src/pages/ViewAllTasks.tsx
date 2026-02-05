@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Clock, CheckCircle2, AlertCircle, Trash2, ChevronLeft, Loader2 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 interface Task {
   taskId: string;
@@ -67,10 +68,16 @@ export function ViewAllTasks() {
   const farmId = 1;
 
   // Fetch real tasks from database
-  const { data: tasksData, isLoading } = trpc.fieldWorker.getTasks.useQuery(
+  const { data: tasksData, isLoading, refetch } = trpc.fieldWorker.getTasks.useQuery(
     { farmId },
     { enabled: !!farmId }
   );
+
+  // Set up WebSocket listeners for real-time updates
+  useWebSocket({
+    onTaskCreated: () => refetch(),
+    onTaskUpdated: () => refetch(),
+  });
 
   // Update tasks when data changes
   useEffect(() => {
