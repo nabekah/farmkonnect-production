@@ -68,6 +68,7 @@ import { BatchTaskImport } from "./pages/BatchTaskImport";
 import { ActivityAnalyticsDashboard } from "./pages/ActivityAnalyticsDashboard";
 import { GPSTracking } from "./pages/GPSTracking";
 import { ActivityPhotoGallery } from "./pages/ActivityPhotoGallery";
+import { TaskPerformanceAnalytics } from "./pages/TaskPerformanceAnalytics";
 
 function Router() {
   return (
@@ -472,6 +473,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ActivityPhotoGallery />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/manager/performance">
+        {() => (
+          <DashboardLayout>
+            <TaskPerformanceAnalytics />
           </DashboardLayout>
         )}
       </Route>

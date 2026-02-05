@@ -198,6 +198,13 @@ export function ActivityLogger() {
     }
   }, [submitSuccess, navigate]);
 
+  // Cleanup photos on unmount
+  useEffect(() => {
+    return () => {
+      photos.forEach((photo) => URL.revokeObjectURL(photo.preview));
+    };
+  }, [photos]);
+
   if (submitSuccess) {
     return (
       <div className="flex items-center justify-center h-screen">
