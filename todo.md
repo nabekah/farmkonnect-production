@@ -2627,7 +2627,7 @@
 
 
 ## Bug Fixes - Completed
-- [x] Fix activity creation not saving to database
-- [x] Fix activity list not showing created activities
-- [x] Implement real database save for createActivityLog
-- [x] Implement real query for getActivityLogs
+- [x] Fix activity creation not saving to database - FIXED with raw SQL
+- [x] Fix activity list not showing created activities - FIXED with raw SQL
+- [x] Implement real database save for createActivityLog - Using raw SQL INSERT
+- [x] Implement real query for getActivityLogs - Using raw SQL SELECT

@@ -7,8 +7,8 @@ import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { getDb } from '../db';
-import { fieldWorkerTasks, taskHistory, users, fieldWorkerActivityLogs } from '../../drizzle/schema';
-import { eq, desc } from 'drizzle-orm';
+import { fieldWorkerTasks, taskHistory, users } from '../../drizzle/schema';
+import { eq, desc, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 // ============================================================================
@@ -269,7 +269,7 @@ export const fieldWorkerRouter = router({
     }),
 
   /**
-   * Create activity log - REAL DATABASE IMPLEMENTATION
+   * Create activity log - USING RAW SQL
    */
   createActivityLog: protectedProcedure
     .input(z.object({
@@ -308,33 +308,39 @@ export const fieldWorkerRouter = router({
 
       const logId = uuidv4();
 
-      await db.insert(fieldWorkerActivityLogs).values({
-        logId,
-        userId: ctx.user!.id,
-        farmId: input.farmId,
-        fieldId: input.fieldId || null,
-        taskId: input.taskId || null,
-        activityType: input.activityType,
-        title: input.title,
-        description: input.description,
-        observations: input.observations || null,
-        gpsLatitude: input.gpsLatitude ? String(input.gpsLatitude) : null,
-        gpsLongitude: input.gpsLongitude ? String(input.gpsLongitude) : null,
-        photoUrls: input.photoUrls ? JSON.stringify(input.photoUrls) : null,
-        duration: input.duration || null,
-        status: 'submitted',
-        syncedToServer: true,
-      });
+      try {
+        // Use raw SQL to insert activity log
+        await db.execute(sql`
+          INSERT INTO fieldWorkerActivityLogs (
+            logId, userId, farmId, fieldId, taskId, activityType, 
+            title, description, observations, gpsLatitude, gpsLongitude, 
+            photoUrls, duration, status, syncedToServer
+          ) VALUES (
+            ${logId}, ${ctx.user!.id}, ${input.farmId}, 
+            ${input.fieldId || null}, ${input.taskId || null}, ${input.activityType},
+            ${input.title}, ${input.description || ''}, ${input.observations || null},
+            ${input.gpsLatitude || null}, ${input.gpsLongitude || null},
+            ${input.photoUrls ? JSON.stringify(input.photoUrls) : null},
+            ${input.duration || null}, 'submitted', true
+          )
+        `);
 
-      return {
-        success: true,
-        logId,
-        message: 'Activity logged successfully',
-      };
+        return {
+          success: true,
+          logId,
+          message: 'Activity logged successfully',
+        };
+      } catch (error: any) {
+        console.error('Activity creation error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to save activity: ${error.message}`,
+        });
+      }
     }),
 
   /**
-   * Get recent activity logs - REAL DATABASE IMPLEMENTATION
+   * Get recent activity logs - USING RAW SQL
    */
   getActivityLogs: protectedProcedure
     .input(z.object({
@@ -350,27 +356,40 @@ export const fieldWorkerRouter = router({
         });
       }
 
-      const logs = await db.select().from(fieldWorkerActivityLogs)
-        .where(eq(fieldWorkerActivityLogs.farmId, input.farmId))
-        .orderBy(desc(fieldWorkerActivityLogs.createdAt))
-        .limit(input.limit);
+      try {
+        // Use raw SQL to query activity logs
+        const logs = await db.execute(sql`
+          SELECT * FROM fieldWorkerActivityLogs 
+          WHERE farmId = ${input.farmId}
+          ORDER BY createdAt DESC
+          LIMIT ${input.limit}
+        `);
 
-      return {
-        logs: logs.map((log: any) => ({
-          id: log.logId,
-          logId: log.logId,
-          title: log.title,
-          activityType: log.activityType,
-          description: log.description,
-          observations: log.observations,
-          gpsLatitude: log.gpsLatitude,
-          gpsLongitude: log.gpsLongitude,
-          photoUrls: log.photoUrls ? JSON.parse(log.photoUrls) : [],
-          createdAt: log.createdAt,
-          updatedAt: log.updatedAt,
-          status: log.status,
-        })),
-      };
+        const rows = (logs as any).rows || [];
+
+        return {
+          logs: rows.map((log: any) => ({
+            id: log.id,
+            logId: log.logId,
+            title: log.title,
+            activityType: log.activityType,
+            description: log.description,
+            observations: log.observations,
+            gpsLatitude: log.gpsLatitude,
+            gpsLongitude: log.gpsLongitude,
+            photoUrls: log.photoUrls ? JSON.parse(log.photoUrls) : [],
+            createdAt: log.createdAt,
+            updatedAt: log.updatedAt,
+            status: log.status,
+          })),
+        };
+      } catch (error: any) {
+        console.error('Activity retrieval error:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to retrieve activities: ${error.message}`,
+        });
+      }
     }),
 
   /**
