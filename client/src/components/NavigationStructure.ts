@@ -39,6 +39,7 @@ import {
   Camera,
   ListTodo,
   Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -78,6 +79,7 @@ export const navigationStructure: MenuGroup[] = [
       { icon: Camera, label: "Activity Logger", path: "/field-worker/activity-log" },
       { icon: Clock, label: "Time Tracking", path: "/field-worker/dashboard" },
       { icon: MapPin, label: "GPS Tracking", path: "/field-worker/gps-tracking" },
+      { icon: ImageIcon, label: "Photo Gallery", path: "/field-worker/photo-gallery" },
     ],
   },
 

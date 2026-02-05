@@ -65,6 +65,7 @@ import { ManagerTaskAssignment } from "./pages/ManagerTaskAssignment";
 import { BatchTaskImport } from "./pages/BatchTaskImport";
 import { ActivityAnalyticsDashboard } from "./pages/ActivityAnalyticsDashboard";
 import { GPSTracking } from "./pages/GPSTracking";
+import { ActivityPhotoGallery } from "./pages/ActivityPhotoGallery";
 
 function Router() {
   return (
@@ -448,6 +449,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <GPSTracking />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-worker/photo-gallery">
+        {() => (
+          <DashboardLayout>
+            <ActivityPhotoGallery />
           </DashboardLayout>
         )}
       </Route>
