@@ -46,6 +46,7 @@ describe('Report Scheduling Router', () => {
 
   it('should create a report schedule', async () => {
     const [result] = await db.insert(reportSchedules).values({
+      userId: testUserId,
       farmId: testFarmId,
       reportType: 'financial',
       frequency: 'weekly',
@@ -163,6 +164,7 @@ describe('Report Scheduling Router', () => {
 
     for (const type of reportTypes) {
       const [result] = await db.insert(reportSchedules).values({
+        userId: testUserId,
         farmId: testFarmId,
         reportType: type,
         frequency: 'monthly',
@@ -189,6 +191,7 @@ describe('Report Scheduling Router', () => {
 
     for (const freq of frequencies) {
       const [result] = await db.insert(reportSchedules).values({
+        userId: testUserId,
         farmId: testFarmId,
         reportType: 'financial',
         frequency: freq,
@@ -213,6 +216,7 @@ describe('Report Scheduling Router', () => {
   it('should parse recipients correctly', async () => {
     const recipients = ['email1@example.com', 'email2@example.com', 'email3@example.com'];
     const [result] = await db.insert(reportSchedules).values({
+      userId: testUserId,
       farmId: testFarmId,
       reportType: 'financial',
       frequency: 'weekly',

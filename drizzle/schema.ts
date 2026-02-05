@@ -1445,6 +1445,7 @@ export type InsertAlertHistory = typeof alertHistory.$inferInsert;
 // ============================================================================
 export const reportSchedules = mysqlTable("reportSchedules", {
   id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
   farmId: int("farmId").notNull().references(() => farms.id),
   reportType: mysqlEnum("reportType", ["financial", "livestock", "complete"]).notNull(),
   frequency: mysqlEnum("frequency", ["daily", "weekly", "monthly"]).notNull(),

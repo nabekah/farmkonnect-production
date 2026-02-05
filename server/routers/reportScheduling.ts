@@ -46,6 +46,7 @@ export const reportSchedulingRouter = router({
       }
 
       const [result] = await db.insert(reportSchedules).values({
+        userId: ctx.user.id,
         farmId: input.farmId,
         reportType: input.reportType,
         frequency: input.frequency,
