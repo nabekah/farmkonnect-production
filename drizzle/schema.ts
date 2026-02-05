@@ -1823,3 +1823,203 @@ export const searchIndexes = mysqlTable("searchIndexes", {
 });
 export type SearchIndex = typeof searchIndexes.$inferSelect;
 export type InsertSearchIndex = typeof searchIndexes.$inferInsert;
+
+
+// ============================================================================
+// FIELD WORKER MANAGEMENT
+// ============================================================================
+
+/**
+ * Field Worker Profiles
+ * Links users to their field worker roles and assignments
+ */
+export const fieldWorkerProfiles = mysqlTable("fieldWorkerProfiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  farmId: int("farmId").notNull(),
+  managerId: int("managerId").notNull(), // User ID of farm manager/supervisor
+  specialization: varchar("specialization", { length: 255 }), // e.g., "crop_management", "pest_control", "irrigation"
+  experience: varchar("experience", { length: 50 }), // e.g., "beginner", "intermediate", "expert"
+  phoneNumber: varchar("phoneNumber", { length: 20 }),
+  emergencyContact: varchar("emergencyContact", { length: 255 }),
+  emergencyPhone: varchar("emergencyPhone", { length: 20 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerProfile = typeof fieldWorkerProfiles.$inferSelect;
+export type InsertFieldWorkerProfile = typeof fieldWorkerProfiles.$inferInsert;
+
+/**
+ * Field Worker Tasks
+ * Tasks assigned by managers to field workers
+ */
+export const fieldWorkerTasks = mysqlTable("fieldWorkerTasks", {
+  id: int("id").autoincrement().primaryKey(),
+  taskId: varchar("taskId", { length: 50 }).notNull().unique(), // UUID-like identifier
+  assignedToUserId: int("assignedToUserId").notNull(), // Field worker user ID
+  assignedByUserId: int("assignedByUserId").notNull(), // Manager user ID
+  farmId: int("farmId").notNull(),
+  fieldId: int("fieldId"), // Optional: specific field
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  taskType: mysqlEnum("taskType", [
+    "planting",
+    "monitoring",
+    "irrigation",
+    "fertilization",
+    "pest_control",
+    "weed_control",
+    "harvest",
+    "equipment_maintenance",
+    "soil_testing",
+    "other"
+  ]).notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "cancelled"]).default("pending").notNull(),
+  dueDate: timestamp("dueDate").notNull(),
+  startDate: timestamp("startDate"),
+  completedDate: timestamp("completedDate"),
+  estimatedDuration: int("estimatedDuration"), // in minutes
+  actualDuration: int("actualDuration"), // in minutes
+  notes: text("notes"),
+  completionNotes: text("completionNotes"),
+  attachments: text("attachments"), // JSON array of file URLs
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerTask = typeof fieldWorkerTasks.$inferSelect;
+export type InsertFieldWorkerTask = typeof fieldWorkerTasks.$inferInsert;
+
+/**
+ * Field Worker Activity Logs
+ * Real-time logging of field worker activities
+ */
+export const fieldWorkerActivityLogs = mysqlTable("fieldWorkerActivityLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  logId: varchar("logId", { length: 50 }).notNull().unique(),
+  userId: int("userId").notNull(), // Field worker user ID
+  farmId: int("farmId").notNull(),
+  fieldId: int("fieldId"),
+  taskId: varchar("taskId", { length: 50 }), // Reference to fieldWorkerTasks.taskId
+  activityType: mysqlEnum("activityType", [
+    "crop_health",
+    "pest_monitoring",
+    "disease_detection",
+    "irrigation",
+    "fertilizer_application",
+    "weed_control",
+    "harvest",
+    "equipment_check",
+    "soil_test",
+    "weather_observation",
+    "general_note"
+  ]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  observations: text("observations"),
+  gpsLatitude: decimal("gpsLatitude", { precision: 10, scale: 8 }),
+  gpsLongitude: decimal("gpsLongitude", { precision: 11, scale: 8 }),
+  photoUrls: text("photoUrls"), // JSON array of photo URLs
+  duration: int("duration"), // in minutes
+  status: mysqlEnum("status", ["draft", "submitted", "reviewed"]).default("draft").notNull(),
+  reviewedBy: int("reviewedBy"), // Manager user ID
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNotes: text("reviewNotes"),
+  syncedToServer: boolean("syncedToServer").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerActivityLog = typeof fieldWorkerActivityLogs.$inferSelect;
+export type InsertFieldWorkerActivityLog = typeof fieldWorkerActivityLogs.$inferInsert;
+
+/**
+ * Field Worker Time Tracking
+ * Clock in/out and work hour tracking
+ */
+export const fieldWorkerTimeTracking = mysqlTable("fieldWorkerTimeTracking", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  farmId: int("farmId").notNull(),
+  clockInTime: timestamp("clockInTime").notNull(),
+  clockOutTime: timestamp("clockOutTime"),
+  workDuration: int("workDuration"), // in minutes
+  taskId: varchar("taskId", { length: 50 }), // Optional: task being worked on
+  breakDuration: int("breakDuration").default(0), // in minutes
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerTimeTracking = typeof fieldWorkerTimeTracking.$inferSelect;
+export type InsertFieldWorkerTimeTracking = typeof fieldWorkerTimeTracking.$inferInsert;
+
+/**
+ * Field Worker Equipment Assignments
+ * Track equipment assigned to field workers
+ */
+export const fieldWorkerEquipmentAssignments = mysqlTable("fieldWorkerEquipmentAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  equipmentId: int("equipmentId").notNull(),
+  assignedDate: timestamp("assignedDate").defaultNow().notNull(),
+  returnedDate: timestamp("returnedDate"),
+  condition: mysqlEnum("condition", ["good", "fair", "poor", "damaged"]).default("good").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerEquipmentAssignment = typeof fieldWorkerEquipmentAssignments.$inferSelect;
+export type InsertFieldWorkerEquipmentAssignment = typeof fieldWorkerEquipmentAssignments.$inferInsert;
+
+/**
+ * Field Worker Offline Queue
+ * Stores activities created offline to sync when online
+ */
+export const fieldWorkerOfflineQueue = mysqlTable("fieldWorkerOfflineQueue", {
+  id: int("id").autoincrement().primaryKey(),
+  queueId: varchar("queueId", { length: 50 }).notNull().unique(),
+  userId: int("userId").notNull(),
+  farmId: int("farmId").notNull(),
+  actionType: mysqlEnum("actionType", [
+    "create_activity",
+    "update_activity",
+    "create_task",
+    "update_task",
+    "clock_in",
+    "clock_out"
+  ]).notNull(),
+  payload: text("payload").notNull(), // JSON payload
+  status: mysqlEnum("status", ["pending", "synced", "failed"]).default("pending").notNull(),
+  errorMessage: text("errorMessage"),
+  syncAttempts: int("syncAttempts").default(0).notNull(),
+  lastSyncAttempt: timestamp("lastSyncAttempt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerOfflineQueue = typeof fieldWorkerOfflineQueue.$inferSelect;
+export type InsertFieldWorkerOfflineQueue = typeof fieldWorkerOfflineQueue.$inferInsert;
+
+/**
+ * Field Worker Dashboard Preferences
+ * Store user preferences for dashboard widgets and layout
+ */
+export const fieldWorkerDashboardPreferences = mysqlTable("fieldWorkerDashboardPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  widgetOrder: text("widgetOrder"), // JSON array of widget IDs in order
+  visibleWidgets: text("visibleWidgets"), // JSON array of visible widget IDs
+  refreshInterval: int("refreshInterval").default(300000), // in milliseconds (default 5 min)
+  theme: varchar("theme", { length: 50 }).default("light"),
+  compactMode: boolean("compactMode").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldWorkerDashboardPreferences = typeof fieldWorkerDashboardPreferences.$inferSelect;
+export type InsertFieldWorkerDashboardPreferences = typeof fieldWorkerDashboardPreferences.$inferInsert;
