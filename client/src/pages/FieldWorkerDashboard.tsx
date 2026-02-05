@@ -266,7 +266,7 @@ export function FieldWorkerDashboard() {
         <CardContent>
           {dashboardQuery.isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading activities...</div>
-          ) : dashboardQuery.data?.recentActivities.length === 0 ? (
+          ) : (dashboardQuery.data?.recentActivities?.length ?? 0) === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No recent activities</div>
           ) : (
             <div className="space-y-3">

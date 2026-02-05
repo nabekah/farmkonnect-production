@@ -64,7 +64,7 @@ export function TaskHistoryTimeline({ taskId }: TaskHistoryTimelineProps) {
     );
   }
 
-  if (!history || history.length === 0) {
+  if (!history || !history.history || history.history.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -86,7 +86,7 @@ export function TaskHistoryTimeline({ taskId }: TaskHistoryTimelineProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {history.map((entry: any, index: number) => (
+          {history.history && history.history.map((entry: any, index: number) => (
             <div key={entry.id} className="flex gap-4">
               {/* Timeline dot and line */}
               <div className="flex flex-col items-center">
@@ -99,7 +99,7 @@ export function TaskHistoryTimeline({ taskId }: TaskHistoryTimelineProps) {
                     <Edit className="h-5 w-5 text-primary" />
                   )}
                 </div>
-                {index < history.length - 1 && (
+                {history.history && index < history.history.length - 1 && (
                   <div className="w-0.5 h-12 bg-border mt-2" />
                 )}
               </div>

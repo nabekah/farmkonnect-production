@@ -150,8 +150,22 @@ export function ManagerTaskAssignment() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Call createTask mutation
-      console.log('Creating task:', newTask);
+      // Call createTask mutation
+      await trpc.fieldWorker.createTask.useMutation({
+        onSuccess: () => {
+          // Refetch tasks after creation
+          window.location.reload();
+        },
+      }).mutateAsync({
+        farmId: farmId || 1,
+        title: newTask.title,
+        description: newTask.description,
+        taskType: newTask.taskType,
+        priority: newTask.priority as any,
+        dueDate: `${newTask.dueDate}T${newTask.dueTime}:00`,
+        assignedToUserId: newTask.assignedToUserId,
+        fieldId: newTask.fieldId,
+      });
 
       // Reset form
       setNewTask({

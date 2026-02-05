@@ -68,7 +68,7 @@ export function TaskEditDialog({
       title: title !== initialTitle ? title : undefined,
       description: description !== initialDescription ? description : undefined,
       priority: priority !== initialPriority ? priority : undefined,
-      dueDate: dueDate !== initialDueDate.toISOString().split('T')[0] ? new Date(dueDate) : undefined,
+      dueDate: dueDate !== initialDueDate.toISOString().split('T')[0] ? dueDate : undefined,
       notes: notes !== (initialNotes || '') ? notes : undefined,
     });
   };
