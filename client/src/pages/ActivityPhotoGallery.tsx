@@ -23,7 +23,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Tag,
+  GitCompare,
+  Info,
 } from 'lucide-react';
+import { BulkPhotoTagging } from '@/components/BulkPhotoTagging';
+import { PhotoComparison } from '@/components/PhotoComparison';
+import { extractExifData, formatExifData } from '@/lib/exifExtractor';
 import { trpc } from '@/lib/trpc';
 
 interface ActivityPhoto {
