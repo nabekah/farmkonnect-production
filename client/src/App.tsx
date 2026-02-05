@@ -69,6 +69,7 @@ import { ActivityAnalyticsDashboard } from "./pages/ActivityAnalyticsDashboard";
 import { GPSTracking } from "./pages/GPSTracking";
 import { ActivityPhotoGallery } from "./pages/ActivityPhotoGallery";
 import { TaskPerformanceAnalytics } from "./pages/TaskPerformanceAnalytics";
+import { TaskDetail } from "./pages/TaskDetail";
 
 function Router() {
   return (
@@ -424,6 +425,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ActivityLogger />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-worker/tasks/:id">
+        {() => (
+          <DashboardLayout>
+            <TaskDetail />
           </DashboardLayout>
         )}
       </Route>
