@@ -32,7 +32,6 @@ import { trpc } from '@/lib/trpc';
 import { Badge } from './ui/badge';
 import { useDarkMode } from '@/contexts/DarkModeContext';
 import { NotificationCenter } from './NotificationCenter';
-import { RealtimeToast } from './RealtimeToast';
 import { CartButton } from './CartButton';
 import { navigationStructure, getAllMenuItems, filterNavigationByRole } from './NavigationStructure';
 import { MenuGroup } from './MenuGroup';
@@ -301,7 +300,6 @@ function DashboardLayoutContent({
           {children}
         </main>
       </SidebarInset>
-      <RealtimeToast />
       <RetryNotificationsContainer />
     </>
   );
