@@ -1,0 +1,61 @@
+{
+  "query": "SELECT \n  id,\n  logId,\n  userId,\n  farmId,\n  fieldId,\n  activityType,\n  title,\n  description,\n  observations,\n  gpsLatitude,\n  gpsLongitude,\n  photoUrls,\n  duration,\n  status,\n  DATE_FORMAT(createdAt, '%Y-%m-%d %H:%i:%s') as createdAt\nFROM fieldWorkerActivityLogs \nORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT \n  id,\n  logId,\n  userId,\n  farmId,\n  fieldId,\n  activityType,\n  title,\n  description,\n  observations,\n  gpsLatitude,\n  gpsLongitude,\n  photoUrls,\n  duration,\n  status,\n  DATE_FORMAT(createdAt, '%Y-%m-%d %H:%i:%s') as createdAt\nFROM fieldWorkerActivityLogs \nORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "id": "3",
+      "logId": "3e3db5b5-d1ca-4425-8937-b3145c0c89c1",
+      "userId": "1",
+      "farmId": "1",
+      "fieldId": "NULL",
+      "activityType": "pest_monitoring",
+      "title": "knlkn",
+      "description": "nbnb",
+      "observations": "kjkjhkj",
+      "gpsLatitude": "5.55450000",
+      "gpsLongitude": "-0.19020000",
+      "photoUrls": "[]",
+      "duration": "NULL",
+      "status": "submitted",
+      "createdAt": "2026-02-05 22:44:16"
+    },
+    {
+      "id": "2",
+      "logId": "8e62dd92-5528-4d49-aa47-a6a18de4660a",
+      "userId": "1",
+      "farmId": "1",
+      "fieldId": "NULL",
+      "activityType": "harvest",
+      "title": "Harvet",
+      "description": "Harvest",
+      "observations": "Harvet kdkdks",
+      "gpsLatitude": "5.55450000",
+      "gpsLongitude": "-0.19020000",
+      "photoUrls": "[]",
+      "duration": "NULL",
+      "status": "submitted",
+      "createdAt": "2026-02-05 22:43:13"
+    },
+    {
+      "id": "1",
+      "logId": "ad9a71f7-4756-482b-89df-b95c63b0e9d8",
+      "userId": "1",
+      "farmId": "1",
+      "fieldId": "NULL",
+      "activityType": "harvest",
+      "title": "Harvest",
+      "description": "havert",
+      "observations": "havert",
+      "gpsLatitude": "5.55450000",
+      "gpsLongitude": "-0.19020000",
+      "photoUrls": "[]",
+      "duration": "NULL",
+      "status": "submitted",
+      "createdAt": "2026-02-05 22:27:15"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tlogId\tuserId\tfarmId\tfieldId\tactivityType\ttitle\tdescription\tobservations\tgpsLatitude\tgpsLongitude\tphotoUrls\tduration\tstatus\tcreatedAt\n3\t3e3db5b5-d1ca-4425-8937-b3145c0c89c1\t1\t1\tNULL\tpest_monitoring\tknlkn\tnbnb\tkjkjhkj\t5.55450000\t-0.19020000\t[]\tNULL\tsubmitted\t2026-02-05 22:44:16\n2\t8e62dd92-5528-4d49-aa47-a6a18de4660a\t1\t1\tNULL\tharvest\tHarvet\tHarvest\tHarvet kdkdks\t5.55450000\t-0.19020000\t[]\tNULL\tsubmitted\t2026-02-05 22:43:13\n1\tad9a71f7-4756-482b-89df-b95c63b0e9d8\t1\t1\tNULL\tharvest\tHarvest\thavert\thavert\t5.55450000\t-0.19020000\t[]\tNULL\tsubmitted\t2026-02-05 22:27:15\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

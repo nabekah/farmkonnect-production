@@ -2946,3 +2946,17 @@
 - [ ] Create permission audit log table in database
 - [ ] Build audit log display component with filtering
 - [ ] Test all features end-to-end
+
+
+## Phase 9 - Activity History & Approval Workflow - In Progress
+- [ ] Create ActivityHistory page component with data table
+- [ ] Implement sorting by date, user, activity type, status
+- [ ] Add filtering by date range, activity type, status
+- [ ] Create record detail modal with full information
+- [ ] Add approval workflow procedures to fieldWorker router
+- [ ] Implement approve/reject functionality for managers
+- [ ] Add review notes field for manager feedback
+- [ ] Create bulk export to CSV/PDF
+- [ ] Implement bulk delete with confirmation
+- [ ] Add bulk status update functionality
+- [ ] Test all features end-to-end

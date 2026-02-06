@@ -43,6 +43,7 @@ import { navigationRouter } from "./routers/navigation";
 import { fieldWorkerRouter } from "./routers/fieldWorker";
 import { adminRouter } from "./routers/admin";
 import { farmPermissionsRouter } from "./farmPermissionsRouter";
+import { activityApprovalRouter } from "./routers/activityApproval";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -768,6 +769,7 @@ export const appRouter = router({
   sms: smsRouter,
   security: securityRouter,
   passwordReset: passwordResetRouter,
+  activityApproval: activityApprovalRouter,
 });
 
 export type AppRouter = typeof appRouter;
