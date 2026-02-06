@@ -32,6 +32,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { WorkerQuickActions } from "@/components/WorkerQuickActions";
 import { trpc } from "@/lib/trpc";
 
 export default function Home() {
@@ -74,12 +75,22 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
     return !completed;
   });
 
+  // State for farm filter
+  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
+
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
   };
   // Fetch KPI data
   const { data: farms } = trpc.farms.list.useQuery();
   const farmId = farms && farms.length > 0 ? farms[0].id : 1;
+
+  // Set default farm on first load
+  useEffect(() => {
+    if (farms && farms.length > 0 && !selectedFarmId) {
+      setSelectedFarmId(farms[0].id);
+    }
+  }, [farms, selectedFarmId]);
 
   // Financial data
   const { data: expenses } = trpc.financial.expenses.list.useQuery({ farmId });
@@ -88,8 +99,15 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
   // Livestock data
   const { data: animals } = trpc.livestock.animals.list.useQuery({ farmId });
 
-  // Workforce data - get all workers across all farms
-  const { data: workers } = trpc.workforce.workers.getAllWorkers.useQuery({});
+  // Workforce data - get workers for selected farm or all workers
+  const { data: allWorkers } = trpc.workforce.workers.getAllWorkers.useQuery({});
+  const { data: farmWorkers } = trpc.workforce.workers.list.useQuery(
+    selectedFarmId ? { farmId: selectedFarmId } : { farmId: farmId },
+    { enabled: !!selectedFarmId || !!farmId }
+  );
+  
+  // Use farm-specific workers if farm is selected, otherwise use all workers
+  const workers = selectedFarmId ? farmWorkers : allWorkers;
 
   // Fish farming data
   const { data: ponds } = trpc.fishFarming.ponds.list.useQuery({ farmId });
@@ -118,6 +136,23 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
         <div className="space-y-2">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">Welcome back, {user.name}!</h1>
         <p className="text-base md:text-lg text-muted-foreground">Manage your agricultural operations efficiently with FarmKonnect</p>
+      </div>
+
+      {/* Farm Filter */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium">Filter by Farm:</label>
+        <select
+          value={selectedFarmId || ""}
+          onChange={(e) => setSelectedFarmId(e.target.value ? parseInt(e.target.value) : null)}
+          className="px-3 py-2 border border-input rounded-md bg-background text-sm"
+        >
+          <option value="">All Farms</option>
+          {farms?.map((farm) => (
+            <option key={farm.id} value={farm.id}>
+              {farm.farmName}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* KPI Cards */}
@@ -206,6 +241,17 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
           />
         </div>
       </div>
+
+      {/* Worker Quick Actions */}
+      <WorkerQuickActions
+        workers={workers}
+        onAssignTask={(worker) => {
+          console.log("Assign task to:", worker);
+        }}
+        onViewSchedule={(worker) => {
+          console.log("View schedule for:", worker);
+        }}
+      />
 
       {/* Quick Actions Grid */}
       <div className="space-y-4">

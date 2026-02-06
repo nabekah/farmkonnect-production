@@ -71,6 +71,7 @@ import { ActivityPhotoGallery } from "./pages/ActivityPhotoGallery";
 import { TaskPerformanceAnalytics } from "./pages/TaskPerformanceAnalytics";
 import { TimeTrackerReporting } from "./pages/TimeTrackerReporting";
 import WorkerPerformanceDashboard from "./pages/WorkerPerformanceDashboard";
+import WorkerStatusDashboard from "./pages/WorkerStatusDashboard";
 import { TaskDetail } from "./pages/TaskDetail";
 import AdminDataSettings from "./pages/AdminDataSettings";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -504,6 +505,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <WorkerPerformanceDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/reporting/worker-status">
+        {() => (
+          <DashboardLayout>
+            <WorkerStatusDashboard />
           </DashboardLayout>
         )}
       </Route>
