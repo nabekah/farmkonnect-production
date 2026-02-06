@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import { useLocation } from 'wouter';
 import { uploadPhotosToS3, validatePhotoFile } from '@/lib/photoUpload';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { BatchPhotoUpload } from '@/components/BatchPhotoUpload';
+import { useValidationRuleSync } from '@/hooks/useValidationRuleSync';
 
 interface Photo {
   file: File;
@@ -61,11 +62,54 @@ export function ActivityLogger() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { errors, validateForm, clearError } = useFormValidation({
-    title: { required: true, minLength: 3 },
-    description: { required: true, minLength: 10 },
-    activityType: { required: true },
-  });
+  const [validationRules, setValidationRules] = useState<any[]>([]);
+  
+  // Fetch validation rules from admin
+  const { data: rulesData } = trpc.admin.getValidationRules.useQuery(
+    { entityType: 'activity' },
+    { enabled: !!user }
+  );
+
+  // Listen for validation rule updates via WebSocket
+  useValidationRuleSync(
+    (update) => {
+      if (update.type === 'validation_rules_sync' && update.rules) {
+        setValidationRules(update.rules.filter((r: any) => r.entityType === 'activity'));
+      }
+    },
+    (rules) => {
+      setValidationRules(rules.filter((r: any) => r.entityType === 'activity'));
+    }
+  );
+
+  // Update validation rules when fetched
+  useEffect(() => {
+    if (rulesData?.rules) {
+      setValidationRules(rulesData.rules);
+    }
+  }, [rulesData]);
+
+  // Build dynamic validation config from rules
+  const buildValidationConfig = () => {
+    const config: any = {
+      title: { required: true, minLength: 3 },
+      description: { required: true, minLength: 10 },
+      activityType: { required: true },
+    };
+
+    // Apply validation rules from admin settings
+    validationRules.forEach((rule: any) => {
+      if (rule.fieldName === 'title' && rule.ruleType === 'minLength' && rule.ruleValue) {
+        config.title.minLength = parseInt(rule.ruleValue);
+      } else if (rule.fieldName === 'description' && rule.ruleType === 'minLength' && rule.ruleValue) {
+        config.description.minLength = parseInt(rule.ruleValue);
+      }
+    });
+
+    return config;
+  };
+
+  const { errors, validateForm, clearError } = useFormValidation(buildValidationConfig());
 
   const createActivityMutation = trpc.fieldWorker.createActivityLog.useMutation({
     onSuccess: () => {
@@ -83,6 +127,13 @@ export function ActivityLogger() {
       setFarmId(1);
     }
   }, [user?.id]);
+
+  // Re-validate when validation rules change
+  useEffect(() => {
+    if (title || description) {
+      validateForm({ title, description, activityType });
+    }
+  }, [validationRules, validateForm, title, description, activityType]);
 
   // Request GPS location on component mount
   useEffect(() => {

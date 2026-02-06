@@ -311,6 +311,57 @@ export const fieldWorkerRouter = router({
     }),
 
   /**
+   * Get time tracker logs for reporting
+   */
+  getTimeTrackerLogs: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      // Mock data for time tracker logs
+      // In production, this would query from a timeTrackerLogs table
+      const mockEntries = [
+        {
+          id: '1',
+          workerId: 'worker1',
+          workerName: 'John Doe',
+          activityType: 'crop_health',
+          startTime: '08:00',
+          endTime: '09:30',
+          duration: 90,
+          date: new Date().toISOString().split('T')[0],
+          notes: 'Checked crop health in field A',
+        },
+        {
+          id: '2',
+          workerId: 'worker2',
+          workerName: 'Jane Smith',
+          activityType: 'irrigation',
+          startTime: '09:00',
+          endTime: '11:00',
+          duration: 120,
+          date: new Date().toISOString().split('T')[0],
+          notes: 'Set up irrigation system',
+        },
+        {
+          id: '3',
+          workerId: 'worker1',
+          workerName: 'John Doe',
+          activityType: 'pest_monitoring',
+          startTime: '14:00',
+          endTime: '15:30',
+          duration: 90,
+          date: new Date().toISOString().split('T')[0],
+          notes: 'Monitored for pests',
+        },
+      ];
+
+      return { entries: mockEntries };
+    }),
+
+  /**
    * Clock in
    */
   clockIn: protectedProcedure
