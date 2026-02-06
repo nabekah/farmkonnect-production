@@ -2813,7 +2813,11 @@
 - [x] Integrate form validation into ActivityLogger with error display
 - [x] Integrate form validation into ManagerTaskAssignment with error display
 - [x] Create time tracker widget component for navigation
-- [x] Add time tracker widget to DashboardLayout header (ready for integration)
-- [x] Implement batch photo upload component
-- [x] Integrate batch photo upload into ActivityLogger (ready for integration)
+- [x] Integrate TimeTrackerWidget into DashboardLayout header (desktop and mobile)
+- [x] Implement batch photo upload component with drag-and-drop
+- [x] Integrate batch photo upload into ActivityLogger form
+- [x] Create admin router for validation rule management with CRUD procedures
+- [x] Implement WebSocket broadcast for validation rule changes
+- [x] Create useValidationRuleSync hook for real-time rule sync
+- [x] Update useWebSocket hook to support generic message handlers
 - [x] Test all features end-to-end - All 247 tests passing

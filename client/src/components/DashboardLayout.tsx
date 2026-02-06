@@ -43,6 +43,7 @@ import { ToastContainer } from './ToastContainer';
 import { WebSocketReconnectionUI } from './WebSocketReconnectionUI';
 import { NotificationHistoryPanel } from './NotificationHistoryPanel';
 import { FieldWorkerNotificationCenter } from './FieldWorkerNotificationCenter';
+import { TimeTrackerWidget } from './TimeTrackerWidget';
 
 const menuItems = getAllMenuItems();
 
@@ -288,6 +289,7 @@ function DashboardLayoutContent({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <TimeTrackerWidget />
                 <CartButton />
                 <NotificationCenter />
               </div>
@@ -296,11 +298,14 @@ function DashboardLayoutContent({
         )}
         <main className="flex-1 p-4 flex flex-col">
         {!isMobile && (
-          <div className="flex justify-end mb-4 gap-2">
-            <CartButton />
-            {user && <FieldWorkerNotificationCenter workerId={user.id} />}
-            <NotificationCenter />
-            <NotificationHistoryPanel />
+          <div className="flex justify-between items-center mb-4 gap-2">
+            <TimeTrackerWidget />
+            <div className="flex gap-2">
+              <CartButton />
+              {user && <FieldWorkerNotificationCenter workerId={user.id} />}
+              <NotificationCenter />
+              <NotificationHistoryPanel />
+            </div>
           </div>
         )}
           {children}

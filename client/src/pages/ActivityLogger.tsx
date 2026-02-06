@@ -17,6 +17,7 @@ import { AlertCircle, Camera, MapPin, Loader2, CheckCircle2, X } from 'lucide-re
 import { useLocation } from 'wouter';
 import { uploadPhotosToS3, validatePhotoFile } from '@/lib/photoUpload';
 import { useFormValidation } from '@/hooks/useFormValidation';
+import { BatchPhotoUpload } from '@/components/BatchPhotoUpload';
 
 interface Photo {
   file: File;
@@ -128,48 +129,25 @@ export function ActivityLogger() {
     };
   }, [photos]);
 
-  const handleCameraCapture = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files) return;
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-
-        const validation = validatePhotoFile(file);
-        if (!validation.valid) {
-          alert(validation.error);
-          continue;
-        }
-
-        const preview = URL.createObjectURL(file);
-
-        const photo: Photo = {
-          file,
-          preview,
-          gpsData: gpsLocation
-            ? {
-                latitude: gpsLocation.lat,
-                longitude: gpsLocation.lng,
-                accuracy: 10,
-              }
-            : undefined,
-        };
-
-        setPhotos((prev) => [...prev, photo]);
-      }
+  const handlePhotosSelected = useCallback(
+    (selectedFiles: File[]) => {
+      const newPhotos: Photo[] = selectedFiles.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+        gpsData: gpsLocation
+          ? {
+              latitude: gpsLocation.lat,
+              longitude: gpsLocation.lng,
+              accuracy: 10,
+            }
+          : undefined,
+      }));
+      setPhotos(newPhotos);
     },
     [gpsLocation]
   );
 
-  const removePhoto = (index: number) => {
-    setPhotos((prev) => {
-      const newPhotos = [...prev];
-      URL.revokeObjectURL(newPhotos[index].preview);
-      newPhotos.splice(index, 1);
-      return newPhotos;
-    });
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -384,84 +362,21 @@ export function ActivityLogger() {
                 <Camera className="h-5 w-5" />
                 Photo Documentation
               </CardTitle>
-              <CardDescription>Capture photos as evidence of your work</CardDescription>
+              <CardDescription>Capture multiple photos as evidence of your work</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {/* Camera Input */}
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  multiple
-                  onChange={handleCameraCapture}
-                  className="hidden"
-                />
-
-                {/* File Input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleCameraCapture}
-                  className="hidden"
-                />
-
-                {/* Upload Buttons */}
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => cameraInputRef.current?.click()}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    Take Photo
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    Upload Photo
-                  </Button>
+              <BatchPhotoUpload
+                onPhotosSelected={handlePhotosSelected}
+                maxPhotos={10}
+                disabled={isSubmitting}
+              />
+              {photos.length > 0 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-900">
+                    {photos.length} photo(s) selected and ready for upload
+                  </p>
                 </div>
-
-                {/* Photo Gallery */}
-                {photos.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-foreground mb-3">
-                      Photos ({photos.length})
-                    </p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {photos.map((photo, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={photo.preview}
-                            alt={`Photo ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                          {photo.gpsData && (
-                            <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              GPS
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </CardContent>
           </Card>
 

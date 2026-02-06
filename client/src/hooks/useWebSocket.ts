@@ -11,11 +11,12 @@ interface UseWebSocketOptions {
   onTaskUpdated?: (data: any) => void;
   onActivityCreated?: (data: any) => void;
   onActivityUpdated?: (data: any) => void;
+  onMessage?: (message: WebSocketMessage) => void;
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { user } = useAuth();
-  const { onTaskCreated, onTaskUpdated, onActivityCreated, onActivityUpdated } = options;
+  const { onTaskCreated, onTaskUpdated, onActivityCreated, onActivityUpdated, onMessage } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -54,6 +55,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         const message = JSON.parse(event.data);
         console.log('[WebSocket] Received:', message);
         setLastMessage(message);
+
+        // Call generic message handler if provided
+        if (onMessage) {
+          onMessage(message);
+        }
 
         // Handle specific event types
         if (message.type === 'task_created' && onTaskCreated) {
