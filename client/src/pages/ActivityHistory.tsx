@@ -56,12 +56,13 @@ export function ActivityHistory() {
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [searchTitle, setSearchTitle] = useState('');
 
-  const { data: activities, isLoading } = trpc.fieldWorker.getActivityLogs.useQuery({});
+  const { data: activities, isLoading } = trpc.fieldWorker.getActivityLogs.useQuery({ farmId: 1 });
 
   const filteredActivities = useMemo(() => {
     if (!activities) return [];
 
-    return activities.filter((activity) => {
+    const activitiesList = Array.isArray(activities) ? activities : (activities?.logs || []) as any[];
+    return activitiesList.filter((activity: any) => {
       const matchesType = !filterType || activity.activityType === filterType;
       const matchesStatus = !filterStatus || activity.status === filterStatus;
       const matchesTitle = !searchTitle || activity.title.toLowerCase().includes(searchTitle.toLowerCase());
@@ -71,7 +72,7 @@ export function ActivityHistory() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedRecords(filteredActivities.map(a => a.id));
+      setSelectedRecords(filteredActivities.map((a: any) => a.id));
     } else {
       setSelectedRecords([]);
     }
@@ -87,11 +88,11 @@ export function ActivityHistory() {
 
   const handleExportCSV = () => {
     const recordsToExport = selectedRecords.length > 0 
-      ? filteredActivities.filter(a => selectedRecords.includes(a.id))
+      ? filteredActivities.filter((a: any) => selectedRecords.includes(a.id))
       : filteredActivities;
 
     const headers = ['ID', 'Log ID', 'User ID', 'Activity Type', 'Title', 'Status', 'Created At'];
-    const rows = recordsToExport.map(r => [
+    const rows = recordsToExport.map((r: any) => [
       r.id,
       r.logId,
       r.userId,
@@ -212,7 +213,7 @@ export function ActivityHistory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredActivities.map((activity) => (
+                  {filteredActivities.map((activity: any) => (
                     <TableRow key={activity.id}>
                       <TableCell>
                         <Checkbox

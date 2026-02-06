@@ -293,14 +293,6 @@ export function ActivityLogger() {
 
   // Show success state after submission
   if (submitSuccess) {
-    // Redirect after 2 seconds
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        navigate('/field-worker/activities');
-      }, 2000);
-      return () => clearTimeout(timer);
-    }, [navigate]);
-
     return (
       <div className="flex items-center justify-center h-screen">
         <Card className="w-full max-w-md">

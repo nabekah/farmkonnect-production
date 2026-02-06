@@ -68,7 +68,7 @@ export const exportScheduleRouter = router({
 
       const schedule: ExportSchedule = {
         id: `schedule_${Date.now()}`,
-        userId: ctx.user.id,
+        userId: ctx.user.id as unknown as string,
         farmId: input.farmId.toString(),
         frequency: input.frequency,
         format: input.format,
@@ -105,7 +105,7 @@ export const exportScheduleRouter = router({
       const schedules: ExportSchedule[] = [
         {
           id: 'schedule_1',
-          userId: ctx.user.id,
+          userId: ctx.user.id as unknown as string,
           farmId: input.farmId.toString(),
           frequency: 'weekly',
           format: 'csv',
