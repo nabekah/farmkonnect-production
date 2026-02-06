@@ -29,9 +29,9 @@ export default function Livestock() {
   const [tabValue, setTabValue] = useState("animals");
 
   // Queries
-  const { data: farms = [] } = trpc.livestock.farms.list.useQuery();
+  const { data: farms = [] } = trpc.livestock.farms.list.useQuery({ farmType: undefined });
   const { data: animalsList = [] } = trpc.livestock.animals.list.useQuery(
-    { farmId: selectedFarmId! },
+    { farmId: selectedFarmId || 0 },
     { enabled: !!selectedFarmId }
   );
   const { data: healthRecords = [] } = trpc.livestock.healthRecords.list.useQuery(
