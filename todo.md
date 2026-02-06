@@ -2934,3 +2934,15 @@
 - [ ] Implement data export with preference filtering
 - [ ] Add CSV/PDF export respecting selected KPIs and farms
 - [ ] Test all features end-to-end
+
+
+## Phase 8 - Farm Sharing & Export Automation - In Progress
+- [ ] Create FarmSharingDialog component with user email input
+- [ ] Implement role selector (viewer, editor, admin) in sharing UI
+- [ ] Add expiration date picker for temporary access
+- [ ] Create bulk permission management interface
+- [ ] Implement export schedule router with cron job support
+- [ ] Add email delivery for scheduled exports
+- [ ] Create permission audit log table in database
+- [ ] Build audit log display component with filtering
+- [ ] Test all features end-to-end
