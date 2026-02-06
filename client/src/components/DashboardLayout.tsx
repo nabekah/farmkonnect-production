@@ -40,7 +40,7 @@ import { Breadcrumbs } from './Breadcrumbs';
 import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
 import { RetryNotificationsContainer, OfflineQueueStatus } from './RetryNotification';
 import { ToastContainer } from './ToastContainer';
-import { WebSocketReconnectionUI } from './WebSocketReconnectionUI';
+
 import { NotificationHistoryPanel } from './NotificationHistoryPanel';
 import { FieldWorkerNotificationCenter } from './FieldWorkerNotificationCenter';
 import { TimeTrackerWidget } from './TimeTrackerWidget';
@@ -313,7 +313,6 @@ function DashboardLayoutContent({
       </SidebarInset>
       <RetryNotificationsContainer />
       <ToastContainer />
-      <WebSocketReconnectionUI />
     </>
   );
 }
