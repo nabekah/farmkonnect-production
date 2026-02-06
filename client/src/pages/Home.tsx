@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import {
@@ -33,6 +33,8 @@ import { getLoginUrl } from "@/const";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { WorkerQuickActions } from "@/components/WorkerQuickActions";
+import { FarmComparisonView } from "@/components/FarmComparisonView";
+import { FarmAlertsCenter, type FarmAlert } from "@/components/FarmAlertsCenter";
 import { trpc } from "@/lib/trpc";
 
 export default function Home() {
@@ -76,8 +78,22 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
   });
 
   // State for farm filter - null means All Farms
-  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
+  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(() => {
+    const saved = localStorage.getItem("farmkonnect_selected_farm");
+    return saved ? parseInt(saved) : null;
+  });
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Persist farm selection to localStorage
+  useEffect(() => {
+    if (isInitialized) {
+      if (selectedFarmId === null) {
+        localStorage.removeItem("farmkonnect_selected_farm");
+      } else {
+        localStorage.setItem("farmkonnect_selected_farm", selectedFarmId.toString());
+      }
+    }
+  }, [selectedFarmId, isInitialized]);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
@@ -86,10 +102,9 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
   const { data: farms } = trpc.farms.list.useQuery();
   const farmId = farms && farms.length > 0 ? farms[0].id : 1;
 
-  // Initialize to All Farms on first load
+  // Initialize on first load
   useEffect(() => {
     if (farms && farms.length > 0 && !isInitialized) {
-      setSelectedFarmId(null);
       setIsInitialized(true);
     }
   }, [farms, isInitialized]);
@@ -128,6 +143,26 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
   const activeWorkers = workers?.filter(w => w.status === "active").length || 0;
   const activePonds = ponds?.filter(p => p.status === "active").length || 0;
   const activeAssets = assets?.filter(a => a.status === "active").length || 0;
+
+  // Generate farm-specific alerts
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const farmAlerts: FarmAlert[] = [];
+  farms?.forEach((farm) => {
+    if (netProfit < 0) {
+      farmAlerts.push({
+        id: `loss-${farm.id}`,
+        farmId: farm.id,
+        farmName: farm.farmName,
+        type: "error",
+        title: "Operating at Loss",
+        message: `Farm is currently operating at a loss. Review expenses and revenue sources.`,
+        timestamp: new Date(),
+        actionUrl: "/farm-finance",
+        actionLabel: "View Finance",
+      });
+    }
+  });
+  const visibleAlerts = farmAlerts.filter(a => !dismissedAlerts.has(a.id));
 
   return (
     <>
