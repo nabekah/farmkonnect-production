@@ -504,8 +504,8 @@ export default function Livestock() {
                         placeholder="Veterinarian, batch number, etc."
                       />
                     </div>
-                    <Button onClick={handleRecordVaccination} disabled={recordVaccinationMutation.isPending}>
-                      {recordVaccinationMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button onClick={handleRecordVaccination} disabled={createHealthRecordMutation.isPending}>
+                      {createHealthRecordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Record Vaccination
                     </Button>
                   </div>
