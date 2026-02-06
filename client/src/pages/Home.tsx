@@ -35,6 +35,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { WorkerQuickActions } from "@/components/WorkerQuickActions";
 import { FarmComparisonView } from "@/components/FarmComparisonView";
 import { FarmAlertsCenter, type FarmAlert } from "@/components/FarmAlertsCenter";
+import { FarmRecommendations } from "@/components/FarmRecommendations";
 import { trpc } from "@/lib/trpc";
 
 export default function Home() {
@@ -196,7 +197,7 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6 animate-stagger-in">
         <KPICard
           title="Total Revenue"
           value={`GH₵ ${totalRevenue.toLocaleString()}`}
@@ -281,6 +282,19 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
               showForecast={true}
             />
           </div>
+        </div>
+      )}
+
+      {/* Farm Recommendations - Only show for specific farm */}
+      {selectedFarmId !== null && (
+        <div className="mb-8">
+          <FarmRecommendations
+            farmId={selectedFarmId}
+            farmName={farms?.find(f => f.id === selectedFarmId)?.farmName || "Your Farm"}
+            cropType="Mixed Crops"
+            soilType="Loamy"
+            weatherCondition="Moderate"
+          />
         </div>
       )}
 
