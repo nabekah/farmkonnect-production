@@ -2,8 +2,8 @@ import { router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
-import { eq, and, gte, lte } from "drizzle-orm";
-import { farmExpenses, farmRevenue, farmWorkers, farmAssets, fishPonds, fishStockingRecords, fishPondActivities } from "../drizzle/schema";
+import { eq, and, gte, lte, inArray } from "drizzle-orm";
+import { farmExpenses, farmRevenue, farmWorkers, farmAssets, fishPonds, fishStockingRecords, fishPondActivities, farms } from "../drizzle/schema";
 
 export const financialRouter = router({
   // ============================================================================
@@ -371,7 +371,7 @@ export const financialRouter = router({
     
     // Get all expenses for all owner's farms
     return await db.select().from(farmExpenses).where(
-      farmExpenses.farmId.inArray(farmIds)
+      inArray(farmExpenses.farmId, farmIds)
     );
   }),
 
@@ -387,7 +387,7 @@ export const financialRouter = router({
     
     // Get all revenue for all owner's farms
     return await db.select().from(farmRevenue).where(
-      farmRevenue.farmId.inArray(farmIds)
+      inArray(farmRevenue.farmId, farmIds)
     );
   }),
 });
