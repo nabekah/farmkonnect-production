@@ -75,8 +75,9 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
     return !completed;
   });
 
-  // State for farm filter
+  // State for farm filter - null means All Farms
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
@@ -85,35 +86,39 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
   const { data: farms } = trpc.farms.list.useQuery();
   const farmId = farms && farms.length > 0 ? farms[0].id : 1;
 
-  // Set default farm on first load
+  // Initialize to All Farms on first load
   useEffect(() => {
-    if (farms && farms.length > 0 && !selectedFarmId) {
-      setSelectedFarmId(farms[0].id);
+    if (farms && farms.length > 0 && !isInitialized) {
+      setSelectedFarmId(null);
+      setIsInitialized(true);
     }
-  }, [farms, selectedFarmId]);
+  }, [farms, isInitialized]);
+
+  // Determine which farm ID to use for queries
+  const queryFarmId = selectedFarmId || (farms && farms.length > 0 ? farms[0].id : 1);
 
   // Financial data
-  const { data: expenses } = trpc.financial.expenses.list.useQuery({ farmId });
-  const { data: revenue } = trpc.financial.revenue.list.useQuery({ farmId });
+  const { data: expenses } = trpc.financial.expenses.list.useQuery({ farmId: queryFarmId });
+  const { data: revenue } = trpc.financial.revenue.list.useQuery({ farmId: queryFarmId });
 
   // Livestock data
-  const { data: animals } = trpc.livestock.animals.list.useQuery({ farmId });
+  const { data: animals } = trpc.livestock.animals.list.useQuery({ farmId: queryFarmId });
 
-  // Workforce data - get workers for selected farm or all workers
+  // Workforce data - always get all workers, filter based on selection
   const { data: allWorkers } = trpc.workforce.workers.getAllWorkers.useQuery({});
   const { data: farmWorkers } = trpc.workforce.workers.list.useQuery(
-    selectedFarmId ? { farmId: selectedFarmId } : { farmId: farmId },
-    { enabled: !!selectedFarmId || !!farmId }
+    { farmId: queryFarmId },
+    { enabled: !!queryFarmId }
   );
   
-  // Use farm-specific workers if farm is selected, otherwise use all workers
-  const workers = selectedFarmId ? farmWorkers : allWorkers;
+  // Use all workers if All Farms selected, otherwise use farm-specific workers
+  const workers = selectedFarmId === null ? allWorkers : farmWorkers;
 
   // Fish farming data
-  const { data: ponds } = trpc.fishFarming.ponds.list.useQuery({ farmId });
+  const { data: ponds } = trpc.fishFarming.ponds.list.useQuery({ farmId: queryFarmId });
 
   // Assets data
-  const { data: assets } = trpc.assets.assets.list.useQuery({ farmId });
+  const { data: assets } = trpc.assets.assets.list.useQuery({ farmId: queryFarmId });
 
   // Calculate KPIs
   const totalRevenue = revenue?.reduce((sum, r) => sum + parseFloat(r.amount || "0"), 0) || 0;
