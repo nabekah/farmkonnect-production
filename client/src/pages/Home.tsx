@@ -112,10 +112,15 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
 
   // Determine which farm ID to use for queries
   const queryFarmId = selectedFarmId || (farms && farms.length > 0 ? farms[0].id : 1);
+  const isAllFarmsSelected = selectedFarmId === null;
 
-  // Financial data
-  const { data: expenses } = trpc.financial.expenses.list.useQuery({ farmId: queryFarmId });
-  const { data: revenue } = trpc.financial.revenue.list.useQuery({ farmId: queryFarmId });
+  // Financial data - use consolidated queries when All Farms selected
+  const { data: expenses } = isAllFarmsSelected 
+    ? trpc.financial.allExpenses.useQuery()
+    : trpc.financial.expenses.list.useQuery({ farmId: queryFarmId });
+  const { data: revenue } = isAllFarmsSelected
+    ? trpc.financial.allRevenue.useQuery()
+    : trpc.financial.revenue.list.useQuery({ farmId: queryFarmId });
 
   // Livestock data
   const { data: animals } = trpc.livestock.animals.list.useQuery({ farmId: queryFarmId });
@@ -127,8 +132,8 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
     { enabled: !!queryFarmId }
   );
   
-  // Use all workers if All Farms selected, otherwise use farm-specific workers
-  const workers = selectedFarmId === null ? allWorkers : farmWorkers;
+  // Use all owner's workers if All Farms selected, otherwise use farm-specific workers
+  const workers = isAllFarmsSelected ? allWorkers : farmWorkers;
 
   // Fish farming data
   const { data: ponds } = trpc.fishFarming.ponds.list.useQuery({ farmId: queryFarmId });

@@ -357,4 +357,37 @@ export const financialRouter = router({
           }));
       }),
   }),
+
+  // Consolidated data for all owner's farms
+  allExpenses: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+    
+    // Get all farms for this owner
+    const ownerFarms = await db.select().from(farms).where(eq(farms.farmerUserId, ctx.user.id));
+    const farmIds = ownerFarms.map(f => f.id);
+    
+    if (farmIds.length === 0) return [];
+    
+    // Get all expenses for all owner's farms
+    return await db.select().from(farmExpenses).where(
+      farmExpenses.farmId.inArray(farmIds)
+    );
+  }),
+
+  allRevenue: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+    
+    // Get all farms for this owner
+    const ownerFarms = await db.select().from(farms).where(eq(farms.farmerUserId, ctx.user.id));
+    const farmIds = ownerFarms.map(f => f.id);
+    
+    if (farmIds.length === 0) return [];
+    
+    // Get all revenue for all owner's farms
+    return await db.select().from(farmRevenue).where(
+      farmRevenue.farmId.inArray(farmIds)
+    );
+  }),
 });
