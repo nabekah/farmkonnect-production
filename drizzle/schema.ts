@@ -2054,3 +2054,67 @@ export const taskHistory = mysqlTable("taskHistory", {
 
 export type TaskHistory = typeof taskHistory.$inferSelect;
 export type InsertTaskHistory = typeof taskHistory.$inferInsert;
+
+
+// ============================================================================
+// AUDIT LOGS (for tracking data changes)
+// ============================================================================
+export const auditLogs = mysqlTable("auditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  entityType: varchar("entityType", { length: 100 }).notNull(), // e.g., "animalType", "cropType", "disease"
+  entityId: int("entityId").notNull(),
+  action: mysqlEnum("action", ["create", "update", "delete", "import", "export"]).notNull(),
+  oldValues: text("oldValues"), // JSON object of previous values
+  newValues: text("newValues"), // JSON object of new values
+  changedFields: text("changedFields"), // JSON array of field names that changed
+  reason: text("reason"), // Optional reason for the change
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+// ============================================================================
+// DATA VALIDATION RULES
+// ============================================================================
+export const validationRules = mysqlTable("validationRules", {
+  id: int("id").autoincrement().primaryKey(),
+  entityType: varchar("entityType", { length: 100 }).notNull(), // e.g., "animal", "crop"
+  fieldName: varchar("fieldName", { length: 100 }).notNull(),
+  ruleType: mysqlEnum("ruleType", ["required", "min", "max", "pattern", "enum", "custom"]).notNull(),
+  ruleValue: text("ruleValue"), // JSON value for the rule (e.g., min value, regex pattern)
+  errorMessage: text("errorMessage"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ValidationRule = typeof validationRules.$inferSelect;
+export type InsertValidationRule = typeof validationRules.$inferInsert;
+
+// ============================================================================
+// BULK IMPORT JOBS
+// ============================================================================
+export const bulkImportJobs = mysqlTable("bulkImportJobs", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: varchar("jobId", { length: 50 }).notNull().unique(),
+  userId: int("userId").notNull(),
+  entityType: varchar("entityType", { length: 100 }).notNull(), // e.g., "animalType", "cropType"
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileUrl: text("fileUrl").notNull(),
+  totalRecords: int("totalRecords").notNull(),
+  successCount: int("successCount").default(0).notNull(),
+  failureCount: int("failureCount").default(0).notNull(),
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  errorLog: text("errorLog"), // JSON array of errors
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BulkImportJob = typeof bulkImportJobs.$inferSelect;
+export type InsertBulkImportJob = typeof bulkImportJobs.$inferInsert;
