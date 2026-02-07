@@ -56,6 +56,9 @@ import { animalBatchEditingRouter } from "./routers/animalBatchEditing";
 import { animalImportWizardRouter } from "./routers/animalImportWizard";
 import { animalSearchFiltersRouter } from "./routers/animalSearchFilters";
 import { bulkHealthOperationsRouter } from "./routers/bulkHealthOperations";
+import { healthAlertsRouter } from "./routers/healthAlerts";
+import { vetAppointmentsRouter } from "./routers/vetAppointments";
+import { healthReportsRouter } from "./routers/healthReports";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -118,6 +121,9 @@ export const appRouter = router({
   animalSearchFilters: animalSearchFiltersRouter,
   tagIdTemplates: tagIdTemplatesRouter,
   bulkHealthOperations: bulkHealthOperationsRouter,
+  healthAlerts: healthAlertsRouter,
+  vetAppointments: vetAppointmentsRouter,
+  healthReports: healthReportsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
