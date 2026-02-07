@@ -7,7 +7,7 @@ import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { getDb } from '../db';
-import { fieldWorkerTasks, taskHistory, users } from '../../drizzle/schema';
+import { fieldWorkerTasks, taskHistory, users, fieldWorkerActivityLogs } from '../../drizzle/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { broadcastToFarm } from '../_core/websocket';
@@ -153,9 +153,13 @@ export const fieldWorkerRouter = router({
       }
 
       try {
-        const logs = await db.execute(
-          sql`SELECT * FROM fieldWorkerActivityLogs WHERE farmId = ${input.farmId} ORDER BY createdAt DESC LIMIT ${input.limit} OFFSET ${input.offset}`
-        );
+        const logs = await db
+          .select()
+          .from(fieldWorkerActivityLogs)
+          .where(eq(fieldWorkerActivityLogs.farmId, input.farmId))
+          .orderBy(desc(fieldWorkerActivityLogs.createdAt))
+          .limit(input.limit)
+          .offset(input.offset);
 
         return logs;
       } catch (error) {
@@ -368,13 +372,12 @@ export const fieldWorkerRouter = router({
           .limit(10);
 
         // Get recent activities
-        const recentActivities = await db.execute(
-          sql`SELECT id, logId, userId, farmId, activityType, title, description, gpsLatitude, gpsLongitude, createdAt 
-              FROM fieldWorkerActivityLogs 
-              WHERE farmId = ${input.farmId} 
-              ORDER BY createdAt DESC 
-              LIMIT 10`
-        );
+        const recentActivities = await db
+          .select()
+          .from(fieldWorkerActivityLogs)
+          .where(eq(fieldWorkerActivityLogs.farmId, input.farmId))
+          .orderBy(desc(fieldWorkerActivityLogs.createdAt))
+          .limit(10);
 
         // Calculate work hours today
         const today = new Date();
