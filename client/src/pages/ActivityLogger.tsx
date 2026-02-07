@@ -1,6 +1,6 @@
-import { trpc } from '@/lib/trpc';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
+import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,23 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Camera, MapPin, Loader2, CheckCircle2, X } from 'lucide-react';
+import { AlertCircle, MapPin, Loader2, CheckCircle2 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { uploadPhotosToS3, validatePhotoFile } from '@/lib/photoUpload';
-import { useFormValidation } from '@/hooks/useFormValidation';
-import { BatchPhotoUpload } from '@/components/BatchPhotoUpload';
-import { useValidationRuleSync } from '@/hooks/useValidationRuleSync';
-import { validateFieldAgainstRules, validateFormAgainstRules, hasValidationErrors } from '@/utils/validationRuleEnforcer';
-
-interface Photo {
-  file: File;
-  preview: string;
-  gpsData?: {
-    latitude: number;
-    longitude: number;
-    accuracy: number;
-  };
-}
 
 const ACTIVITY_TYPES = [
   { value: 'crop_health', label: 'Crop Health Check' },
@@ -48,127 +33,46 @@ const ACTIVITY_TYPES = [
 export function ActivityLogger() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
-  const [farmId, setFarmId] = useState<number | null>(null);
-  const [fieldId, setFieldId] = useState<number | null>(null);
-  const [activityType, setActivityType] = useState<string>('crop_health');
+  
+  // Form state
+  const [activityType, setActivityType] = useState('crop_health');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [observations, setObservations] = useState('');
-  const [photos, setPhotos] = useState<Photo[]>([]);
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const [validationRules, setValidationRules] = useState<any[]>([]);
-  
-  // Fetch validation rules from admin
-  const { data: rulesData } = trpc.admin.getValidationRules.useQuery(
-    { entityType: 'activity' },
-    { enabled: !!user }
-  );
-
-  // Listen for validation rule updates via WebSocket
-  useValidationRuleSync(
-    (update) => {
-      if (update.type === 'validation_rules_sync' && update.rules) {
-        setValidationRules(update.rules.filter((r: any) => r.entityType === 'activity'));
-      }
-    },
-    (rules) => {
-      setValidationRules(rules.filter((r: any) => r.entityType === 'activity'));
-    }
-  );
-
-  // Update validation rules when fetched
-  useEffect(() => {
-    if (rulesData?.rules) {
-      setValidationRules(rulesData.rules);
-    }
-  }, [rulesData]);
-
-  // Build dynamic validation config from rules
-  const buildValidationConfig = () => {
-    const config: any = {
-      title: { required: true, minLength: 3 },
-      description: { required: true, minLength: 10 },
-      activityType: { required: true },
-    };
-
-    // Apply validation rules from admin settings
-    validationRules.forEach((rule: any) => {
-      if (rule.fieldName === 'title' && rule.ruleType === 'minLength' && rule.ruleValue) {
-        config.title.minLength = parseInt(rule.ruleValue);
-      } else if (rule.fieldName === 'description' && rule.ruleType === 'minLength' && rule.ruleValue) {
-        config.description.minLength = parseInt(rule.ruleValue);
-      }
-    });
-
-    return config;
-  };
-
-  const { errors, validateForm, clearError } = useFormValidation(buildValidationConfig());
-  const [validationErrors, setValidationErrors] = useState<Record<string, any>>({});
-
+  // Mutation
   const createActivityMutation = trpc.fieldWorker.createActivityLog.useMutation({
     onSuccess: () => {
       setSubmitSuccess(true);
+      setTimeout(() => {
+        navigate('/field-worker/dashboard');
+      }, 2000);
     },
     onError: (error) => {
-      console.error('Failed to create activity:', error);
-      alert('Failed to log activity. Please try again.');
+      setSubmitError(error.message || 'Failed to log activity');
+      setIsSubmitting(false);
     },
   });
 
-  // Initialize farm ID from user
-  useEffect(() => {
-    if (user?.id) {
-      setFarmId(1);
+  // Get GPS location
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsError('Geolocation is not supported by your browser');
+      return;
     }
-  }, [user?.id]);
-
-  // Re-validate when validation rules change
-  useEffect(() => {
-    if (title || description) {
-      validateForm({ title, description, activityType });
-      
-      // Apply validation rules from admin
-      const formData = { title, description, activityType };
-      const ruleErrors = validateFormAgainstRules(formData, validationRules);
-      setValidationErrors(ruleErrors);
-    }
-  }, [validationRules, validateForm, title, description, activityType]);
-
-  // Validate individual fields on change
-  const validateField = useCallback((fieldName: string, fieldValue: any) => {
-    const fieldErrors = validateFieldAgainstRules(fieldName, fieldValue, validationRules);
-    setValidationErrors((prev) => {
-      const updated = { ...prev };
-      if (fieldErrors.length > 0) {
-        updated[fieldName] = fieldErrors;
-      } else {
-        delete updated[fieldName];
-      }
-      return updated;
-    });
-  }, [validationRules]);
-
-  // Request GPS location on component mount
-  useEffect(() => {
-    if (!navigator.geolocation) return;
 
     setGpsLoading(true);
-    const timeoutId = setTimeout(() => {
-      setGpsLoading(false);
-      setGpsError('Location request timed out');
-    }, 10000);
+    setGpsError(null);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        clearTimeout(timeoutId);
         setGpsLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -176,131 +80,78 @@ export function ActivityLogger() {
         setGpsLoading(false);
       },
       (error) => {
-        clearTimeout(timeoutId);
         setGpsError('Unable to get location. Please enable location services.');
         setGpsLoading(false);
       }
     );
-  }, []);
+  };
 
-  // Redirect to dashboard after successful submission
-  useEffect(() => {
-    if (!submitSuccess) return;
+  // Validate form
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
 
-    const timer = setTimeout(() => {
-      navigate('/field-worker/dashboard');
-    }, 2000);
+    if (!title.trim()) {
+      errors.title = 'Title is required';
+    } else if (title.trim().length < 3) {
+      errors.title = 'Title must be at least 3 characters';
+    }
 
-    return () => clearTimeout(timer);
-  }, [submitSuccess, navigate]);
+    if (!description.trim()) {
+      errors.description = 'Description is required';
+    } else if (description.trim().length < 10) {
+      errors.description = 'Description must be at least 10 characters';
+    }
 
-  // Cleanup photos on unmount
-  useEffect(() => {
-    return () => {
-      photos.forEach((photo) => URL.revokeObjectURL(photo.preview));
-    };
-  }, [photos]);
+    if (!activityType) {
+      errors.activityType = 'Activity type is required';
+    }
 
-  const handlePhotosSelected = useCallback(
-    (selectedFiles: File[]) => {
-      const newPhotos: Photo[] = selectedFiles.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-        gpsData: gpsLocation
-          ? {
-              latitude: gpsLocation.lat,
-              longitude: gpsLocation.lng,
-              accuracy: 10,
-            }
-          : undefined,
-      }));
-      setPhotos(newPhotos);
-    },
-    [gpsLocation]
-  );
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-
-
+  // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm({ title, description, activityType })) {
+    if (!validateForm()) {
       return;
     }
 
-    // Check validation rules
-    const formData = { title, description, activityType };
-    const ruleErrors = validateFormAgainstRules(formData, validationRules);
-    if (hasValidationErrors(ruleErrors)) {
-      setValidationErrors(ruleErrors);
-      alert('Please fix validation errors before submitting');
-      return;
-    }
-
-    if (!farmId) {
-      alert('Farm ID not initialized');
+    if (!user?.id) {
+      setSubmitError('User not authenticated');
       return;
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      let photoUrls: string[] = [];
-      if (photos.length > 0 && farmId) {
-        const uploadedPhotos = await uploadPhotosToS3(
-          photos.map((p) => p.file),
-          farmId,
-          gpsLocation
-            ? {
-                latitude: gpsLocation.lat,
-                longitude: gpsLocation.lng,
-                accuracy: 10,
-              }
-            : undefined
-        );
-        photoUrls = uploadedPhotos.map((p) => p.url);
-      }
-
       await createActivityMutation.mutateAsync({
-        farmId,
-        fieldId: fieldId || undefined,
+        farmId: 1, // Default farm ID
         activityType: activityType as any,
-        title,
-        description,
-        observations,
+        title: title.trim(),
+        description: description.trim(),
+        observations: observations.trim() || undefined,
         gpsLatitude: gpsLocation?.lat,
         gpsLongitude: gpsLocation?.lng,
-        photoUrls,
+        photoUrls: [],
       });
-    } finally {
-      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Error submitting activity:', error);
     }
   };
 
-  // Show loading state while farmId is being set
-  if (!farmId) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Initializing activity logger...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show success state after submission
+  // Show success state
   if (submitSuccess) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-8 text-center">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Activity Logged!</h2>
             <p className="text-muted-foreground">Your activity has been recorded successfully.</p>
-            <p className="text-sm text-muted-foreground mt-4">Redirecting to activities list...</p>
+            <p className="text-sm text-muted-foreground mt-4">Redirecting to dashboard...</p>
           </CardContent>
         </Card>
       </div>
@@ -316,168 +167,169 @@ export function ActivityLogger() {
           <p className="text-muted-foreground">Record your field work and observations</p>
         </div>
 
-        {/* GPS Status */}
-        {gpsError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-red-900">{gpsError}</p>
-            </div>
-          </div>
-        )}
-
-        {gpsLoading && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
-            <Loader2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0 animate-spin" />
-            <div>
-              <p className="font-semibold text-blue-900">Getting your location...</p>
-            </div>
-          </div>
-        )}
-
-        {gpsLocation && !gpsError && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-green-900">Location Tagged</p>
-              <p className="text-sm text-green-700">
-                {gpsLocation.lat.toFixed(4)}, {gpsLocation.lng.toFixed(4)}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Activity Type */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity Type</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={activityType} onValueChange={setActivityType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACTIVITY_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* Error Alert */}
+        {submitError && (
+          <Card className="mb-6 border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-red-900">Error</p>
+                  <p className="text-sm text-red-700">{submitError}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Title & Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-foreground">
-                  Title <span className="text-red-500">*</span>
-                </label>
+        {/* Form Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity Details</CardTitle>
+            <CardDescription>Fill in the details of your field activity</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Activity Type */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Activity Type *</label>
+                <Select value={activityType} onValueChange={setActivityType}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {validationErrors.activityType && (
+                  <p className="text-sm text-red-600">{validationErrors.activityType}</p>
+                )}
+              </div>
+
+              {/* Title */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title *</label>
                 <Input
+                  placeholder="Enter activity title"
                   value={title}
                   onChange={(e) => {
                     setTitle(e.target.value);
-                    clearError('title');
+                    if (validationErrors.title) {
+                      setValidationErrors((prev) => {
+                        const updated = { ...prev };
+                        delete updated.title;
+                        return updated;
+                      });
+                    }
                   }}
-                  placeholder="e.g., Morning crop inspection in Field A"
-                  required
-                  className={errors.title ? 'border-red-500' : ''}
+                  className={validationErrors.title ? 'border-red-500' : ''}
                 />
-                {errors.title && (
-                  <p className="text-sm text-red-500 mt-1">{errors.title}</p>
+                {validationErrors.title && (
+                  <p className="text-sm text-red-600">{validationErrors.title}</p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2 text-foreground">
-                  Description <span className="text-red-500">*</span>
-                </label>
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Description *</label>
                 <Textarea
+                  placeholder="Describe what you observed and did"
                   value={description}
                   onChange={(e) => {
                     setDescription(e.target.value);
-                    clearError('description');
+                    if (validationErrors.description) {
+                      setValidationErrors((prev) => {
+                        const updated = { ...prev };
+                        delete updated.description;
+                        return updated;
+                      });
+                    }
                   }}
-                  placeholder="What did you do?"
-                  rows={3}
-                  className={errors.description ? 'border-red-500' : ''}
+                  rows={4}
+                  className={validationErrors.description ? 'border-red-500' : ''}
                 />
-                {errors.description && (
-                  <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+                {validationErrors.description && (
+                  <p className="text-sm text-red-600">{validationErrors.description}</p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2 text-foreground">
-                  Observations
-                </label>
+              {/* Observations */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Additional Observations</label>
                 <Textarea
+                  placeholder="Any additional notes or observations"
                   value={observations}
                   onChange={(e) => setObservations(e.target.value)}
-                  placeholder="What did you observe? Any issues or concerns?"
                   rows={3}
                 />
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Photo Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                Photo Documentation
-              </CardTitle>
-              <CardDescription>Capture multiple photos as evidence of your work</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BatchPhotoUpload
-                onPhotosSelected={handlePhotosSelected}
-                maxPhotos={10}
-                disabled={isSubmitting}
-              />
-              {photos.length > 0 && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-900">
-                    {photos.length} photo(s) selected and ready for upload
-                  </p>
+              {/* GPS Location */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">GPS Location</label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGetLocation}
+                    disabled={gpsLoading}
+                    className="flex items-center gap-2"
+                  >
+                    {gpsLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Getting location...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="h-4 w-4" />
+                        Get Location
+                      </>
+                    )}
+                  </Button>
+                  {gpsLocation && (
+                    <Badge variant="secondary">
+                      {gpsLocation.lat.toFixed(4)}, {gpsLocation.lng.toFixed(4)}
+                    </Badge>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                {gpsError && (
+                  <p className="text-sm text-amber-600">{gpsError}</p>
+                )}
+              </div>
 
-          {/* Submit Button */}
-          <div className="flex gap-3">
-            <Button
-              type="submit"
-              disabled={isSubmitting || !title.trim()}
-              className="flex-1"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging Activity...
-                </>
-              ) : (
-                'Log Activity'
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate('/field-worker/dashboard')}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+              {/* Submit Button */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Log Activity'
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/field-worker/dashboard')}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
