@@ -2162,3 +2162,65 @@ export const farmPermissions = mysqlTable("farmPermissions", {
 
 export type FarmPermission = typeof farmPermissions.$inferSelect;
 export type InsertFarmPermission = typeof farmPermissions.$inferInsert;
+
+
+// ============================================================================
+// BULK OPERATION HISTORY
+// ============================================================================
+export const bulkOperationHistory = mysqlTable("bulkOperationHistory", {
+  id: varchar("id", { length: 64 }).primaryKey(), // UUID
+  farmId: int("farmId").notNull(),
+  userId: int("userId").notNull(),
+  operationType: mysqlEnum("operationType", ["batch-edit", "import", "export", "bulk-register"]).notNull(),
+  status: mysqlEnum("status", ["pending", "in-progress", "completed", "failed", "cancelled"]).default("pending").notNull(),
+  totalItems: int("totalItems").notNull(),
+  processedItems: int("processedItems").default(0).notNull(),
+  successCount: int("successCount").default(0).notNull(),
+  failureCount: int("failureCount").default(0).notNull(),
+  errorMessage: text("errorMessage"),
+  details: json("details"), // JSON object with operation-specific details
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  duration: int("duration"), // Duration in milliseconds
+  retryCount: int("retryCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BulkOperationHistory = typeof bulkOperationHistory.$inferSelect;
+export type InsertBulkOperationHistory = typeof bulkOperationHistory.$inferInsert;
+
+// ============================================================================
+// OPERATION RETRY LOG
+// ============================================================================
+export const operationRetryLog = mysqlTable("operationRetryLog", {
+  id: int("id").autoincrement().primaryKey(),
+  operationId: varchar("operationId", { length: 64 }).notNull(),
+  retryAttempt: int("retryAttempt").notNull(),
+  status: mysqlEnum("status", ["pending", "in-progress", "completed", "failed"]).default("pending").notNull(),
+  errorMessage: text("errorMessage"),
+  nextRetryAt: timestamp("nextRetryAt"),
+  backoffMultiplier: decimal("backoffMultiplier", { precision: 4, scale: 2 }).default("1.5"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export type OperationRetryLog = typeof operationRetryLog.$inferSelect;
+export type InsertOperationRetryLog = typeof operationRetryLog.$inferInsert;
+
+// ============================================================================
+// OPERATION FAILURE DETAILS
+// ============================================================================
+export const operationFailureDetails = mysqlTable("operationFailureDetails", {
+  id: int("id").autoincrement().primaryKey(),
+  operationId: varchar("operationId", { length: 64 }).notNull(),
+  itemId: varchar("itemId", { length: 64 }).notNull(),
+  itemType: varchar("itemType", { length: 50 }).notNull(), // e.g., "animal", "field", "activity"
+  errorCode: varchar("errorCode", { length: 50 }).notNull(),
+  errorMessage: text("errorMessage").notNull(),
+  itemData: json("itemData"), // Original item data that failed
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OperationFailureDetails = typeof operationFailureDetails.$inferSelect;
+export type InsertOperationFailureDetails = typeof operationFailureDetails.$inferInsert;
