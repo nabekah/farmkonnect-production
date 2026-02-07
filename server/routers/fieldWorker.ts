@@ -343,4 +343,132 @@ export const fieldWorkerRouter = router({
         });
       }
     }),
+
+  getDashboardData: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        // Get pending tasks
+        const pendingTasks = await db
+          .select()
+          .from(fieldWorkerTasks)
+          .where(eq(fieldWorkerTasks.farmId, input.farmId))
+          .orderBy(desc(fieldWorkerTasks.dueDate))
+          .limit(10);
+
+        // Get recent activities
+        const recentActivities = await db.execute(
+          sql`SELECT id, logId, userId, farmId, activityType, title, description, gpsLatitude, gpsLongitude, createdAt 
+              FROM fieldWorkerActivityLogs 
+              WHERE farmId = ${input.farmId} 
+              ORDER BY createdAt DESC 
+              LIMIT 10`
+        );
+
+        // Calculate work hours today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const workHoursResult = await db.execute(
+          sql`SELECT 
+                SUM(TIMESTAMPDIFF(MINUTE, clockInTime, clockOutTime)) as totalMinutes
+              FROM timeTrackerLogs 
+              WHERE userId = ${ctx.user.id} 
+              AND farmId = ${input.farmId}
+              AND clockInTime >= ${today}
+              AND clockInTime < ${tomorrow}`
+        );
+
+        const totalMinutes = (workHoursResult[0]?.totalMinutes as number) || 0;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        return {
+          pendingTasks: pendingTasks || [],
+          recentActivities: recentActivities || [],
+          workHoursToday: { hours, minutes },
+        };
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch dashboard data',
+        });
+      }
+    }),
+
+  clockIn: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        const now = new Date();
+        await db.execute(
+          sql`INSERT INTO timeTrackerLogs (userId, farmId, clockInTime, createdAt, updatedAt)
+              VALUES (${ctx.user.id}, ${input.farmId}, ${now}, ${now}, ${now})`
+        );
+        return { success: true, message: 'Clocked in successfully' };
+      } catch (error) {
+        console.error('Failed to clock in:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to clock in',
+        });
+      }
+    }),
+
+  clockOut: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Database not available',
+        });
+      }
+
+      try {
+        const now = new Date();
+        await db.execute(
+          sql`UPDATE timeTrackerLogs 
+              SET clockOutTime = ${now}, updatedAt = ${now}
+              WHERE userId = ${ctx.user.id} 
+              AND farmId = ${input.farmId}
+              AND clockOutTime IS NULL
+              ORDER BY clockInTime DESC
+              LIMIT 1`
+        );
+        return { success: true, message: 'Clocked out successfully' };
+      } catch (error) {
+        console.error('Failed to clock out:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to clock out',
+        });
+      }
+    }),
 });

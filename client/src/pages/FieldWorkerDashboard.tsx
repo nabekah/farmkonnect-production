@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Clock, CheckCircle2, AlertTriangle, MapPin, Camera, Plus } from 'lucide-react';
+import { AlertCircle, Clock, CheckCircle2, AlertTriangle, Camera, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
-
-interface DashboardWidget {
-  id: string;
-  title: string;
-  visible: boolean;
-}
 
 export function FieldWorkerDashboard() {
   const { user } = useAuth();
@@ -20,11 +14,12 @@ export function FieldWorkerDashboard() {
   const [isClockingIn, setIsClockingIn] = useState(false);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState<Date | null>(null);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   // Get dashboard data
   const dashboardQuery = trpc.fieldWorker.getDashboardData.useQuery(
     { farmId: farmId || 0 },
-    { enabled: !!farmId, refetchInterval: 30000 } // Refetch every 30 seconds
+    { enabled: !!farmId, refetchInterval: 30000 }
   );
 
   // Clock in/out mutations
@@ -33,17 +28,17 @@ export function FieldWorkerDashboard() {
       dashboardQuery.refetch();
     },
   });
+
   const clockOutMutation = trpc.fieldWorker.clockOut.useMutation({
     onSuccess: () => {
       dashboardQuery.refetch();
     },
   });
 
+  // Initialize farm ID from user
   useEffect(() => {
-    // Get user's farm ID from profile or use default
     if (user?.id) {
-      // TODO: Fetch actual farm ID from user profile
-      setFarmId(1); // Placeholder - replace with actual farm ID from user profile
+      setFarmId(1); // Default farm ID
     }
   }, [user]);
 
@@ -51,10 +46,10 @@ export function FieldWorkerDashboard() {
   useEffect(() => {
     if (!isClockedIn) return;
     const interval = setInterval(() => {
-      // Force component re-render to update duration
+      setForceUpdate((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [isClockedIn, clockInTime]);
+  }, [isClockedIn]);
 
   const handleClockIn = async () => {
     if (!farmId) return;
@@ -84,8 +79,6 @@ export function FieldWorkerDashboard() {
     }
   };
 
-  const [, setForceUpdate] = useState(0);
-
   const calculateWorkDuration = () => {
     if (!clockInTime) return '0h 0m';
     const now = new Date();
@@ -94,15 +87,6 @@ export function FieldWorkerDashboard() {
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
   };
-
-  // Force update every second for duration display
-  useEffect(() => {
-    if (!isClockedIn) return;
-    const interval = setInterval(() => {
-      setForceUpdate((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isClockedIn]);
 
   if (!farmId) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -198,18 +182,18 @@ export function FieldWorkerDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
-            Pending Tasks ({dashboardQuery.data?.pendingTasks.length || 0})
+            Pending Tasks ({dashboardQuery.data?.pendingTasks?.length || 0})
           </CardTitle>
           <CardDescription>Tasks due today and upcoming</CardDescription>
         </CardHeader>
         <CardContent>
           {dashboardQuery.isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading tasks...</div>
-          ) : dashboardQuery.data?.pendingTasks.length === 0 ? (
+          ) : !dashboardQuery.data?.pendingTasks || dashboardQuery.data.pendingTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No pending tasks</div>
           ) : (
             <div className="space-y-3">
-              {dashboardQuery.data?.pendingTasks.slice(0, 5).map((task: any) => (
+              {dashboardQuery.data.pendingTasks.slice(0, 5).map((task: any) => (
                 <div
                   key={task.id}
                   className="flex items-start justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
@@ -266,13 +250,13 @@ export function FieldWorkerDashboard() {
         <CardContent>
           {dashboardQuery.isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading activities...</div>
-          ) : (dashboardQuery.data?.recentActivities?.length ?? 0) === 0 ? (
+          ) : !dashboardQuery.data?.recentActivities || dashboardQuery.data.recentActivities.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No recent activities</div>
           ) : (
             <div className="space-y-3">
-              {dashboardQuery.data?.recentActivities.slice(0, 5).map((activity: any) => (
+              {dashboardQuery.data.recentActivities.slice(0, 5).map((activity: any) => (
                 <div
-                  key={activity.id}
+                  key={activity.logId || activity.id}
                   className="flex items-start justify-between p-3 bg-muted rounded-lg"
                 >
                   <div className="flex-1">
@@ -291,7 +275,7 @@ export function FieldWorkerDashboard() {
           <Button
             variant="ghost"
             className="w-full mt-4"
-            onClick={() => navigate('/field-worker/activities')}
+            onClick={() => navigate('/field-worker/activity-log')}
           >
             View All Activities →
           </Button>
