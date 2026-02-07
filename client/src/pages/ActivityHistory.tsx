@@ -1,4 +1,3 @@
-import { useState, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Download, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ActivitySearchFilter } from '@/components/ActivitySearchFilter';
+import { searchActivities, sortActivities, ActivitySearchFilters } from '@/lib/activitySearch';
+import { useState, useMemo } from 'react';
 
 const ACTIVITY_TYPES = [
   { value: 'crop_health', label: 'Crop Health Check' },
@@ -55,6 +57,9 @@ export function ActivityHistory() {
   const [filterType, setFilterType] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [searchTitle, setSearchTitle] = useState('');
+  const [searchFilters, setSearchFilters] = useState<ActivitySearchFilters>({});
+  const [sortBy, setSortBy] = useState<'date' | 'type' | 'status' | 'title'>('date');
+  const [sortAscending, setSortAscending] = useState(false);
 
   const { data: activities, isLoading } = trpc.fieldWorker.getActivityLogs.useQuery({ farmId: 1 });
 
