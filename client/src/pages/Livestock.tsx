@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Plus, Trash2, AlertCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
 import BreedingRecords from "@/components/BreedingRecords";
 import { FeedingRecords } from "@/components/FeedingRecords";
 
