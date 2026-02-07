@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit2, Heart, AlertTriangle, TrendingUp, Loader2, Copy, Download } from "lucide-react";
+import { Plus, Trash2, Edit2, Heart, AlertTriangle, TrendingUp, Loader2, Copy, Download, Settings } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { BatchAnimalEditingModal } from "@/components/BatchAnimalEditingModal";
+import { AnimalImportWizard } from "@/components/AnimalImportWizard";
+import { AnimalSearchDashboard } from "@/components/AnimalSearchDashboard";
 
 const ANIMAL_TYPES = [
   { id: 1, name: "Cattle" },
@@ -28,6 +31,10 @@ export default function LivestockManagement() {
   const [bulkTagIds, setBulkTagIds] = useState("");
   const [tagIdPrefix, setTagIdPrefix] = useState("TAG");
   const [tagIdCount, setTagIdCount] = useState(1);
+  const [showBatchEditing, setShowBatchEditing] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
+  const [showSearchDashboard, setShowSearchDashboard] = useState(false);
+  const [activeTab, setActiveTab] = useState("animals");
 
   // Fetch farms
   const { data: farms = [] } = trpc.farms.list.useQuery();
