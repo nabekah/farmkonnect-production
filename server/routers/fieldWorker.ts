@@ -185,14 +185,15 @@ export const fieldWorkerRouter = router({
           sql`SELECT * FROM fieldWorkerActivityLogs WHERE logId = ${input.logId}`
         );
 
-        if (logs.length === 0) {
+        const logsArray = Array.isArray(logs) ? logs : [];
+        if (logsArray.length === 0) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Activity log not found',
           });
         }
 
-        return logs[0];
+        return logsArray[0];
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         console.error('Failed to fetch activity log details:', error);
@@ -391,7 +392,8 @@ export const fieldWorkerRouter = router({
               AND clockInTime < ${tomorrow}`
         );
 
-        const totalMinutes = (workHoursResult[0]?.totalMinutes as number) || 0;
+        const workHoursArray = Array.isArray(workHoursResult) ? workHoursResult : [];
+        const totalMinutes = (workHoursArray[0] ? (workHoursArray[0] as any).totalMinutes : null) || 0;
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
 

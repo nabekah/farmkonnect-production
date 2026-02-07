@@ -1,7 +1,7 @@
-import { protectedProcedure, publicProcedure } from '../_core/procedures';
+import { protectedProcedure } from '../_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { db } from '../db';
+import { getDb } from '../db';
 import { fieldWorkerActivityLogs } from '../../drizzle/schema';
 import { sql } from 'drizzle-orm';
 
@@ -22,17 +22,22 @@ export const activityBulkOperationsRouter = {
         notes: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
-        const { activityIds, farmId, notes } = input;
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Database not available',
+          });
+        }
 
-        // Verify user has permission to approve activities for this farm
-        // TODO: Add farm permission check
+        const { activityIds, farmId, notes } = input;
 
         // Update activities to reviewed status
         const result = await db.execute(
           sql`
-            UPDATE ${fieldWorkerActivityLogs}
+            UPDATE fieldWorkerActivityLogs
             SET 
               status = 'reviewed',
               reviewedBy = ${ctx.user.id},
@@ -47,14 +52,14 @@ export const activityBulkOperationsRouter = {
 
         return {
           success: true,
-          updated: (result as any)[0]?.affectedRows || 0,
-          message: `Successfully approved ${(result as any)[0]?.affectedRows || 0} activities`,
+          updated: (result as any).affectedRows || 0,
+          message: `Successfully approved ${(result as any).affectedRows || 0} activities`,
         };
       } catch (error) {
         console.error('Bulk approve error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to bulk approve activities',
+          message: 'Failed to approve activities',
         });
       }
     }),
@@ -70,45 +75,48 @@ export const activityBulkOperationsRouter = {
         reason: z.string(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Database not available',
+          });
+        }
+
         const { activityIds, farmId, reason } = input;
 
-        // Verify user has permission
-        // TODO: Add farm permission check
-
-        // Update activities to draft status with rejection reason
         const result = await db.execute(
           sql`
-            UPDATE ${fieldWorkerActivityLogs}
+            UPDATE fieldWorkerActivityLogs
             SET 
-              status = 'draft',
+              status = 'rejected',
               reviewedBy = ${ctx.user.id},
               reviewedAt = NOW(),
               reviewNotes = ${reason},
               updatedAt = NOW()
             WHERE logId IN (${sql.join(activityIds, ',')})
             AND farmId = ${farmId}
-            AND status = 'submitted'
           `
         );
 
         return {
           success: true,
-          updated: (result as any)[0]?.affectedRows || 0,
-          message: `Successfully rejected ${(result as any)[0]?.affectedRows || 0} activities`,
+          updated: (result as any).affectedRows || 0,
+          message: `Successfully rejected ${(result as any).affectedRows || 0} activities`,
         };
       } catch (error) {
         console.error('Bulk reject error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to bulk reject activities',
+          message: 'Failed to reject activities',
         });
       }
     }),
 
   /**
-   * Bulk delete activities
+   * Bulk delete activities (admin only)
    */
   bulkDelete: protectedProcedure
     .input(
@@ -117,8 +125,16 @@ export const activityBulkOperationsRouter = {
         farmId: z.number(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Database not available',
+          });
+        }
+
         const { activityIds, farmId } = input;
 
         // Verify user has permission (admin only)
@@ -129,10 +145,9 @@ export const activityBulkOperationsRouter = {
           });
         }
 
-        // Delete activities
         const result = await db.execute(
           sql`
-            DELETE FROM ${fieldWorkerActivityLogs}
+            DELETE FROM fieldWorkerActivityLogs
             WHERE logId IN (${sql.join(activityIds, ',')})
             AND farmId = ${farmId}
           `
@@ -140,14 +155,15 @@ export const activityBulkOperationsRouter = {
 
         return {
           success: true,
-          deleted: (result as any)[0]?.affectedRows || 0,
-          message: `Successfully deleted ${(result as any)[0]?.affectedRows || 0} activities`,
+          deleted: (result as any).affectedRows || 0,
+          message: `Successfully deleted ${(result as any).affectedRows || 0} activities`,
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error('Bulk delete error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to bulk delete activities',
+          message: 'Failed to delete activities',
         });
       }
     }),
@@ -163,17 +179,21 @@ export const activityBulkOperationsRouter = {
         status: z.enum(['draft', 'submitted', 'reviewed']),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Database not available',
+          });
+        }
+
         const { activityIds, farmId, status } = input;
 
-        // Verify user has permission
-        // TODO: Add farm permission check
-
-        // Update activity status
         const result = await db.execute(
           sql`
-            UPDATE ${fieldWorkerActivityLogs}
+            UPDATE fieldWorkerActivityLogs
             SET 
               status = ${status},
               updatedAt = NOW()
@@ -184,14 +204,14 @@ export const activityBulkOperationsRouter = {
 
         return {
           success: true,
-          updated: (result as any)[0]?.affectedRows || 0,
-          message: `Successfully updated ${(result as any)[0]?.affectedRows || 0} activities to ${status}`,
+          updated: (result as any).affectedRows || 0,
+          message: `Successfully updated ${(result as any).affectedRows || 0} activities to ${status}`,
         };
       } catch (error) {
         console.error('Bulk update status error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to bulk update activity status',
+          message: 'Failed to update activity status',
         });
       }
     }),
@@ -201,38 +221,49 @@ export const activityBulkOperationsRouter = {
    */
   getStats: protectedProcedure
     .input(z.object({ farmId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
-        const result = await db.execute(
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Database not available',
+          });
+        }
+
+        const { farmId } = input;
+
+        const statsResult = await db.execute(
           sql`
             SELECT 
               COUNT(*) as total,
-              SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft,
-              SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted,
-              SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as reviewed
-            FROM ${fieldWorkerActivityLogs}
-            WHERE farmId = ${input.farmId}
+              SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft_count,
+              SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as submitted_count,
+              SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as reviewed_count
+            FROM fieldWorkerActivityLogs
+            WHERE farmId = ${farmId}
           `
         );
 
-        const stats = (result as any)[0]?.[0] || {
+        const statsArray = Array.isArray(statsResult) ? statsResult : [];
+        const stats = statsArray[0] || {
           total: 0,
-          draft: 0,
-          submitted: 0,
-          reviewed: 0,
+          draft_count: 0,
+          submitted_count: 0,
+          reviewed_count: 0,
         };
 
         return {
-          total: parseInt(stats.total) || 0,
-          draft: parseInt(stats.draft) || 0,
-          submitted: parseInt(stats.submitted) || 0,
-          reviewed: parseInt(stats.reviewed) || 0,
+          total: (stats as any).total || 0,
+          draft: (stats as any).draft_count || 0,
+          submitted: (stats as any).submitted_count || 0,
+          reviewed: (stats as any).reviewed_count || 0,
         };
       } catch (error) {
         console.error('Get stats error:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to get bulk operation statistics',
+          message: 'Failed to get statistics',
         });
       }
     }),

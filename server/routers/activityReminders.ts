@@ -1,7 +1,7 @@
-import { protectedProcedure } from '../_core/procedures';
+import { protectedProcedure } from '../_core/trpc';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { db } from '../db';
+import { getDb } from '../db';
 import { sql } from 'drizzle-orm';
 
 /**
@@ -101,13 +101,13 @@ export const activityRemindersRouter = {
   createApprovalReminder: protectedProcedure
     .input(
       z.object({
-        activityId: string,
-        userId: number,
-        farmId: number,
+        activityId: z.string(),
+        userId: z.number(),
+        farmId: z.number(),
         delayMinutes: z.number().default(24 * 60), // Default 24 hours
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const { activityId, userId, farmId, delayMinutes } = input;
 
@@ -148,13 +148,13 @@ export const activityRemindersRouter = {
   createSubmissionReminder: protectedProcedure
     .input(
       z.object({
-        activityId: string,
-        userId: number,
-        farmId: number,
+        activityId: z.string(),
+        userId: z.number(),
+        farmId: z.number(),
         delayMinutes: z.number().default(48 * 60), // Default 48 hours
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const { activityId, userId, farmId, delayMinutes } = input;
 
@@ -195,15 +195,15 @@ export const activityRemindersRouter = {
   createCustomReminder: protectedProcedure
     .input(
       z.object({
-        activityId: string,
-        userId: number,
-        farmId: number,
-        title: string,
-        message: string,
+        activityId: z.string(),
+        userId: z.number(),
+        farmId: z.number(),
+        title: z.string(),
+        message: z.string(),
         scheduledAt: z.date(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const { activityId, userId, farmId, title, message, scheduledAt } = input;
 
@@ -240,8 +240,8 @@ export const activityRemindersRouter = {
    * Cancel a reminder
    */
   cancelReminder: protectedProcedure
-    .input(z.object({ reminderId: string }))
-    .mutation(async ({ input }) => {
+    .input(z.object({ reminderId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
       try {
         const cancelled = reminderManager.cancelReminder(input.reminderId);
 
@@ -270,7 +270,7 @@ export const activityRemindersRouter = {
    */
   getPendingReminders: protectedProcedure
     .input(z.object({ userId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
         const reminders = reminderManager.getPendingReminders();
         return reminders.filter((r) => r.userId === input.userId);
@@ -288,7 +288,7 @@ export const activityRemindersRouter = {
    */
   getStats: protectedProcedure
     .input(z.object({ farmId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
         const reminders = reminderManager.getPendingReminders();
         const farmReminders = reminders.filter((r) => r.farmId === input.farmId);

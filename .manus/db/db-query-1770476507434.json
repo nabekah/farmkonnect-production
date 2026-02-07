@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, logId, userId, farmId, activityType, title, status, createdAt FROM fieldWorkerActivityLogs LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT id, logId, userId, farmId, activityType, title, status, createdAt FROM fieldWorkerActivityLogs LIMIT 3;",
+  "rows": [
+    {
+      "id": "1",
+      "logId": "ad9a71f7-4756-482b-89df-b95c63b0e9d8",
+      "userId": "1",
+      "farmId": "1",
+      "activityType": "harvest",
+      "title": "Harvest",
+      "status": "submitted",
+      "createdAt": "2026-02-05 22:27:15"
+    },
+    {
+      "id": "2",
+      "logId": "8e62dd92-5528-4d49-aa47-a6a18de4660a",
+      "userId": "1",
+      "farmId": "1",
+      "activityType": "harvest",
+      "title": "Harvet",
+      "status": "submitted",
+      "createdAt": "2026-02-05 22:43:13"
+    },
+    {
+      "id": "3",
+      "logId": "3e3db5b5-d1ca-4425-8937-b3145c0c89c1",
+      "userId": "1",
+      "farmId": "1",
+      "activityType": "pest_monitoring",
+      "title": "knlkn",
+      "status": "submitted",
+      "createdAt": "2026-02-05 22:44:16"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tlogId\tuserId\tfarmId\tactivityType\ttitle\tstatus\tcreatedAt\n1\tad9a71f7-4756-482b-89df-b95c63b0e9d8\t1\t1\tharvest\tHarvest\tsubmitted\t2026-02-05 22:27:15\n2\t8e62dd92-5528-4d49-aa47-a6a18de4660a\t1\t1\tharvest\tHarvet\tsubmitted\t2026-02-05 22:43:13\n3\t3e3db5b5-d1ca-4425-8937-b3145c0c89c1\t1\t1\tpest_monitoring\tknlkn\tsubmitted\t2026-02-05 22:44:16\n",
+  "stderr": "",
+  "execution_time_ms": 359
+}
