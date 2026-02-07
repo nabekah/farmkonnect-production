@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Plus, Trash2, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
 import BreedingRecords from "@/components/BreedingRecords";
 import { FeedingRecords } from "@/components/FeedingRecords";
 
@@ -27,6 +26,10 @@ export default function Livestock() {
   const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   const [selectedAnimalId, setSelectedAnimalId] = useState<number | null>(null);
   const [tabValue, setTabValue] = useState("animals");
+  const [registrationMode, setRegistrationMode] = useState<"single" | "bulk">("single");
+  const [bulkTagIds, setBulkTagIds] = useState("");
+  const [tagIdPrefix, setTagIdPrefix] = useState("TAG");
+  const [tagIdCount, setTagIdCount] = useState(1);
 
   // Queries
   const { data: farms = [] } = trpc.livestock.farms.list.useQuery({ farmType: undefined });
@@ -49,6 +52,7 @@ export default function Livestock() {
   const createHealthRecordMutation = trpc.livestock.healthRecords.create.useMutation();
   const deleteHealthRecordMutation = trpc.livestock.healthRecords.delete.useMutation();
   const recordPerformanceMutation = trpc.livestock.performanceMetrics.create.useMutation();
+  const bulkRegisterAnimals = trpc.animalBulkRegistration.registerBulk.useMutation();
 
   // Form states
   const [animalForm, setAnimalForm] = useState({
@@ -228,10 +232,30 @@ export default function Livestock() {
                 Add Animal
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Register New Animal</DialogTitle>
+                <DialogTitle>Register New Animal(s)</DialogTitle>
               </DialogHeader>
+
+              {/* Registration Mode Toggle */}
+              <div className="flex gap-4 mb-6">
+                <Button
+                  variant={registrationMode === "single" ? "default" : "outline"}
+                  onClick={() => setRegistrationMode("single")}
+                  className="flex-1"
+                >
+                  Single Registration
+                </Button>
+                <Button
+                  variant={registrationMode === "bulk" ? "default" : "outline"}
+                  onClick={() => setRegistrationMode("bulk")}
+                  className="flex-1"
+                >
+                  Bulk Registration
+                </Button>
+              </div>
+
+              {registrationMode === "single" ? (
               <div className="space-y-4">
                 <div>
                   <Label>Animal Type</Label>
@@ -290,6 +314,105 @@ export default function Livestock() {
                   Register Animal
                 </Button>
               </div>
+              ) : (
+              <div className="space-y-4">
+                <div>
+                  <Label>Animal Type</Label>
+                  <Select defaultValue="1">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ANIMAL_TYPES.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Breed</Label>
+                  <Input placeholder="e.g., Holstein" />
+                </div>
+                <div>
+                  <Label>Gender</Label>
+                  <Select defaultValue="unknown">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="unknown">Unknown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Birth Date (Optional)</Label>
+                  <Input type="date" />
+                </div>
+                <div>
+                  <Label>Tag IDs</Label>
+                  <Textarea
+                    value={bulkTagIds}
+                    onChange={(e) => setBulkTagIds(e.target.value)}
+                    placeholder="Enter tag IDs, one per line (e.g., TAG-001, TAG-002, TAG-003)"
+                    rows={4}
+                  />
+                </div>
+                <div className="border-t pt-4">
+                  <Label>Auto-Generate Tag IDs</Label>
+                  <div className="space-y-2 mt-2">
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Label className="text-xs">Prefix</Label>
+                        <Input
+                          value={tagIdPrefix}
+                          onChange={(e) => setTagIdPrefix(e.target.value)}
+                          placeholder="e.g., TAG"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-xs">Count</Label>
+                        <Input
+                          type="number"
+                          value={tagIdCount}
+                          onChange={(e) => setTagIdCount(parseInt(e.target.value) || 1)}
+                          min="1"
+                          max="1000"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={() => {
+                  const generated = Array.from({ length: tagIdCount }, (_, i) =>
+                    `${tagIdPrefix}-${String(i + 1).padStart(3, "0")}`
+                  ).join("\n");
+                  setBulkTagIds(generated);
+                }} className="w-full" variant="outline">
+                  Generate Tag IDs
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (selectedFarmId && bulkTagIds) {
+                      bulkRegisterAnimals.mutateAsync({
+                        farmId: selectedFarmId,
+                        tagIds: bulkTagIds.split("\n").filter(id => id.trim()),
+                        typeId: 1,
+                        breed: "Mixed",
+                        gender: "unknown",
+                      });
+                    }
+                  }}
+                  disabled={bulkRegisterAnimals.isPending || !bulkTagIds}
+                >
+                  {bulkRegisterAnimals.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Register {bulkTagIds.split("\n").filter(id => id.trim()).length} Animals
+                </Button>
+              </div>
+              )}
             </DialogContent>
           </Dialog>
 
