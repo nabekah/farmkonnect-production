@@ -45,6 +45,9 @@ import { adminRouter } from "./routers/admin";
 import { farmPermissionsRouter } from "./farmPermissionsRouter";
 import { activityApprovalRouter } from "./routers/activityApproval";
 import { animalBulkRegistrationRouter } from "./routers/animalBulkRegistration";
+import { animalBulkEditingRouter } from "./routers/animalBulkEditing";
+import { animalGenealogyRouter } from "./routers/animalGenealogy";
+import { animalHealthDashboardRouter } from "./routers/animalHealthDashboard";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -96,6 +99,9 @@ export const appRouter = router({
   fieldWorker: fieldWorkerRouter,
   admin: adminRouter,
   animalBulkRegistration: animalBulkRegistrationRouter,
+  animalBulkEditing: animalBulkEditingRouter,
+  animalGenealogy: animalGenealogyRouter,
+  animalHealthDashboard: animalHealthDashboardRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
