@@ -140,7 +140,6 @@ export function ActivityHistory() {
                 <SelectValue placeholder="Activity Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
                 {ACTIVITY_TYPES.map(type => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -153,7 +152,6 @@ export function ActivityHistory() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="submitted">Submitted</SelectItem>
                 <SelectItem value="reviewed">Reviewed</SelectItem>
