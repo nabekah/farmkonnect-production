@@ -48,6 +48,7 @@ import { animalBulkRegistrationRouter } from "./routers/animalBulkRegistration";
 import { animalBulkEditingRouter } from "./routers/animalBulkEditing";
 import { animalGenealogyRouter } from "./routers/animalGenealogy";
 import { animalHealthDashboardRouter } from "./routers/animalHealthDashboard";
+import { tagIdTemplatesRouter } from "./routers/tagIdTemplates";
 import { animalPerformanceAnalyticsRouter } from "./routers/animalPerformanceAnalytics";
 import { breedingRecommendationEngineRouter } from "./routers/breedingRecommendationEngine";
 import { animalMovementTrackingRouter } from "./routers/animalMovementTracking";
@@ -114,6 +115,7 @@ export const appRouter = router({
   animalBatchEditing: animalBatchEditingRouter,
   animalImportWizard: animalImportWizardRouter,
   animalSearchFilters: animalSearchFiltersRouter,
+  tagIdTemplates: tagIdTemplatesRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
