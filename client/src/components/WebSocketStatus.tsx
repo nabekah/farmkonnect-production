@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Wifi, WifiOff, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Wifi, WifiOff, X } from 'lucide-react';
 
 interface WebSocketStatusProps {
   isConnected: boolean;
@@ -17,33 +17,27 @@ export function WebSocketStatus({
   reconnectAttempt = 0,
 }: WebSocketStatusProps) {
   const [isDismissed, setIsDismissed] = useState(false);
-  const [autoHideTimer, setAutoHideTimer] = useState<NodeJS.Timeout | null>(null);
 
   // Auto-hide when reconnected
   useEffect(() => {
     if (isConnected && !isDismissed) {
-      // Clear any existing timer
-      if (autoHideTimer) {
-        clearTimeout(autoHideTimer);
-      }
-
       // Auto-hide after 2 seconds when connected
       const timer = setTimeout(() => {
         setIsDismissed(true);
       }, 2000);
 
-      setAutoHideTimer(timer);
-
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+      };
     }
-  }, [isConnected, isDismissed, autoHideTimer]);
+  }, [isConnected]);
 
-  // Reset dismissed state when reconnecting
+  // Reset dismissed state when connection status changes
   useEffect(() => {
-    if (isReconnecting) {
+    if (isReconnecting || (!isConnected && !isReconnecting)) {
       setIsDismissed(false);
     }
-  }, [isReconnecting]);
+  }, [isReconnecting, isConnected]);
 
   // Don't show if dismissed and connected
   if (isDismissed && isConnected) {

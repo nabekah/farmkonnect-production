@@ -184,7 +184,7 @@ export default defineConfig({
     cssCodeSplit: true,
   },
   server: {
-    host: true,
+    host: '0.0.0.0',
     allowedHosts: [
       ".manuspre.computer",
       ".manus.computer",
@@ -198,11 +198,12 @@ export default defineConfig({
       overlay: false,
       protocol: "wss",
       host: undefined, // Let browser determine host from current URL
-      port: undefined, // Use default port (443 for wss, 80 for ws)
+      port: 443, // Use 443 for wss
+      timeout: 60000, // Increase timeout to 60 seconds
     },
     fs: {
-      strict: true,
-      deny: ["**/.*"],
+      strict: false,
+      allow: ["."],
     },
   },
   optimizeDeps: {
