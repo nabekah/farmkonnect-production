@@ -2326,3 +2326,187 @@ export const searchFeedback = mysqlTable("searchFeedback", {
 
 export type SearchFeedback = typeof searchFeedback.$inferSelect;
 export type InsertSearchFeedback = typeof searchFeedback.$inferInsert;
+
+
+// ============================================================================
+// MULTI-SPECIES LIVESTOCK SUPPORT
+// ============================================================================
+
+/**
+ * Species templates with standardized configurations for each livestock type
+ * Supports: Cattle, Poultry, Goats, Sheep, Pigs, Rabbits, Horses
+ */
+export const speciesTemplates = mysqlTable("speciesTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  speciesName: varchar("speciesName", { length: 100 }).notNull().unique(), // cattle, poultry, goat, sheep, pig, rabbit, horse
+  commonNames: varchar("commonNames", { length: 500 }), // comma-separated common names
+  description: text("description"),
+  icon: varchar("icon", { length: 100 }), // icon name for UI
+  averageLifespanYears: int("averageLifespanYears"),
+  matureWeightKg: decimal("matureWeightKg", { precision: 8, scale: 2 }),
+  productionType: varchar("productionType", { length: 100 }), // milk, meat, eggs, wool, fiber, etc.
+  gestationPeriodDays: int("gestationPeriodDays"),
+  averageLitterSize: int("averageLitterSize"),
+  sexualMaturityMonths: int("sexualMaturityMonths"),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SpeciesTemplate = typeof speciesTemplates.$inferSelect;
+export type InsertSpeciesTemplate = typeof speciesTemplates.$inferInsert;
+
+/**
+ * Breed database with comprehensive breed information
+ * Supports 1200+ breeds across all species
+ */
+export const breeds = mysqlTable("breeds", {
+  id: int("id").autoincrement().primaryKey(),
+  speciesId: int("speciesId").notNull(),
+  breedName: varchar("breedName", { length: 255 }).notNull(),
+  breedCode: varchar("breedCode", { length: 50 }).unique(),
+  origin: varchar("origin", { length: 255 }), // country of origin
+  description: text("description"),
+  characteristics: text("characteristics"), // JSON: color, size, temperament, etc.
+  productionCapabilities: text("productionCapabilities"), // JSON: milk yield, egg production, etc.
+  adaptability: varchar("adaptability", { length: 100 }), // climate/environment suitability
+  rarity: mysqlEnum("rarity", ["common", "uncommon", "rare", "endangered"]).default("common"),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Breed = typeof breeds.$inferSelect;
+export type InsertBreed = typeof breeds.$inferInsert;
+
+/**
+ * Species-specific health protocols and vaccination schedules
+ */
+export const healthProtocols = mysqlTable("healthProtocols", {
+  id: int("id").autoincrement().primaryKey(),
+  speciesId: int("speciesId").notNull(),
+  protocolName: varchar("protocolName", { length: 255 }).notNull(),
+  description: text("description"),
+  protocolType: mysqlEnum("protocolType", ["vaccination", "treatment", "prevention", "monitoring"]).notNull(),
+  recommendedAge: varchar("recommendedAge", { length: 100 }), // e.g., "8 weeks", "6 months"
+  frequency: varchar("frequency", { length: 100 }), // e.g., "once", "annually", "every 6 months"
+  disease: varchar("disease", { length: 255 }), // disease being prevented/treated
+  vaccine: varchar("vaccine", { length: 255 }), // vaccine name if applicable
+  dosage: varchar("dosage", { length: 255 }),
+  administrationRoute: varchar("administrationRoute", { length: 100 }), // oral, injection, etc.
+  sideEffects: text("sideEffects"),
+  contraindications: text("contraindications"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type HealthProtocol = typeof healthProtocols.$inferSelect;
+export type InsertHealthProtocol = typeof healthProtocols.$inferInsert;
+
+/**
+ * Production metrics templates by species
+ * Tracks species-specific outputs: milk, eggs, wool, meat, etc.
+ */
+export const productionMetricsTemplates = mysqlTable("productionMetricsTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  speciesId: int("speciesId").notNull(),
+  metricName: varchar("metricName", { length: 255 }).notNull(), // e.g., "Daily Milk Yield", "Egg Production"
+  metricType: mysqlEnum("metricType", ["milk", "eggs", "wool", "meat", "fiber", "reproduction", "other"]).notNull(),
+  unit: varchar("unit", { length: 100 }).notNull(), // liters, pieces, kg, etc.
+  benchmarkMin: decimal("benchmarkMin", { precision: 8, scale: 2 }),
+  benchmarkAverage: decimal("benchmarkAverage", { precision: 8, scale: 2 }),
+  benchmarkMax: decimal("benchmarkMax", { precision: 8, scale: 2 }),
+  frequency: varchar("frequency", { length: 100 }), // daily, weekly, monthly
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProductionMetricsTemplate = typeof productionMetricsTemplates.$inferSelect;
+export type InsertProductionMetricsTemplate = typeof productionMetricsTemplates.$inferInsert;
+
+/**
+ * Species-specific production records
+ * Tracks actual production metrics for each animal
+ */
+export const speciesProductionRecords = mysqlTable("speciesProductionRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  animalId: int("animalId").notNull(),
+  metricTemplateId: int("metricTemplateId").notNull(),
+  recordDate: date("recordDate").notNull(),
+  value: decimal("value", { precision: 8, scale: 2 }).notNull(),
+  unit: varchar("unit", { length: 100 }).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SpeciesProductionRecord = typeof speciesProductionRecords.$inferSelect;
+export type InsertSpeciesProductionRecord = typeof speciesProductionRecords.$inferInsert;
+
+/**
+ * Breeding calculators and genetic information
+ */
+export const breedingCalculators = mysqlTable("breedingCalculators", {
+  id: int("id").autoincrement().primaryKey(),
+  speciesId: int("speciesId").notNull(),
+  breedId: int("breedId"),
+  calculatorName: varchar("calculatorName", { length: 255 }).notNull(),
+  description: text("description"),
+  calculationType: mysqlEnum("calculationType", ["inbreeding", "expectedProgeny", "geneticValue", "heterosis"]).notNull(),
+  formula: text("formula"), // JSON: calculation parameters
+  parameters: text("parameters"), // JSON: required inputs
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BreedingCalculator = typeof breedingCalculators.$inferSelect;
+export type InsertBreedingCalculator = typeof breedingCalculators.$inferInsert;
+
+/**
+ * Feed and nutrition recommendations by species
+ */
+export const feedRecommendations = mysqlTable("feedRecommendations", {
+  id: int("id").autoincrement().primaryKey(),
+  speciesId: int("speciesId").notNull(),
+  breedId: int("breedId"),
+  ageGroup: varchar("ageGroup", { length: 100 }).notNull(), // e.g., "0-3 months", "3-6 months", "adult"
+  productionStage: varchar("productionStage", { length: 100 }), // e.g., "growing", "lactating", "pregnant"
+  feedType: varchar("feedType", { length: 255 }).notNull(), // e.g., "starter feed", "grower feed"
+  dailyQuantityKg: decimal("dailyQuantityKg", { precision: 8, scale: 2 }),
+  proteinPercentage: decimal("proteinPercentage", { precision: 5, scale: 2 }),
+  energyMcalKg: decimal("energyMcalKg", { precision: 8, scale: 2 }),
+  fiberPercentage: decimal("fiberPercentage", { precision: 5, scale: 2 }),
+  fatPercentage: decimal("fatPercentage", { precision: 5, scale: 2 }),
+  calciumPercentage: decimal("calciumPercentage", { precision: 5, scale: 2 }),
+  phosphorusPercentage: decimal("phosphorusPercentage", { precision: 5, scale: 2 }),
+  ingredients: text("ingredients"), // JSON: list of recommended ingredients
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FeedRecommendation = typeof feedRecommendations.$inferSelect;
+export type InsertFeedRecommendation = typeof feedRecommendations.$inferInsert;
+
+/**
+ * Species-specific animal records
+ * Extends the basic animals table with species-specific fields
+ */
+export const speciesAnimalRecords = mysqlTable("speciesAnimalRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  animalId: int("animalId").notNull().unique(),
+  speciesId: int("speciesId").notNull(),
+  breedId: int("breedId"),
+  productionType: varchar("productionType", { length: 100 }), // milk, meat, eggs, etc.
+  registrationNumber: varchar("registrationNumber", { length: 255 }),
+  pedigree: text("pedigree"), // JSON: family tree
+  geneticMarkers: text("geneticMarkers"), // JSON: genetic test results
+  currentWeight: decimal("currentWeight", { precision: 8, scale: 2 }),
+  lastWeightDate: date("lastWeightDate"),
+  bodyConditionScore: decimal("bodyConditionScore", { precision: 3, scale: 1 }), // 1-5 or 1-9 scale
+  reproductiveStatus: varchar("reproductiveStatus", { length: 100 }), // virgin, pregnant, lactating, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SpeciesAnimalRecord = typeof speciesAnimalRecords.$inferSelect;
+export type InsertSpeciesAnimalRecord = typeof speciesAnimalRecords.$inferInsert;

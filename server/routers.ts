@@ -63,6 +63,7 @@ import { medicationTrackingRouter } from "./routers/medicationTracking";
 import { healthTrendsAnalyticsRouter } from "./routers/healthTrendsAnalytics";
 import { searchRouter } from "./routers/search";
 import { searchEnhancementsRouter } from "./routers/searchEnhancements";
+import { multiSpeciesRouter } from "./routers/multiSpecies";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -132,6 +133,7 @@ export const appRouter = router({
   healthTrendsAnalytics: healthTrendsAnalyticsRouter,
   search: searchRouter,
   searchEnhancements: searchEnhancementsRouter,
+  multiSpecies: multiSpeciesRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
