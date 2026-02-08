@@ -2932,3 +2932,61 @@ export const telemedicineSessions = mysqlTable("telemedicineSessions", {
 
 export type TelemedicineSession = typeof telemedicineSessions.$inferSelect;
 export type InsertTelemedicineSession = typeof telemedicineSessions.$inferInsert;
+
+
+/**
+ * Veterinarian Reviews - tracks farmer ratings and reviews of veterinarians
+ */
+export const vetReviews = mysqlTable("vetReviews", {
+  id: int("id").autoincrement().primaryKey(),
+  veterinarianId: int("veterinarianId").notNull(), // Reference to veterinarians table
+  farmId: int("farmId").notNull(), // Reference to farms table
+  userId: int("userId").notNull(), // Reference to users table (farmer)
+  appointmentId: int("appointmentId"), // Optional - reference to vetAppointments table
+  rating: int("rating").notNull(), // 1-5 stars
+  reviewTitle: varchar("reviewTitle", { length: 255 }).notNull(),
+  reviewText: text("reviewText"), // Detailed review
+  professionalismRating: int("professionalismRating"), // 1-5
+  communicationRating: int("communicationRating"), // 1-5
+  priceValueRating: int("priceValueRating"), // 1-5
+  treatmentEffectivenessRating: int("treatmentEffectivenessRating"), // 1-5
+  animalSpecies: varchar("animalSpecies", { length: 100 }), // Species treated
+  treatmentType: varchar("treatmentType", { length: 255 }), // Type of treatment/service
+  wouldRecommend: boolean("wouldRecommend").default(true),
+  helpfulCount: int("helpfulCount").default(0), // Number of farmers who found review helpful
+  unhelpfulCount: int("unhelpfulCount").default(0), // Number of farmers who found review unhelpful
+  isVerified: boolean("isVerified").default(false), // Verified purchase/appointment
+  isAnonymous: boolean("isAnonymous").default(false), // Hide farmer name
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "hidden"]).default("pending"), // Moderation status
+  moderationNotes: text("moderationNotes"), // Admin notes for rejection
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type VetReview = typeof vetReviews.$inferSelect;
+export type InsertVetReview = typeof vetReviews.$inferInsert;
+
+/**
+ * Veterinarian Review Statistics - cached statistics for performance
+ */
+export const vetReviewStats = mysqlTable("vetReviewStats", {
+  id: int("id").autoincrement().primaryKey(),
+  veterinarianId: int("veterinarianId").notNull().unique(), // Reference to veterinarians table
+  totalReviews: int("totalReviews").default(0),
+  averageRating: decimal("averageRating", { precision: 3, scale: 2 }).default("0.00"), // 0-5
+  averageProfessionalism: decimal("averageProfessionalism", { precision: 3, scale: 2 }).default("0.00"),
+  averageCommunication: decimal("averageCommunication", { precision: 3, scale: 2 }).default("0.00"),
+  averagePriceValue: decimal("averagePriceValue", { precision: 3, scale: 2 }).default("0.00"),
+  averageTreatmentEffectiveness: decimal("averageTreatmentEffectiveness", { precision: 3, scale: 2 }).default("0.00"),
+  recommendationPercentage: int("recommendationPercentage").default(0), // % who would recommend
+  fiveStarCount: int("fiveStarCount").default(0),
+  fourStarCount: int("fourStarCount").default(0),
+  threeStarCount: int("threeStarCount").default(0),
+  twoStarCount: int("twoStarCount").default(0),
+  oneStarCount: int("oneStarCount").default(0),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type VetReviewStats = typeof vetReviewStats.$inferSelect;
+export type InsertVetReviewStats = typeof vetReviewStats.$inferInsert;
