@@ -3010,3 +3010,12 @@
 - [x] Add routes to App.tsx
 - [ ] Populate seed data with species, breeds, and protocols
 - [ ] Test and validate all multi-species functionality
+
+
+## Bulk Registration & Species Onboarding (In Progress)
+- [ ] Fix bulk animal registration with gender distribution (females count, rest males)
+- [ ] Fix animal storage and UI display after registration
+- [ ] Implement species onboarding flow in farm creation
+- [ ] Build herd health dashboard with species-specific metrics
+- [ ] Implement feed optimization engine
+- [ ] Test and validate all new features

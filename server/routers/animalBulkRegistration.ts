@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const animalBulkRegistrationRouter = router({
   /**
    * Register multiple animals of the same breed with serial tag IDs
+   * Supports gender distribution: specify femaleCount and rest will be males
    */
   registerBulk: protectedProcedure
     .input(
@@ -21,7 +22,8 @@ export const animalBulkRegistrationRouter = router({
         farmId: z.number(),
         typeId: z.number(),
         breed: z.string(),
-        gender: z.enum(['male', 'female', 'unknown']),
+        gender: z.enum(['male', 'female', 'unknown']).optional(),
+        femaleCount: z.number().optional(), // Number of females, rest will be males
         birthDate: z.date().optional(),
         serialTagIds: z.array(z.string()).min(1, 'At least one serial tag ID is required'),
         startingNumber: z.number().optional(), // For auto-generating tag IDs
@@ -45,7 +47,8 @@ export const animalBulkRegistrationRouter = router({
         const errors: { tagId: string; error: string }[] = [];
 
         // Process each serial tag ID
-        for (const tagId of input.serialTagIds) {
+        for (let index = 0; index < input.serialTagIds.length; index++) {
+          const tagId = input.serialTagIds[index];
           try {
             // Check if tag already exists
             const existingAnimal = await db
@@ -61,13 +64,19 @@ export const animalBulkRegistrationRouter = router({
               continue;
             }
 
+            // Determine gender based on femaleCount
+            let animalGender = input.gender || 'unknown';
+            if (input.femaleCount !== undefined) {
+              animalGender = index < input.femaleCount ? 'female' : 'male';
+            }
+
             // Register the animal
             const result = await db.insert(animals).values({
               farmId: input.farmId,
               typeId: input.typeId,
               uniqueTagId: tagId,
               breed: input.breed,
-              gender: input.gender,
+              gender: animalGender,
               birthDate: input.birthDate,
               status: 'active',
             });

@@ -19,6 +19,7 @@ export function BulkAnimalRegistration() {
   const [typeId, setTypeId] = useState('');
   const [breed, setBreed] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'unknown'>('unknown');
+  const [femaleCount, setFemaleCount] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [serialTags, setSerialTags] = useState<SerialTag[]>([]);
   const [tagInput, setTagInput] = useState('');
@@ -117,7 +118,8 @@ export function BulkAnimalRegistration() {
       farmId,
       typeId: parseInt(typeId),
       breed,
-      gender,
+      gender: femaleCount ? undefined : gender,
+      femaleCount: femaleCount ? parseInt(femaleCount) : undefined,
       birthDate: birthDate ? new Date(birthDate) : undefined,
       serialTagIds: serialTags.map((tag) => tag.tagId),
     });
@@ -184,7 +186,7 @@ TAG-00005`;
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Gender</label>
-            <Select value={gender} onValueChange={(value: any) => setGender(value)}>
+            <Select value={gender} onValueChange={(value: any) => setGender(value)} disabled={!!femaleCount}>
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
@@ -194,6 +196,19 @@ TAG-00005`;
                 <SelectItem value="unknown">Unknown</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Or specify female count below</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Number of Females (Optional)</label>
+            <Input
+              type="number"
+              min="0"
+              placeholder="e.g., 5 (rest will be males)"
+              value={femaleCount}
+              onChange={(e) => setFemaleCount(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">If specified, first N animals will be female, rest male</p>
           </div>
 
           <div className="space-y-2">
