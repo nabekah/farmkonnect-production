@@ -40,6 +40,7 @@ import {
   ListTodo,
   Upload,
   Image as ImageIcon,
+  Zap,
 } from "lucide-react";
 
 export interface MenuItem {
