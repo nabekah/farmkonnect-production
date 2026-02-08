@@ -10,6 +10,7 @@ import {
   getPopularSearches,
   getUserSearchAnalytics,
 } from "../db/searchAnalytics";
+import { cacheService } from "../services/cacheService";
 
 export const searchRouter = router({
   /**
@@ -33,6 +34,13 @@ export const searchRouter = router({
       const searchTerm = `%${input.query}%`;
       const user = ctx.user as any;
       const startTime = Date.now();
+      
+      // Check cache first
+      const cacheKey = cacheService.generateKey(input.query, input.filters, "search");
+      const cachedResults = cacheService.get(cacheKey);
+      if (cachedResults) {
+        return cachedResults;
+      }
 
       try {
         // Search animals - build where conditions dynamically
@@ -109,6 +117,16 @@ export const searchRouter = router({
         const finalResults = results.slice(0, input.limit);
         const searchDuration = Date.now() - startTime;
 
+        const response = {
+          success: true,
+          results: finalResults,
+          total: finalResults.length,
+          searchDuration,
+        };
+
+        // Cache results for 5 minutes (300 seconds)
+        cacheService.set(cacheKey, response, 300);
+
         // Track search asynchronously (don't wait for it)
         trackSearch({
           userId: user.id,
@@ -119,12 +137,7 @@ export const searchRouter = router({
           sessionId: input.sessionId,
         }).catch((err) => console.error("Error tracking search:", err));
 
-        return {
-          success: true,
-          results: finalResults,
-          total: finalResults.length,
-          searchDuration,
-        };
+        return response;
       } catch (error) {
         console.error("Search error:", error);
         return {
@@ -289,6 +302,77 @@ export const searchRouter = router({
     }),
 
   /**
+   * Lightweight autocomplete API - returns only text suggestions
+   */
+  autocomplete: protectedProcedure
+    .input(
+      z.object({
+        query: z.string().min(1).max(50),
+        limit: z.number().min(1).max(20).default(10),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const db = getDb();
+      const searchTerm = `%${input.query}%`;
+
+      // Check cache first (shorter TTL for autocomplete - 2 minutes)
+      const cacheKey = cacheService.generateKey(input.query, {}, "autocomplete");
+      const cachedSuggestions = cacheService.get(cacheKey);
+      if (cachedSuggestions) {
+        return cachedSuggestions;
+      }
+
+      try {
+        // Get distinct animal names
+        const animalNames = await db
+          .selectDistinct({ name: animals.animalName })
+          .from(animals)
+          .where(like(animals.animalName, searchTerm))
+          .limit(input.limit);
+
+        // Get distinct farm names
+        const farmNames = await db
+          .selectDistinct({ name: farms.farmName })
+          .from(farms)
+          .where(like(farms.farmName, searchTerm))
+          .limit(input.limit);
+
+        // Get distinct crop names
+        const cropNames = await db
+          .selectDistinct({ name: crops.cropName })
+          .from(crops)
+          .where(like(crops.cropName, searchTerm))
+          .limit(input.limit);
+
+        // Combine and deduplicate
+        const suggestions = [
+          ...animalNames.map((a) => ({ text: a.name, category: "animal" })),
+          ...farmNames.map((f) => ({ text: f.name, category: "farm" })),
+          ...cropNames.map((c) => ({ text: c.name, category: "crop" })),
+        ]
+          .filter((item, index, self) => self.findIndex((t) => t.text === item.text) === index)
+          .slice(0, input.limit);
+
+        const response = {
+          success: true,
+          suggestions,
+        };
+
+        // Cache for 2 minutes
+        cacheService.set(cacheKey, response, 120);
+
+        return response;
+      } catch (error) {
+        console.error("Autocomplete error:", error);
+        return {
+          success: false,
+          suggestions: [],
+          error: "Autocomplete failed",
+        };
+      }
+    }),
+
+  /**
    * Search animals by name, type, or ID with filters
    */
   searchAnimals: protectedProcedure
@@ -415,6 +499,79 @@ export const searchRouter = router({
           results: [],
           total: 0,
           error: "Crop search failed",
+        };
+      }
+    }),
+
+  /**
+   * Get cache statistics (for monitoring)
+   */
+  getCacheStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      const user = ctx.user as any;
+      
+      // Only admins can view cache stats
+      if (user.role !== "admin") {
+        return {
+          success: false,
+          error: "Unauthorized",
+        };
+      }
+
+      try {
+        const stats = cacheService.getStats();
+        return {
+          success: true,
+          stats,
+        };
+      } catch (error) {
+        console.error("Error getting cache stats:", error);
+        return {
+          success: false,
+          error: "Failed to get cache stats",
+        };
+      }
+    }),
+
+  /**
+   * Clear search cache (for admins)
+   */
+  clearCache: protectedProcedure
+    .input(
+      z.object({
+        pattern: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const user = ctx.user as any;
+      
+      // Only admins can clear cache
+      if (user.role !== "admin") {
+        return {
+          success: false,
+          error: "Unauthorized",
+        };
+      }
+
+      try {
+        let cleared = 0;
+        if (input.pattern) {
+          cleared = cacheService.deletePattern(input.pattern);
+        } else {
+          cacheService.clear();
+          cleared = -1; // Indicates full clear
+        }
+
+        return {
+          success: true,
+          cleared,
+          message: cleared === -1 ? "Cache cleared" : `Cleared ${cleared} entries`,
+        };
+      } catch (error) {
+        console.error("Error clearing cache:", error);
+        return {
+          success: false,
+          error: "Failed to clear cache",
         };
       }
     }),
