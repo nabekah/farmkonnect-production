@@ -2224,3 +2224,58 @@ export const operationFailureDetails = mysqlTable("operationFailureDetails", {
 
 export type OperationFailureDetails = typeof operationFailureDetails.$inferSelect;
 export type InsertOperationFailureDetails = typeof operationFailureDetails.$inferInsert;
+
+
+// ============================================================================
+// SEARCH ANALYTICS & TRACKING
+// ============================================================================
+export const searchAnalytics = mysqlTable("searchAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  query: varchar("query", { length: 255 }).notNull(),
+  resultCount: int("resultCount").default(0).notNull(),
+  resultClicked: boolean("resultClicked").default(false).notNull(),
+  clickedResultId: int("clickedResultId"),
+  clickedResultType: varchar("clickedResultType", { length: 50 }), // "animal", "farm", "crop"
+  searchDuration: int("searchDuration"), // milliseconds
+  filters: json("filters"), // Applied filters as JSON
+  sessionId: varchar("sessionId", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SearchAnalytics = typeof searchAnalytics.$inferSelect;
+export type InsertSearchAnalytics = typeof searchAnalytics.$inferInsert;
+
+// ============================================================================
+// SEARCH SUGGESTIONS & CACHE
+// ============================================================================
+export const searchSuggestions = mysqlTable("searchSuggestions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  suggestionText: varchar("suggestionText", { length: 255 }).notNull(),
+  suggestionType: varchar("suggestionType", { length: 50 }).notNull(), // "recent", "trending", "popular"
+  frequency: int("frequency").default(1).notNull(),
+  lastUsedAt: timestamp("lastUsedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SearchSuggestions = typeof searchSuggestions.$inferSelect;
+export type InsertSearchSuggestions = typeof searchSuggestions.$inferInsert;
+
+// ============================================================================
+// TRENDING SEARCHES
+// ============================================================================
+export const trendingSearches = mysqlTable("trendingSearches", {
+  id: int("id").autoincrement().primaryKey(),
+  query: varchar("query", { length: 255 }).notNull(),
+  searchCount: int("searchCount").default(1).notNull(),
+  clickThroughRate: decimal("clickThroughRate", { precision: 5, scale: 2 }).default("0"),
+  averageResultCount: decimal("averageResultCount", { precision: 8, scale: 2 }).default("0"),
+  period: varchar("period", { length: 20 }).notNull(), // "daily", "weekly", "monthly"
+  rank: int("rank").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TrendingSearches = typeof trendingSearches.$inferSelect;
+export type InsertTrendingSearches = typeof trendingSearches.$inferInsert;
