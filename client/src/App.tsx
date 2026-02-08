@@ -87,6 +87,9 @@ import { ActivityNotificationContainer } from "./components/ActivityNotification
 import { WebSocketStatus } from "./components/WebSocketStatus";
 import { useNotification } from "./contexts/NotificationContext";
 import { useWebSocket } from "./hooks/useWebSocket";
+import { FinancialDashboard } from "./pages/FinancialDashboard";
+import { GhanaExtensionServicesDashboard } from "./pages/GhanaExtensionServicesDashboard";
+import { InvoiceAndTaxReporting } from "./pages/InvoiceAndTaxReporting";
 
 function Router() {
   return (
@@ -232,6 +235,27 @@ function Router() {
         {() => (
           <DashboardLayout>
             <SpeciesSelectionWizard onComplete={() => {}} onCancel={() => {}} />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/financial-dashboard">
+        {() => (
+          <DashboardLayout>
+            <FinancialDashboard farmId="1" />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/ghana-extension-services">
+        {() => (
+          <DashboardLayout>
+            <GhanaExtensionServicesDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/invoicing-tax-reporting">
+        {() => (
+          <DashboardLayout>
+            <InvoiceAndTaxReporting farmId="1" />
           </DashboardLayout>
         )}
       </Route>

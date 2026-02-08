@@ -178,6 +178,18 @@ export const navigationStructure: MenuGroup[] = [
     defaultExpanded: false,
     items: [
       { icon: Wallet, label: "Farm Finance", path: "/farm-finance" },
+      { icon: DollarSign, label: "Financial Dashboard", path: "/financial-dashboard" },
+      { icon: FileText, label: "Invoicing & Tax", path: "/invoicing-tax-reporting" },
+    ],
+  },
+
+  {
+    title: "Ghana Extension Services",
+    description: "Agricultural support and resources",
+    collapsible: true,
+    defaultExpanded: false,
+    items: [
+      { icon: BookOpen, label: "Extension Services", path: "/ghana-extension-services" },
     ],
   },
 
