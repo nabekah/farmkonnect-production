@@ -74,6 +74,10 @@ import { recurringExpensesRouter } from "./routers/recurringExpenses";
 import { accountingExportRouter } from "./routers/accountingExport";
 import { expenseNotifications } from "./routers/expenseNotifications";
 import { farmAnalytics } from "./routers/farmAnalytics";
+import { vetDirectoryRouter } from "./routers/vetDirectory";
+import { prescriptionManagementRouter } from "./routers/prescriptionManagement";
+import { telemedicineManagementRouter } from "./routers/telemedicineManagement";
+import { insuranceClaimTrackingRouter } from "./routers/insuranceClaimTracking";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -154,6 +158,10 @@ export const appRouter = router({
   accountingExport: accountingExportRouter,
   expenseNotifications: expenseNotifications,
   farmAnalytics: farmAnalytics,
+  vetDirectory: vetDirectoryRouter,
+  prescriptionManagement: prescriptionManagementRouter,
+  telemedicineManagement: telemedicineManagementRouter,
+  insuranceClaims: insuranceClaimTrackingRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

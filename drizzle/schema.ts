@@ -2724,3 +2724,211 @@ export const taxRecords = mysqlTable("taxRecords", {
 
 export type TaxRecord = typeof taxRecords.$inferSelect;
 export type InsertTaxRecord = typeof taxRecords.$inferInsert;
+
+
+// ============================================================================
+// VETERINARY INTEGRATION & APPOINTMENT MANAGEMENT
+// ============================================================================
+
+/**
+ * Veterinarian directory - stores vet information and clinic details
+ */
+export const veterinarians = mysqlTable("veterinarians", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Reference to users table (role: veterinarian)
+  licenseNumber: varchar("licenseNumber", { length: 100 }).notNull(),
+  specialization: varchar("specialization", { length: 255 }), // e.g., "Livestock", "Poultry", "Fish"
+  clinicName: varchar("clinicName", { length: 255 }).notNull(),
+  clinicPhone: varchar("clinicPhone", { length: 20 }).notNull(),
+  clinicEmail: varchar("clinicEmail", { length: 320 }),
+  clinicAddress: text("clinicAddress"),
+  clinicCity: varchar("clinicCity", { length: 100 }),
+  clinicRegion: varchar("clinicRegion", { length: 100 }), // Ghana region
+  yearsOfExperience: int("yearsOfExperience"),
+  consultationFee: decimal("consultationFee", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("GHS"),
+  isVerified: boolean("isVerified").default(false),
+  verificationDate: timestamp("verificationDate"),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"), // 0-5 stars
+  totalReviews: int("totalReviews").default(0),
+  availability: text("availability"), // JSON: { mon: "09:00-17:00", tue: "09:00-17:00", ... }
+  telemedicineAvailable: boolean("telemedicineAvailable").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Veterinarian = typeof veterinarians.$inferSelect;
+export type InsertVeterinarian = typeof veterinarians.$inferInsert;
+
+/**
+ * Veterinary appointments - tracks vet consultations and clinic visits
+ */
+export const vetAppointments = mysqlTable("vetAppointments", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  veterinarianId: int("veterinarianId").notNull(),
+  animalId: int("animalId"), // Optional - can be null for farm-level consultation
+  appointmentType: mysqlEnum("appointmentType", ["clinic_visit", "farm_visit", "telemedicine", "emergency"]).notNull(),
+  appointmentDate: timestamp("appointmentDate").notNull(),
+  duration: int("duration").default(30), // minutes
+  status: mysqlEnum("status", ["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"]).default("scheduled"),
+  reason: text("reason"), // Chief complaint/reason for visit
+  notes: text("notes"),
+  diagnosis: text("diagnosis"),
+  treatment: text("treatment"),
+  recommendations: text("recommendations"),
+  followUpDate: timestamp("followUpDate"),
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "partially_paid", "waived"]).default("pending"),
+  telemedicineLink: varchar("telemedicineLink", { length: 500 }), // Zoom/Meet link for remote consultations
+  recordingUrl: varchar("recordingUrl", { length: 500 }), // Recording of telemedicine session
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type VetAppointment = typeof vetAppointments.$inferSelect;
+export type InsertVetAppointment = typeof vetAppointments.$inferInsert;
+
+/**
+ * Prescriptions - tracks medications prescribed by veterinarians
+ */
+export const prescriptions = mysqlTable("prescriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  appointmentId: int("appointmentId").notNull(),
+  farmId: int("farmId").notNull(),
+  animalId: int("animalId").notNull(),
+  veterinarianId: int("veterinarianId").notNull(),
+  medicationName: varchar("medicationName", { length: 255 }).notNull(),
+  dosage: varchar("dosage", { length: 100 }).notNull(), // e.g., "500mg", "2ml"
+  frequency: varchar("frequency", { length: 100 }).notNull(), // e.g., "twice daily", "every 8 hours"
+  duration: int("duration").notNull(), // days
+  route: mysqlEnum("route", ["oral", "injection", "topical", "inhalation", "other"]).notNull(),
+  quantity: int("quantity").notNull(), // number of doses
+  instructions: text("instructions"), // Special instructions
+  prescriptionDate: timestamp("prescriptionDate").defaultNow().notNull(),
+  expiryDate: timestamp("expiryDate").notNull(), // Prescription validity period
+  status: mysqlEnum("status", ["active", "fulfilled", "expired", "cancelled"]).default("active"),
+  fulfillmentDate: timestamp("fulfillmentDate"),
+  fulfillmentVendor: varchar("fulfillmentVendor", { length: 255 }), // Pharmacy/supplier name
+  cost: decimal("cost", { precision: 10, scale: 2 }),
+  complianceStatus: mysqlEnum("complianceStatus", ["not_started", "in_progress", "completed", "abandoned"]).default("not_started"),
+  complianceNotes: text("complianceNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Prescription = typeof prescriptions.$inferSelect;
+export type InsertPrescription = typeof prescriptions.$inferInsert;
+
+/**
+ * Prescription compliance tracking - monitors adherence to prescribed medications
+ */
+export const prescriptionCompliance = mysqlTable("prescriptionCompliance", {
+  id: int("id").autoincrement().primaryKey(),
+  prescriptionId: int("prescriptionId").notNull(),
+  doseDate: date("doseDate").notNull(),
+  doseTime: varchar("doseTime", { length: 10 }), // HH:MM format
+  administered: boolean("administered").default(false),
+  dosesGiven: int("dosesGiven").default(0),
+  notes: text("notes"),
+  recordedBy: varchar("recordedBy", { length: 255 }), // Farm worker name
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PrescriptionCompliance = typeof prescriptionCompliance.$inferSelect;
+export type InsertPrescriptionCompliance = typeof prescriptionCompliance.$inferInsert;
+
+/**
+ * Vet recommendations history - tracks advice and recommendations from veterinarians
+ */
+export const vetRecommendations = mysqlTable("vetRecommendations", {
+  id: int("id").autoincrement().primaryKey(),
+  appointmentId: int("appointmentId").notNull(),
+  farmId: int("farmId").notNull(),
+  veterinarianId: int("veterinarianId").notNull(),
+  animalId: int("animalId"),
+  recommendationType: mysqlEnum("recommendationType", ["nutrition", "housing", "breeding", "vaccination", "parasite_control", "disease_prevention", "management", "other"]).notNull(),
+  recommendation: text("recommendation").notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "critical"]).default("medium"),
+  implementationDate: timestamp("implementationDate"),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "not_applicable"]).default("pending"),
+  outcome: text("outcome"), // Result of implementing the recommendation
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type VetRecommendation = typeof vetRecommendations.$inferSelect;
+export type InsertVetRecommendation = typeof vetRecommendations.$inferInsert;
+
+/**
+ * Insurance claims - tracks veterinary insurance claims for farm operations
+ */
+export const insuranceClaims = mysqlTable("insuranceClaims", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  appointmentId: int("appointmentId"),
+  claimNumber: varchar("claimNumber", { length: 100 }).notNull().unique(),
+  insuranceProvider: varchar("insuranceProvider", { length: 255 }).notNull(),
+  policyNumber: varchar("policyNumber", { length: 100 }).notNull(),
+  claimType: mysqlEnum("claimType", ["veterinary_service", "medication", "emergency", "preventive", "other"]).notNull(),
+  claimAmount: decimal("claimAmount", { precision: 10, scale: 2 }).notNull(),
+  claimDate: timestamp("claimDate").defaultNow().notNull(),
+  submissionDate: timestamp("submissionDate"),
+  status: mysqlEnum("status", ["draft", "submitted", "under_review", "approved", "rejected", "paid"]).default("draft"),
+  approvalAmount: decimal("approvalAmount", { precision: 10, scale: 2 }),
+  rejectionReason: text("rejectionReason"),
+  paymentDate: timestamp("paymentDate"),
+  paymentAmount: decimal("paymentAmount", { precision: 10, scale: 2 }),
+  supportingDocuments: text("supportingDocuments"), // JSON array of file URLs
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InsuranceClaim = typeof insuranceClaims.$inferSelect;
+export type InsertInsuranceClaim = typeof insuranceClaims.$inferInsert;
+
+/**
+ * Vet communication - direct messaging between farmers and veterinarians
+ */
+export const vetCommunications = mysqlTable("vetCommunications", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  veterinarianId: int("veterinarianId").notNull(),
+  senderId: int("senderId").notNull(), // User ID of sender
+  messageType: mysqlEnum("messageType", ["text", "image", "document", "audio"]).default("text"),
+  message: text("message"),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+  isRead: boolean("isRead").default(false),
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type VetCommunication = typeof vetCommunications.$inferSelect;
+export type InsertVetCommunication = typeof vetCommunications.$inferInsert;
+
+/**
+ * Telemedicine sessions - tracks video consultation sessions
+ */
+export const telemedicineSessions = mysqlTable("telemedicineSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  appointmentId: int("appointmentId").notNull(),
+  farmId: int("farmId").notNull(),
+  veterinarianId: int("veterinarianId").notNull(),
+  sessionType: mysqlEnum("sessionType", ["consultation", "follow_up", "emergency"]).default("consultation"),
+  platform: mysqlEnum("platform", ["zoom", "google_meet", "custom_webrtc"]).notNull(),
+  sessionLink: varchar("sessionLink", { length: 500 }).notNull(),
+  startTime: timestamp("startTime"),
+  endTime: timestamp("endTime"),
+  duration: int("duration"), // minutes
+  recordingUrl: varchar("recordingUrl", { length: 500 }),
+  transcriptUrl: varchar("transcriptUrl", { length: 500 }),
+  status: mysqlEnum("status", ["scheduled", "in_progress", "completed", "cancelled", "no_show"]).default("scheduled"),
+  participantCount: int("participantCount").default(2),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TelemedicineSession = typeof telemedicineSessions.$inferSelect;
+export type InsertTelemedicineSession = typeof telemedicineSessions.$inferInsert;

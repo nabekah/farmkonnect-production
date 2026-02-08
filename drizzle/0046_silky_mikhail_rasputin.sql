@@ -1,0 +1,163 @@
+CREATE TABLE `insuranceClaims` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`farmId` int NOT NULL,
+	`appointmentId` int,
+	`claimNumber` varchar(100) NOT NULL,
+	`insuranceProvider` varchar(255) NOT NULL,
+	`policyNumber` varchar(100) NOT NULL,
+	`claimType` enum('veterinary_service','medication','emergency','preventive','other') NOT NULL,
+	`claimAmount` decimal(10,2) NOT NULL,
+	`claimDate` timestamp NOT NULL DEFAULT (now()),
+	`submissionDate` timestamp,
+	`status` enum('draft','submitted','under_review','approved','rejected','paid') DEFAULT 'draft',
+	`approvalAmount` decimal(10,2),
+	`rejectionReason` text,
+	`paymentDate` timestamp,
+	`paymentAmount` decimal(10,2),
+	`supportingDocuments` text,
+	`notes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `insuranceClaims_id` PRIMARY KEY(`id`),
+	CONSTRAINT `insuranceClaims_claimNumber_unique` UNIQUE(`claimNumber`)
+);
+--> statement-breakpoint
+CREATE TABLE `prescriptionCompliance` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`prescriptionId` int NOT NULL,
+	`doseDate` date NOT NULL,
+	`doseTime` varchar(10),
+	`administered` boolean DEFAULT false,
+	`dosesGiven` int DEFAULT 0,
+	`notes` text,
+	`recordedBy` varchar(255),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `prescriptionCompliance_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `prescriptions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`appointmentId` int NOT NULL,
+	`farmId` int NOT NULL,
+	`animalId` int NOT NULL,
+	`veterinarianId` int NOT NULL,
+	`medicationName` varchar(255) NOT NULL,
+	`dosage` varchar(100) NOT NULL,
+	`frequency` varchar(100) NOT NULL,
+	`duration` int NOT NULL,
+	`route` enum('oral','injection','topical','inhalation','other') NOT NULL,
+	`quantity` int NOT NULL,
+	`instructions` text,
+	`prescriptionDate` timestamp NOT NULL DEFAULT (now()),
+	`expiryDate` timestamp NOT NULL,
+	`status` enum('active','fulfilled','expired','cancelled') DEFAULT 'active',
+	`fulfillmentDate` timestamp,
+	`fulfillmentVendor` varchar(255),
+	`cost` decimal(10,2),
+	`complianceStatus` enum('not_started','in_progress','completed','abandoned') DEFAULT 'not_started',
+	`complianceNotes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `prescriptions_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `telemedicineSessions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`appointmentId` int NOT NULL,
+	`farmId` int NOT NULL,
+	`veterinarianId` int NOT NULL,
+	`sessionType` enum('consultation','follow_up','emergency') DEFAULT 'consultation',
+	`platform` enum('zoom','google_meet','custom_webrtc') NOT NULL,
+	`sessionLink` varchar(500) NOT NULL,
+	`startTime` timestamp,
+	`endTime` timestamp,
+	`duration` int,
+	`recordingUrl` varchar(500),
+	`transcriptUrl` varchar(500),
+	`status` enum('scheduled','in_progress','completed','cancelled','no_show') DEFAULT 'scheduled',
+	`participantCount` int DEFAULT 2,
+	`notes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `telemedicineSessions_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `vetAppointments` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`farmId` int NOT NULL,
+	`veterinarianId` int NOT NULL,
+	`animalId` int,
+	`appointmentType` enum('clinic_visit','farm_visit','telemedicine','emergency') NOT NULL,
+	`appointmentDate` timestamp NOT NULL,
+	`duration` int DEFAULT 30,
+	`status` enum('scheduled','confirmed','in_progress','completed','cancelled','no_show') DEFAULT 'scheduled',
+	`reason` text,
+	`notes` text,
+	`diagnosis` text,
+	`treatment` text,
+	`recommendations` text,
+	`followUpDate` timestamp,
+	`cost` decimal(10,2),
+	`paymentStatus` enum('pending','paid','partially_paid','waived') DEFAULT 'pending',
+	`telemedicineLink` varchar(500),
+	`recordingUrl` varchar(500),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `vetAppointments_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `vetCommunications` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`farmId` int NOT NULL,
+	`veterinarianId` int NOT NULL,
+	`senderId` int NOT NULL,
+	`messageType` enum('text','image','document','audio') DEFAULT 'text',
+	`message` text,
+	`attachmentUrl` varchar(500),
+	`isRead` boolean DEFAULT false,
+	`readAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `vetCommunications_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `vetRecommendations` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`appointmentId` int NOT NULL,
+	`farmId` int NOT NULL,
+	`veterinarianId` int NOT NULL,
+	`animalId` int,
+	`recommendationType` enum('nutrition','housing','breeding','vaccination','parasite_control','disease_prevention','management','other') NOT NULL,
+	`recommendation` text NOT NULL,
+	`priority` enum('low','medium','high','critical') DEFAULT 'medium',
+	`implementationDate` timestamp,
+	`status` enum('pending','in_progress','completed','not_applicable') DEFAULT 'pending',
+	`outcome` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `vetRecommendations_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `veterinarians` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`licenseNumber` varchar(100) NOT NULL,
+	`specialization` varchar(255),
+	`clinicName` varchar(255) NOT NULL,
+	`clinicPhone` varchar(20) NOT NULL,
+	`clinicEmail` varchar(320),
+	`clinicAddress` text,
+	`clinicCity` varchar(100),
+	`clinicRegion` varchar(100),
+	`yearsOfExperience` int,
+	`consultationFee` decimal(10,2),
+	`currency` varchar(3) DEFAULT 'GHS',
+	`isVerified` boolean DEFAULT false,
+	`verificationDate` timestamp,
+	`rating` decimal(3,2) DEFAULT '0.00',
+	`totalReviews` int DEFAULT 0,
+	`availability` text,
+	`telemedicineAvailable` boolean DEFAULT false,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `veterinarians_id` PRIMARY KEY(`id`)
+);
