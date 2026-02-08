@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { ExpenseRevenueHistory } from "@/components/ExpenseRevenueHistory";
+import { RecurringExpenseManager } from "@/components/RecurringExpenseManager";
+import { generateExpensePDF, generateRevenuePDF, downloadTextFile } from "@/lib/exportPdf";
 
 export const FinancialDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -488,6 +491,15 @@ export const FinancialDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Recurring Expense Manager */}
+      {farmId && <RecurringExpenseManager farmId={farmId} />}
+
+      {/* Expense History */}
+      {farmId && <ExpenseRevenueHistory farmId={farmId} type="expense" startDate={startDate} endDate={endDate} />}
+
+      {/* Revenue History */}
+      {farmId && <ExpenseRevenueHistory farmId={farmId} type="revenue" startDate={startDate} endDate={endDate} />}
 
       {/* Cost Analysis */}
       <Card>

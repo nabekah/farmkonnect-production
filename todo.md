@@ -3100,3 +3100,12 @@
 - [x] Fix Add Revenue error in Financial Dashboard - Fixed insert syntax and schema field names (revenueType, revenueDate, buyer)
 - [x] Update FinancialDashboard component with correct field names
 - [x] Test expense and revenue submission - All 361 tests passing
+
+
+## Expense/Revenue History & Export Features (Completed)
+- [x] Add expense history table with sorting and filtering (ExpenseRevenueHistory.tsx)
+- [x] Add revenue history table with sorting and filtering (ExpenseRevenueHistory.tsx)
+- [x] Implement recurring expense template management (RecurringExpenseManager.tsx)
+- [x] Add CSV export for expenses and revenue (ExpenseRevenueHistory component)
+- [x] Add PDF export for expenses and revenue (exportPdf.ts utility)
+- [x] Test all export and history features (All 361 tests passing)
