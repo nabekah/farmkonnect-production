@@ -21,7 +21,7 @@ export const searchRouter = router({
       const user = ctx.user as any;
 
       try {
-        // Search animals
+        // Search animals - search across all farms for the user
         const animalResults = await db
           .select({
             id: animals.id,
@@ -32,10 +32,7 @@ export const searchRouter = router({
           })
           .from(animals)
           .where(
-            and(
-              eq(animals.farmId, user.farmId || 0),
-              like(animals.animalName, searchTerm)
-            )
+            like(animals.animalName, searchTerm)
           )
           .limit(input.limit);
 
@@ -49,10 +46,7 @@ export const searchRouter = router({
           })
           .from(farms)
           .where(
-            and(
-              eq(farms.farmerUserId, user.id),
-              like(farms.farmName, searchTerm)
-            )
+            like(farms.farmName, searchTerm)
           )
           .limit(input.limit);
 
