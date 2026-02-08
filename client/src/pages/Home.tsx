@@ -31,6 +31,13 @@ import {
   Droplet,
   AlertCircle,
   Clock,
+  BookOpen,
+  Brain,
+  Cpu,
+  Truck,
+  Briefcase,
+  LineChart,
+  Target,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -466,6 +473,54 @@ function LandingPage() {
               title="Data Security"
               description="Enterprise-grade security with encrypted data storage and access control"
               color="text-red-600"
+            />
+
+            {/* Feature 7 */}
+            <FeatureCard
+              icon={<Fish className="h-8 w-8" />}
+              title="Fish Farming"
+              description="Comprehensive aquaculture management with pond monitoring and health tracking"
+              color="text-teal-600"
+            />
+
+            {/* Feature 8 */}
+            <FeatureCard
+              icon={<Sprout className="h-8 w-8" />}
+              title="Crop Planning"
+              description="Plan crop cycles with soil testing, fertilizer tracking, and yield analysis"
+              color="text-lime-600"
+            />
+
+            {/* Feature 9 */}
+            <FeatureCard
+              icon={<ShoppingCart className="h-8 w-8" />}
+              title="Marketplace"
+              description="Buy and sell farm products directly with integrated payment processing"
+              color="text-orange-600"
+            />
+
+            {/* Feature 10 */}
+            <FeatureCard
+              icon={<Wrench className="h-8 w-8" />}
+              title="Asset Management"
+              description="Track farm equipment, maintenance schedules, and asset depreciation"
+              color="text-slate-600"
+            />
+
+            {/* Feature 11 */}
+            <FeatureCard
+              icon={<Activity className="h-8 w-8" />}
+              title="Activity Tracking"
+              description="Log field activities with GPS tracking, photos, and performance metrics"
+              color="text-rose-600"
+            />
+
+            {/* Feature 12 */}
+            <FeatureCard
+              icon={<Droplet className="h-8 w-8" />}
+              title="Soil & Fertilizer"
+              description="Manage soil health, fertilizer applications, and nutrient optimization"
+              color="text-amber-700"
             />
           </div>
         </div>

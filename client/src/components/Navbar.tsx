@@ -1,30 +1,22 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Search, Menu, X, LogOut, Settings, User, ChevronDown } from "lucide-react";
+import { Menu, X, LogOut, Settings, User, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
+import { SearchComponent } from "./SearchComponent";
 
 export function Navbar() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const logoutMutation = trpc.auth.logout.useMutation();
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
     setLocation("/");
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      setLocation(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery("");
-    }
   };
 
   return (
@@ -49,18 +41,7 @@ export function Navbar() {
           {/* Search Bar - Desktop */}
           {isAuthenticated && (
             <div className="hidden md:flex flex-1 max-w-md mx-8">
-              <form onSubmit={handleSearch} className="w-full">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search animals, farms, activities..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </form>
+              <SearchComponent />
             </div>
           )}
 
@@ -107,16 +88,16 @@ export function Navbar() {
                         {user.email}
                       </p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setLocation("/settings");
-                        setProfileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    <a
+                      href="https://farmkonnect-wzqk4bd8.manus.space/settings"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                      onClick={() => setProfileMenuOpen(false)}
                     >
                       <Settings className="h-4 w-4" />
                       Settings
-                    </button>
+                    </a>
                     <button
                       onClick={() => {
                         setLocation("/profile");
@@ -160,18 +141,9 @@ export function Navbar() {
           <div className="md:hidden border-t border-gray-200 dark:border-gray-800 py-4 space-y-4">
             {/* Mobile Search */}
             {isAuthenticated && (
-              <form onSubmit={handleSearch} className="px-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pl-10 pr-4 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </form>
+              <div className="px-4">
+                <SearchComponent />
+              </div>
             )}
 
             {/* Mobile Auth Section */}
@@ -192,16 +164,16 @@ export function Navbar() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setLocation("/settings");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                <a
+                  href="https://farmkonnect-wzqk4bd8.manus.space/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <Settings className="h-4 w-4" />
                   Settings
-                </button>
+                </a>
                 <button
                   onClick={() => {
                     setLocation("/profile");

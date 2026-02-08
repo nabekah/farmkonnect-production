@@ -110,6 +110,7 @@ export const navigationStructure: MenuGroup[] = [
       { icon: Fish, label: "Fish Farming", path: "/fish-farming" },
       { icon: CloudRain, label: "Weather Alerts", path: "/weather-alerts" },
       { icon: LineChart, label: "Weather Trends", path: "/weather-trends" },
+      { icon: Heart, label: "Health Alerts", path: "/health-alerts" },
     ],
   },
 
@@ -144,6 +145,8 @@ export const navigationStructure: MenuGroup[] = [
       { icon: Users, label: "Recipient Groups", path: "/recipient-groups" },
       { icon: Download, label: "Export History", path: "/report-history-export" },
       { icon: Palette, label: "Report Customization", path: "/report-template-customization" },
+      { icon: LineChart, label: "Health Trends", path: "/health-trends" },
+      { icon: Brain, label: "Breeding Recommendations", path: "/breeding-recommendations" },
     ],
   },
 
@@ -156,6 +159,8 @@ export const navigationStructure: MenuGroup[] = [
       { icon: ShoppingCart, label: "Browse Products", path: "/marketplace" },
       { icon: Heart, label: "Wishlist", path: "/wishlist" },
       { icon: DollarSign, label: "Seller Payouts", path: "/seller-payouts" },
+      { icon: ShoppingCart, label: "Orders", path: "/orders" },
+      { icon: BarChart3, label: "Seller Analytics", path: "/seller-analytics" },
     ],
   },
 
@@ -178,6 +183,9 @@ export const navigationStructure: MenuGroup[] = [
       { icon: UserCog, label: "Workforce", path: "/workforce-management" },
       { icon: Wrench, label: "Asset Management", path: "/asset-management" },
       { icon: Truck, label: "Transport & Logistics", path: "/transport" },
+      { icon: Heart, label: "Health Management", path: "/health-management" },
+      { icon: Zap, label: "Medication Tracking", path: "/medication-tracking" },
+      { icon: CheckCircle, label: "Vet Appointments", path: "/vet-appointments" },
     ],
   },
 
@@ -234,6 +242,8 @@ export const navigationStructure: MenuGroup[] = [
       { icon: Shield, label: "Role Management", path: "/role-management", adminOnly: true },
       { icon: CheckCircle, label: "Seller Verification", path: "/admin-verification", adminOnly: true },
       { icon: Settings, label: "Settings", path: "/settings" },
+      { icon: Upload, label: "Bulk Operations", path: "/bulk-operations" },
+      { icon: History, label: "Operation History", path: "/operation-history" },
     ],
   },
 ];
