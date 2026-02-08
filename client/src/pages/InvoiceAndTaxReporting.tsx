@@ -1,18 +1,20 @@
 import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Download, FileText, Calendar } from "lucide-react";
+import { toast } from "sonner";
+import { generateInvoicePDF, generateTaxReportPDF } from "@/lib/invoicePdfGenerator";
 
-interface InvoiceAndTaxReportingProps {
-  farmId: string;
-}
-
-export const InvoiceAndTaxReporting: React.FC<InvoiceAndTaxReportingProps> = ({ farmId }) => {
+export const InvoiceAndTaxReporting: React.FC = () => {
+  const { user } = useAuth();
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false);
+  const [selectedFarmId, setSelectedFarmId] = useState<string>("");
   const [invoiceFormData, setInvoiceFormData] = useState({
     invoiceNumber: "",
     clientName: "",
@@ -22,20 +24,56 @@ export const InvoiceAndTaxReporting: React.FC<InvoiceAndTaxReportingProps> = ({ 
     notes: ""
   });
 
+  // Fetch user's farms
+  const { data: farms = [] } = trpc.farms.list.useQuery();
+
+  // Set default farm on load
+  React.useEffect(() => {
+    if (farms.length > 0 && !selectedFarmId) {
+      setSelectedFarmId(farms[0].id.toString());
+    }
+  }, [farms, selectedFarmId]);
+
+  const farmId = selectedFarmId || (farms[0]?.id.toString() ?? "");
+
   // Fetch invoices
-  const { data: invoices } = trpc.financialManagement.getInvoices.useQuery({
-    farmId
-  });
+  const { data: invoices } = trpc.financialManagement.getInvoices.useQuery(
+    farmId ? { farmId } : undefined,
+    { enabled: !!farmId }
+  );
 
   // Create invoice mutation
-  const createInvoiceMutation = trpc.financialManagement.createInvoice.useMutation();
+  const createInvoiceMutation = trpc.financialManagement.createInvoice.useMutation({
+    onSuccess: () => {
+      toast.success("Invoice created successfully!");
+      setIsCreateInvoiceOpen(false);
+      setInvoiceFormData({
+        invoiceNumber: "",
+        clientName: "",
+        items: [{ description: "", quantity: 1, unitPrice: 0, amount: 0 }],
+        totalAmount: 0,
+        dueDate: new Date().toISOString().split('T')[0],
+        notes: ""
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create invoice");
+    }
+  });
 
   // Update invoice status mutation
-  const updateInvoiceStatusMutation = trpc.financialManagement.updateInvoiceStatus.useMutation();
+  const updateInvoiceStatusMutation = trpc.financialManagement.updateInvoiceStatus.useMutation({
+    onSuccess: () => {
+      toast.success("Invoice status updated!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update invoice status");
+    }
+  });
 
   const handleCreateInvoice = async () => {
     if (!invoiceFormData.invoiceNumber || !invoiceFormData.clientName) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -48,16 +86,6 @@ export const InvoiceAndTaxReporting: React.FC<InvoiceAndTaxReportingProps> = ({ 
         totalAmount: invoiceFormData.totalAmount,
         dueDate: new Date(invoiceFormData.dueDate),
         notes: invoiceFormData.notes
-      });
-
-      setIsCreateInvoiceOpen(false);
-      setInvoiceFormData({
-        invoiceNumber: "",
-        clientName: "",
-        items: [{ description: "", quantity: 1, unitPrice: 0, amount: 0 }],
-        totalAmount: 0,
-        dueDate: new Date().toISOString().split('T')[0],
-        notes: ""
       });
     } catch (error) {
       console.error("Failed to create invoice:", error);
@@ -76,33 +104,21 @@ export const InvoiceAndTaxReporting: React.FC<InvoiceAndTaxReportingProps> = ({ 
   };
 
   const handleGeneratePDF = (invoice: any) => {
-    // Create a simple PDF content
-    const content = `
-INVOICE
-Invoice Number: ${invoice.invoiceNumber}
-Date: ${new Date(invoice.createdAt).toLocaleDateString()}
-Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
-
-Bill To: ${invoice.clientName}
-
-Items:
-${invoice.items.map((item: any) => `${item.description} x ${item.quantity} @ GHS ${item.unitPrice} = GHS ${item.amount}`).join('\n')}
-
-Total: GHS ${invoice.totalAmount}
-Status: ${invoice.status}
-${invoice.notes ? `Notes: ${invoice.notes}` : ''}
-    `;
-
-    // Create a blob and download
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `invoice-${invoice.invoiceNumber}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+    try {
+      generateInvoicePDF({
+        invoiceNumber: invoice.invoiceNumber,
+        clientName: invoice.clientName,
+        items: invoice.items,
+        totalAmount: invoice.totalAmount,
+        dueDate: invoice.dueDate,
+        notes: invoice.notes,
+        createdAt: invoice.createdAt
+      });
+      toast.success("Invoice PDF downloaded!");
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to generate PDF");
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -120,11 +136,34 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
     }
   };
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">Please log in to view invoices</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Invoicing & Tax Reporting</h1>
+      <div className="flex justify-between items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Invoicing & Tax Reporting</h1>
+          {farms.length > 0 && (
+            <select
+              value={selectedFarmId}
+              onChange={(e) => setSelectedFarmId(e.target.value)}
+              className="mt-2 border rounded px-3 py-2 text-sm"
+            >
+              {farms.map((farm: any) => (
+                <option key={farm.id} value={farm.id.toString()}>
+                  {farm.farmName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
         <Dialog open={isCreateInvoiceOpen} onOpenChange={setIsCreateInvoiceOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -140,16 +179,18 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Invoice Number</label>
+                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
                   <Input
+                    id="invoiceNumber"
                     value={invoiceFormData.invoiceNumber}
                     onChange={(e) => setInvoiceFormData({ ...invoiceFormData, invoiceNumber: e.target.value })}
                     placeholder="INV-001"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Client Name</label>
+                  <Label htmlFor="clientName">Client Name</Label>
                   <Input
+                    id="clientName"
                     value={invoiceFormData.clientName}
                     onChange={(e) => setInvoiceFormData({ ...invoiceFormData, clientName: e.target.value })}
                     placeholder="Client name"
@@ -158,7 +199,7 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Invoice Items</label>
+                <Label className="block text-sm font-medium mb-2">Invoice Items</Label>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {invoiceFormData.items.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-4 gap-2">
@@ -205,16 +246,18 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Due Date</label>
+                  <Label htmlFor="dueDate">Due Date</Label>
                   <Input
+                    id="dueDate"
                     type="date"
                     value={invoiceFormData.dueDate}
                     onChange={(e) => setInvoiceFormData({ ...invoiceFormData, dueDate: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Total Amount</label>
+                  <Label htmlFor="totalAmount">Total Amount</Label>
                   <Input
+                    id="totalAmount"
                     type="number"
                     value={invoiceFormData.totalAmount}
                     readOnly
@@ -224,8 +267,9 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Notes</label>
+                <Label htmlFor="notes">Notes</Label>
                 <textarea
+                  id="notes"
                   value={invoiceFormData.notes}
                   onChange={(e) => setInvoiceFormData({ ...invoiceFormData, notes: e.target.value })}
                   placeholder="Additional notes"
@@ -365,12 +409,12 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Tax Year</label>
-                    <Input type="number" placeholder="2026" defaultValue={new Date().getFullYear()} />
+                    <Label htmlFor="taxYear">Tax Year</Label>
+                    <Input type="number" id="taxYear" placeholder="2026" defaultValue={new Date().getFullYear()} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Report Format</label>
-                    <select className="w-full border rounded px-3 py-2">
+                    <Label htmlFor="reportFormat">Report Format</Label>
+                    <select id="reportFormat" className="w-full border rounded px-3 py-2">
                       <option>PDF Report</option>
                       <option>Excel Spreadsheet</option>
                       <option>CSV Export</option>
@@ -401,7 +445,25 @@ ${invoice.notes ? `Notes: ${invoice.notes}` : ''}
                   </div>
                 </div>
 
-                <Button className="w-full">
+                <Button 
+                  className="w-full"
+                  onClick={() => {
+                    try {
+                      generateTaxReportPDF({
+                        taxYear: new Date().getFullYear(),
+                        totalIncome: 0,
+                        totalExpenses: 0,
+                        taxableIncome: 0,
+                        estimatedTax: 0,
+                        farmName: farms[0]?.farmName
+                      });
+                      toast.success("Tax report PDF downloaded!");
+                    } catch (error) {
+                      console.error("Failed to generate tax report:", error);
+                      toast.error("Failed to generate tax report");
+                    }
+                  }}
+                >
                   <FileText className="h-4 w-4 mr-2" />
                   Generate Tax Report
                 </Button>

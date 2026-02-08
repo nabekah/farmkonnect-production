@@ -1,17 +1,52 @@
 import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { DollarSign, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Plus } from "lucide-react";
+import { toast } from "sonner";
 
-interface FinancialDashboardProps {
-  farmId: string;
-}
-
-export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ farmId }) => {
+export const FinancialDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [dateRange, setDateRange] = useState<"month" | "quarter" | "year">("month");
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
+  const [selectedFarmId, setSelectedFarmId] = useState<string>("");
+
+  // Fetch user's farms
+  const { data: farms = [] } = trpc.farms.list.useQuery();
+
+  // Set default farm on load
+  React.useEffect(() => {
+    if (farms.length > 0 && !selectedFarmId) {
+      setSelectedFarmId(farms[0].id.toString());
+    }
+  }, [farms, selectedFarmId]);
+
+  const farmId = selectedFarmId || (farms[0]?.id.toString() ?? "");
+
+  // Expense form state
+  const [expenseForm, setExpenseForm] = useState({
+    category: "feed",
+    description: "",
+    amount: "",
+    date: new Date().toISOString().split('T')[0],
+    animalId: ""
+  });
+
+  // Revenue form state
+  const [revenueForm, setRevenueForm] = useState({
+    source: "animal_sales",
+    description: "",
+    amount: "",
+    date: new Date().toISOString().split('T')[0],
+    animalId: ""
+  });
 
   // Calculate date range
   const endDate = new Date();
@@ -25,29 +60,92 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ farmId }
   }
 
   // Fetch financial data
-  const { data: summary } = trpc.financialManagement.getFinancialSummary.useQuery({
-    farmId,
-    startDate,
-    endDate
+  const { data: summary } = trpc.financialManagement.getFinancialSummary.useQuery(
+    farmId ? { farmId, startDate, endDate } : undefined,
+    { enabled: !!farmId }
+  );
+
+  const { data: expenseBreakdown } = trpc.financialManagement.getExpenseBreakdown.useQuery(
+    farmId ? { farmId, startDate, endDate } : undefined,
+    { enabled: !!farmId }
+  );
+
+  const { data: revenueBreakdown } = trpc.financialManagement.getRevenueBreakdown.useQuery(
+    farmId ? { farmId, startDate, endDate } : undefined,
+    { enabled: !!farmId }
+  );
+
+  const { data: costPerAnimal } = trpc.financialManagement.calculateCostPerAnimal.useQuery(
+    farmId ? { farmId, startDate, endDate } : undefined,
+    { enabled: !!farmId }
+  );
+
+  // Mutations
+  const createExpenseMutation = trpc.financialManagement.createExpense.useMutation({
+    onSuccess: () => {
+      toast.success("Expense recorded successfully!");
+      setExpenseForm({
+        category: "feed",
+        description: "",
+        amount: "",
+        date: new Date().toISOString().split('T')[0],
+        animalId: ""
+      });
+      setIsAddExpenseOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to record expense");
+    }
   });
 
-  const { data: expenseBreakdown } = trpc.financialManagement.getExpenseBreakdown.useQuery({
-    farmId,
-    startDate,
-    endDate
+  const createRevenueMutation = trpc.financialManagement.createRevenue.useMutation({
+    onSuccess: () => {
+      toast.success("Revenue recorded successfully!");
+      setRevenueForm({
+        source: "animal_sales",
+        description: "",
+        amount: "",
+        date: new Date().toISOString().split('T')[0],
+        animalId: ""
+      });
+      setIsAddRevenueOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to record revenue");
+    }
   });
 
-  const { data: revenueBreakdown } = trpc.financialManagement.getRevenueBreakdown.useQuery({
-    farmId,
-    startDate,
-    endDate
-  });
+  const handleAddExpense = async () => {
+    if (!expenseForm.description || !expenseForm.amount) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
 
-  const { data: costPerAnimal } = trpc.financialManagement.calculateCostPerAnimal.useQuery({
-    farmId,
-    startDate,
-    endDate
-  });
+    await createExpenseMutation.mutateAsync({
+      farmId,
+      category: expenseForm.category as any,
+      description: expenseForm.description,
+      amount: parseFloat(expenseForm.amount),
+      date: new Date(expenseForm.date),
+      animalId: expenseForm.animalId || undefined
+    });
+  };
+
+  const handleAddRevenue = async () => {
+    if (!revenueForm.description || !revenueForm.amount) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    await createRevenueMutation.mutateAsync({
+      farmId,
+      source: revenueForm.source as any,
+      description: revenueForm.description,
+      amount: parseFloat(revenueForm.amount),
+      date: new Date(revenueForm.date),
+      animalId: revenueForm.animalId || undefined
+    });
+  };
 
   // Prepare chart data
   const expenseChartData = expenseBreakdown?.breakdown
@@ -68,11 +166,34 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ farmId }
 
   const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">Please log in to view financial data</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header with date range selector */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Financial Dashboard</h1>
+      {/* Header with date range selector and farm selection */}
+      <div className="flex justify-between items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Financial Dashboard</h1>
+          {farms.length > 0 && (
+            <select
+              value={selectedFarmId}
+              onChange={(e) => setSelectedFarmId(e.target.value)}
+              className="mt-2 border rounded px-3 py-2 text-sm"
+            >
+              {farms.map((farm: any) => (
+                <option key={farm.id} value={farm.id.toString()}>
+                  {farm.farmName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button
             variant={dateRange === "month" ? "default" : "outline"}
@@ -142,6 +263,139 @@ export const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ farmId }
             <p className="text-xs text-gray-500">Return on investment</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Expense
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Record Expense</DialogTitle>
+              <DialogDescription>Add a new farm expense</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <select
+                  id="category"
+                  value={expenseForm.category}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="feed">Feed</option>
+                  <option value="medication">Medication</option>
+                  <option value="labor">Labor</option>
+                  <option value="equipment">Equipment</option>
+                  <option value="utilities">Utilities</option>
+                  <option value="transport">Transport</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  value={expenseForm.description}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                  placeholder="Expense description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="amount">Amount (GHS)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={expenseForm.amount}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={expenseForm.date}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                />
+              </div>
+              <Button onClick={handleAddExpense} className="w-full">
+                Record Expense
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isAddRevenueOpen} onOpenChange={setIsAddRevenueOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Revenue
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Record Revenue</DialogTitle>
+              <DialogDescription>Add a new farm revenue source</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="source">Source</Label>
+                <select
+                  id="source"
+                  value={revenueForm.source}
+                  onChange={(e) => setRevenueForm({ ...revenueForm, source: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="animal_sales">Animal Sales</option>
+                  <option value="milk_production">Milk Production</option>
+                  <option value="eggs">Eggs</option>
+                  <option value="meat">Meat</option>
+                  <option value="breeding">Breeding</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="rev-description">Description</Label>
+                <Input
+                  id="rev-description"
+                  value={revenueForm.description}
+                  onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })}
+                  placeholder="Revenue description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rev-amount">Amount (GHS)</Label>
+                <Input
+                  id="rev-amount"
+                  type="number"
+                  step="0.01"
+                  value={revenueForm.amount}
+                  onChange={(e) => setRevenueForm({ ...revenueForm, amount: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rev-date">Date</Label>
+                <Input
+                  id="rev-date"
+                  type="date"
+                  value={revenueForm.date}
+                  onChange={(e) => setRevenueForm({ ...revenueForm, date: e.target.value })}
+                />
+              </div>
+              <Button onClick={handleAddRevenue} className="w-full">
+                Record Revenue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Charts */}

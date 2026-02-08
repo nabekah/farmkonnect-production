@@ -241,7 +241,7 @@ function Router() {
       <Route path="/financial-dashboard">
         {() => (
           <DashboardLayout>
-            <FinancialDashboard farmId="1" />
+            <FinancialDashboard />
           </DashboardLayout>
         )}
       </Route>
@@ -255,7 +255,7 @@ function Router() {
       <Route path="/invoicing-tax-reporting">
         {() => (
           <DashboardLayout>
-            <InvoiceAndTaxReporting farmId="1" />
+            <InvoiceAndTaxReporting />
           </DashboardLayout>
         )}
       </Route>
