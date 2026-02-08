@@ -109,6 +109,7 @@ export const navigationStructure: MenuGroup[] = [
       { icon: TrendingUp, label: "Crops", path: "/crops" },
       { icon: Sprout, label: "Crop Planning", path: "/crop-planning" },
       { icon: Users, label: "Livestock", path: "/livestock" },
+      { icon: Users, label: "Bulk Animal Registration", path: "/bulk-animal-registration" },
       { icon: Fish, label: "Fish Farming", path: "/fish-farming" },
       { icon: Users, label: "Multi-Species Management", path: "/multi-species" },
       { icon: TrendingUp, label: "Species Production", path: "/species-production-dashboard" },

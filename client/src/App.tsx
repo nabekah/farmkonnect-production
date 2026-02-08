@@ -79,6 +79,7 @@ import AdminDataSettings from "./pages/AdminDataSettings";
 import { SpeciesSelectionWizard } from "./components/SpeciesSelectionWizard";
 import { SpeciesProductionDashboard } from "./pages/SpeciesProductionDashboard";
 import { BreedComparison } from "./pages/BreedComparison";
+import { BulkAnimalRegistration } from "./pages/BulkAnimalRegistration";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { TimeTrackerProvider } from "./contexts/TimeTrackerContext";
 import { ActivityNotificationContainer } from "./components/ActivityNotificationToast";
@@ -188,6 +189,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <Livestock />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/bulk-animal-registration">
+        {() => (
+          <DashboardLayout>
+            <BulkAnimalRegistration />
           </DashboardLayout>
         )}
       </Route>
