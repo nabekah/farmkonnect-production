@@ -3153,5 +3153,6 @@
 - [x] Fix Add Expense error - Changed field name from category to expenseType
 - [x] Fix Add Revenue error - Convert Date objects to YYYY-MM-DD format in createRevenue
 - [x] Fix Date parameter handling - Convert Date objects to YYYY-MM-DD format for both mutations
-- [x] Update FinancialDashboard to pass correct expense and revenue parameters
+- [x] Fix expenseType validation error - Updated UI select to use expenseType instead of category
+- [x] Verify entire flow: UI → Router → Model → Database
 - [x] Test Add Expense and Add Revenue functionality (All 361 tests passing)

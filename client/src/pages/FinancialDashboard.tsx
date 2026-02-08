@@ -293,8 +293,8 @@ export const FinancialDashboard: React.FC = () => {
                 <Label htmlFor="category">Category</Label>
                 <select
                   id="category"
-                  value={expenseForm.category}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                  value={expenseForm.expenseType}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, expenseType: e.target.value })}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="feed">Feed</option>
