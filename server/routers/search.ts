@@ -11,6 +11,7 @@ import {
   getUserSearchAnalytics,
 } from "../db/searchAnalytics";
 import { cacheService } from "../services/cacheService";
+import { SearchRankingService } from "../services/searchRankingService";
 
 export const searchRouter = router({
   /**
@@ -114,7 +115,9 @@ export const searchRouter = router({
           })),
         ];
 
-        const finalResults = results.slice(0, input.limit);
+        // Rank results by relevance
+        const rankedResults = SearchRankingService.rankResults(results, input.query);
+        const finalResults = rankedResults.slice(0, input.limit);
         const searchDuration = Date.now() - startTime;
 
         const response = {
