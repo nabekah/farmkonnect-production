@@ -2510,3 +2510,217 @@ export const speciesAnimalRecords = mysqlTable("speciesAnimalRecords", {
 
 export type SpeciesAnimalRecord = typeof speciesAnimalRecords.$inferSelect;
 export type InsertSpeciesAnimalRecord = typeof speciesAnimalRecords.$inferInsert;
+
+
+// ============================================================================
+// FINANCIAL MANAGEMENT & COST ANALYSIS
+// ============================================================================
+
+/**
+ * Expense tracking for all farm operations
+ */
+export const expenses = mysqlTable("expenses", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  animalId: int("animalId"), // Optional: link to specific animal
+  cropId: int("cropId"), // Optional: link to specific crop
+  expenseType: mysqlEnum("expenseType", [
+    "feed",
+    "medication",
+    "labor",
+    "equipment",
+    "utilities",
+    "transport",
+    "veterinary",
+    "fertilizer",
+    "seeds",
+    "pesticides",
+    "water",
+    "rent",
+    "insurance",
+    "maintenance",
+    "other"
+  ]).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }),
+  unitCost: decimal("unitCost", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  vendor: varchar("vendor", { length: 255 }),
+  invoiceNumber: varchar("invoiceNumber", { length: 100 }),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "partial"]).default("pending").notNull(),
+  paymentDate: date("paymentDate"),
+  expenseDate: date("expenseDate").notNull(),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Expense = typeof expenses.$inferSelect;
+export type InsertExpense = typeof expenses.$inferInsert;
+
+/**
+ * Revenue tracking from farm products and sales
+ */
+export const revenue = mysqlTable("revenue", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  animalId: int("animalId"), // Optional: link to specific animal
+  cropId: int("cropId"), // Optional: link to specific crop
+  revenueType: mysqlEnum("revenueType", [
+    "animal_sale",
+    "milk_production",
+    "egg_production",
+    "wool_production",
+    "meat_sale",
+    "crop_sale",
+    "produce_sale",
+    "breeding_service",
+    "other"
+  ]).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }),
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  buyer: varchar("buyer", { length: 255 }),
+  invoiceNumber: varchar("invoiceNumber", { length: 100 }),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "partial"]).default("pending").notNull(),
+  paymentDate: date("paymentDate"),
+  revenueDate: date("revenueDate").notNull(),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Revenue = typeof revenue.$inferSelect;
+export type InsertRevenue = typeof revenue.$inferInsert;
+
+/**
+ * Budget planning and forecasting
+ */
+export const budgets = mysqlTable("budgets", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  budgetName: varchar("budgetName", { length: 255 }).notNull(),
+  budgetType: mysqlEnum("budgetType", ["annual", "quarterly", "monthly", "project"]).notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
+  totalBudget: decimal("totalBudget", { precision: 12, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  status: mysqlEnum("status", ["draft", "approved", "active", "completed"]).default("draft").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Budget = typeof budgets.$inferSelect;
+export type InsertBudget = typeof budgets.$inferInsert;
+
+/**
+ * Budget line items
+ */
+export const budgetLineItems = mysqlTable("budgetLineItems", {
+  id: int("id").autoincrement().primaryKey(),
+  budgetId: int("budgetId").notNull(),
+  expenseType: varchar("expenseType", { length: 100 }).notNull(),
+  description: varchar("description", { length: 500 }),
+  budgetedAmount: decimal("budgetedAmount", { precision: 12, scale: 2 }).notNull(),
+  actualAmount: decimal("actualAmount", { precision: 12, scale: 2 }),
+  variance: decimal("variance", { precision: 12, scale: 2 }),
+  percentageUsed: decimal("percentageUsed", { precision: 5, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BudgetLineItem = typeof budgetLineItems.$inferSelect;
+export type InsertBudgetLineItem = typeof budgetLineItems.$inferInsert;
+
+/**
+ * Invoices for tracking payments
+ */
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  invoiceNumber: varchar("invoiceNumber", { length: 100 }).unique().notNull(),
+  invoiceType: mysqlEnum("invoiceType", ["expense", "revenue"]).notNull(),
+  vendorOrBuyer: varchar("vendorOrBuyer", { length: 255 }).notNull(),
+  invoiceDate: date("invoiceDate").notNull(),
+  dueDate: date("dueDate"),
+  totalAmount: decimal("totalAmount", { precision: 12, scale: 2 }).notNull(),
+  paidAmount: decimal("paidAmount", { precision: 12, scale: 2 }).default(0),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["draft", "sent", "pending", "partial", "paid", "overdue", "cancelled"]).default("draft").notNull(),
+  paymentMethod: varchar("paymentMethod", { length: 100 }),
+  notes: text("notes"),
+  attachmentUrl: varchar("attachmentUrl", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;
+
+/**
+ * Invoice line items
+ */
+export const invoiceLineItems = mysqlTable("invoiceLineItems", {
+  id: int("id").autoincrement().primaryKey(),
+  invoiceId: int("invoiceId").notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }).notNull(),
+  lineTotal: decimal("lineTotal", { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
+export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
+
+/**
+ * Financial summary and KPIs by period
+ */
+export const financialSummaries = mysqlTable("financialSummaries", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  period: varchar("period", { length: 20 }).notNull(), // YYYY-MM or YYYY-Q1, etc.
+  totalExpenses: decimal("totalExpenses", { precision: 12, scale: 2 }).notNull(),
+  totalRevenue: decimal("totalRevenue", { precision: 12, scale: 2 }).notNull(),
+  netProfit: decimal("netProfit", { precision: 12, scale: 2 }).notNull(),
+  profitMargin: decimal("profitMargin", { precision: 5, scale: 2 }),
+  roi: decimal("roi", { precision: 5, scale: 2 }),
+  costPerHectare: decimal("costPerHectare", { precision: 10, scale: 2 }),
+  revenuePerHectare: decimal("revenuePerHectare", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FinancialSummary = typeof financialSummaries.$inferSelect;
+export type InsertFinancialSummary = typeof financialSummaries.$inferInsert;
+
+
+
+/**
+ * Tax records for accounting and reporting
+ */
+export const taxRecords = mysqlTable("taxRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  taxYear: int("taxYear").notNull(),
+  totalIncome: decimal("totalIncome", { precision: 12, scale: 2 }).notNull(),
+  totalExpenses: decimal("totalExpenses", { precision: 12, scale: 2 }).notNull(),
+  taxableIncome: decimal("taxableIncome", { precision: 12, scale: 2 }).notNull(),
+  taxRate: decimal("taxRate", { precision: 5, scale: 2 }),
+  taxAmount: decimal("taxAmount", { precision: 12, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  status: mysqlEnum("status", ["draft", "filed", "paid", "pending"]).default("draft").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TaxRecord = typeof taxRecords.$inferSelect;
+export type InsertTaxRecord = typeof taxRecords.$inferInsert;

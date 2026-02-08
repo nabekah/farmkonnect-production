@@ -316,6 +316,13 @@
       "when": 1770557341100,
       "tag": "0044_late_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "5",
+      "when": 1770563204266,
+      "tag": "0045_cuddly_johnny_storm",
+      "breakpoints": true
     }
   ]
 }
