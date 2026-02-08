@@ -27,7 +27,7 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const result = await db.insert(expenses).values({
+      const [result] = await db.insert(expenses).values({
         farmId: input.farmId,
         userId: ctx.user.id,
         category: input.category,
@@ -37,9 +37,9 @@ export const financialManagementRouter = router({
         animalId: input.animalId,
         notes: input.notes,
         createdAt: new Date()
-      }).returning();
+      });
 
-      return result[0];
+      return result;
     }),
 
   /**
@@ -99,7 +99,7 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const result = await db.insert(revenue).values({
+      const [result] = await db.insert(revenue).values({
         farmId: input.farmId,
         userId: ctx.user.id,
         source: input.source,
@@ -111,9 +111,9 @@ export const financialManagementRouter = router({
         unit: input.unit,
         notes: input.notes,
         createdAt: new Date()
-      }).returning();
+      });
 
-      return result[0];
+      return result;
     }),
 
   /**
@@ -273,7 +273,7 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const result = await db.insert(budgets).values({
+      const [result] = await db.insert(budgets).values({
         farmId: input.farmId,
         userId: ctx.user.id,
         name: input.name,
@@ -283,9 +283,9 @@ export const financialManagementRouter = router({
         endDate: input.endDate,
         notes: input.notes,
         createdAt: new Date()
-      }).returning();
+      });
 
-      return result[0];
+      return result;
     }),
 
   /**
@@ -379,7 +379,7 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const result = await db.insert(invoices).values({
+      const [result] = await db.insert(invoices).values({
         farmId: input.farmId,
         userId: ctx.user.id,
         invoiceNumber: input.invoiceNumber,
@@ -390,9 +390,9 @@ export const financialManagementRouter = router({
         status: "draft",
         notes: input.notes,
         createdAt: new Date()
-      }).returning();
+      });
 
-      return result[0];
+      return result;
     }),
 
   /**
@@ -433,13 +433,12 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const result = await db
+      const [result] = await db
         .update(invoices)
         .set({ status: input.status })
-        .where(eq(invoices.id, input.invoiceId))
-        .returning();
+        .where(eq(invoices.id, input.invoiceId));
 
-      return result[0];
+      return result;
     }),
 
   /**

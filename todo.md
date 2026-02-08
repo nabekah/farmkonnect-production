@@ -3079,3 +3079,23 @@
 - [x] Test budget management workflows
 - [x] Test invoice generation and PDF export
 - [x] Test tax reporting calculations (15% Ghana tax rate)
+
+
+## Real-Time Expense Notifications (In Progress)
+- [ ] Create expenseNotifications router with budget threshold alerts
+- [ ] Implement notification persistence in database
+- [ ] Add notification UI to Financial Dashboard
+- [ ] Test budget alert triggering
+
+## Comparative Farm Analytics (In Progress)
+- [ ] Create farmAnalytics router with regional benchmarks
+- [ ] Calculate cost-per-hectare comparisons
+- [ ] Implement farm efficiency metrics
+- [ ] Build Farm Analytics comparison dashboard
+- [ ] Test analytics calculations
+
+
+## Bug Fixes (Completed)
+- [x] Fix Add Expense error in Financial Dashboard - Fixed insert syntax from .returning() to destructuring
+- [x] Fix Add Revenue error in Financial Dashboard - Fixed insert syntax from .returning() to destructuring
+- [x] Test expense and revenue submission - All 361 tests passing
