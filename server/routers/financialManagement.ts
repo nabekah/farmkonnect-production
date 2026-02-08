@@ -16,7 +16,7 @@ export const financialManagementRouter = router({
   createExpense: protectedProcedure
     .input(z.object({
       farmId: z.string(),
-      category: z.enum(["feed", "medication", "labor", "equipment", "utilities", "transport", "veterinary", "fertilizer", "seeds", "pesticides", "water", "rent", "insurance", "maintenance", "other"]),
+      expenseType: z.enum(["feed", "medication", "labor", "equipment", "utilities", "transport", "veterinary", "fertilizer", "seeds", "pesticides", "water", "rent", "insurance", "maintenance", "other"]),
       description: z.string(),
       amount: z.number().positive(),
       expenseDate: z.date(),
@@ -33,19 +33,27 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
+      const expenseDateStr = input.expenseDate instanceof Date 
+        ? input.expenseDate.toISOString().split('T')[0]
+        : input.expenseDate.toString();
+      
+      const paymentDateStr = input.paymentDate && input.paymentDate instanceof Date
+        ? input.paymentDate.toISOString().split('T')[0]
+        : input.paymentDate?.toString();
+      
       const [result] = await db.insert(expenses).values({
         farmId: parseInt(input.farmId),
-        category: input.category,
+        expenseType: input.expenseType,
         description: input.description,
         amount: input.amount.toString(),
-        expenseDate: input.expenseDate,
+        expenseDate: expenseDateStr,
         animalId: input.animalId ? parseInt(input.animalId) : undefined,
         quantity: input.quantity ? input.quantity.toString() : undefined,
         unitCost: input.unitCost ? input.unitCost.toString() : undefined,
         vendor: input.vendor,
         invoiceNumber: input.invoiceNumber,
         paymentStatus: input.paymentStatus || "pending",
-        paymentDate: input.paymentDate,
+        paymentDate: paymentDateStr,
         notes: input.notes
       });
 

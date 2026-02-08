@@ -35,7 +35,7 @@ export const FinancialDashboard: React.FC = () => {
 
   // Expense form state
   const [expenseForm, setExpenseForm] = useState({
-    category: "feed",
+    expenseType: "feed",
     description: "",
     amount: "",
     expenseDate: new Date().toISOString().split('T')[0],
@@ -90,7 +90,7 @@ export const FinancialDashboard: React.FC = () => {
     onSuccess: () => {
       toast.success("Expense recorded successfully!");
       setExpenseForm({
-        category: "feed",
+        expenseType: "feed",
         description: "",
         amount: "",
         expenseDate: new Date().toISOString().split('T')[0],
@@ -130,7 +130,7 @@ export const FinancialDashboard: React.FC = () => {
 
     await createExpenseMutation.mutateAsync({
       farmId,
-      category: expenseForm.category as any,
+      expenseType: expenseForm.expenseType as any,
       description: expenseForm.description,
       amount: parseFloat(expenseForm.amount),
       expenseDate: new Date(expenseForm.expenseDate),
