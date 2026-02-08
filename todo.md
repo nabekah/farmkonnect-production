@@ -2960,3 +2960,14 @@
 - [ ] Implement bulk delete with confirmation
 - [ ] Add bulk status update functionality
 - [ ] Test all features end-to-end
+
+
+## Home Screen Redesign (In Progress)
+- [ ] Create professional navbar component with icon, brand, search, and auth
+- [ ] Redesign landing page with improved hero section
+- [ ] Optimize KPI cards with smaller, responsive layout
+- [ ] Add quick action cards for common operations
+- [ ] Add feature cards to landing page
+- [ ] Improve mobile responsiveness
+- [ ] Test navbar on all breakpoints
+- [ ] Test home page styling and layout

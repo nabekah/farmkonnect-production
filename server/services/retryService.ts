@@ -53,7 +53,7 @@ export class RetryService {
       status: "pending",
       errorMessage,
       nextRetryAt,
-      backoffMultiplier,
+      backoffMultiplier: backoffMultiplier.toString(),
     });
 
     return { success: !!result, nextRetryAt, delayMs: delay };
@@ -166,7 +166,8 @@ export class RetryService {
     // Check if we should retry again
     if (nextRetryAttempt <= this.config.maxRetries) {
       // Create next retry
-      const delay = this.calculateNextRetryDelay(nextRetryAttempt, currentRetry.backoffMultiplier);
+      const multiplier = currentRetry.backoffMultiplier ? parseFloat(currentRetry.backoffMultiplier.toString()) : 1.5;
+      const delay = this.calculateNextRetryDelay(nextRetryAttempt, multiplier);
       const nextRetryAt = new Date(Date.now() + delay);
 
       await db.insert(operationRetryLog).values({
@@ -175,7 +176,7 @@ export class RetryService {
         status: "pending",
         errorMessage,
         nextRetryAt,
-        backoffMultiplier: currentRetry.backoffMultiplier,
+        backoffMultiplier: (currentRetry.backoffMultiplier || 1.5).toString(),
       });
 
       // Update operation retry count
@@ -290,7 +291,7 @@ export class RetryService {
       status: "pending",
       errorMessage: "Manual retry initiated",
       nextRetryAt,
-      backoffMultiplier: this.config.backoffMultiplier,
+      backoffMultiplier: this.config.backoffMultiplier.toString(),
     });
 
     return { success: !!result, nextRetryAt, delayMs: delay };
