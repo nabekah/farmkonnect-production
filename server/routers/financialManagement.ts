@@ -33,6 +33,11 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
+      // DEBUG: Log the input received by the router
+      console.log("DEBUG: Router received input:", input);
+      console.log("DEBUG: expenseType in router:", input.expenseType);
+      console.log("DEBUG: expenseType type in router:", typeof input.expenseType);
+      
       const expenseDateStr = input.expenseDate instanceof Date 
         ? input.expenseDate.toISOString().split('T')[0]
         : input.expenseDate.toString();
@@ -45,11 +50,11 @@ export const financialManagementRouter = router({
         farmId: parseInt(input.farmId),
         expenseType: input.expenseType,
         description: input.description,
-        amount: input.amount.toString(),
+        amount: input.amount,
         expenseDate: expenseDateStr,
         animalId: input.animalId ? parseInt(input.animalId) : undefined,
-        quantity: input.quantity ? input.quantity.toString() : undefined,
-        unitCost: input.unitCost ? input.unitCost.toString() : undefined,
+        quantity: input.quantity,
+        unitCost: input.unitCost,
         vendor: input.vendor,
         invoiceNumber: input.invoiceNumber,
         paymentStatus: input.paymentStatus || "pending",
@@ -127,12 +132,12 @@ export const financialManagementRouter = router({
         farmId: parseInt(input.farmId),
         revenueType: input.revenueType,
         description: input.description,
-        amount: input.amount.toString(),
+        amount: input.amount,
         revenueDate: revenueDateStr,
         animalId: input.animalId ? parseInt(input.animalId) : undefined,
         cropId: input.cropId ? parseInt(input.cropId) : undefined,
-        quantity: input.quantity ? input.quantity.toString() : undefined,
-        unitPrice: input.unitPrice ? input.unitPrice.toString() : undefined,
+        quantity: input.quantity,
+        unitPrice: input.unitPrice,
         buyer: input.buyer,
         invoiceNumber: input.invoiceNumber,
         paymentStatus: input.paymentStatus || "pending",
@@ -356,7 +361,7 @@ export const financialManagementRouter = router({
         farmId: parseInt(input.farmId),
         name: input.name,
         category: input.category,
-        allocatedAmount: input.allocatedAmount.toString(),
+        allocatedAmount: input.allocatedAmount,
         startDate: input.startDate,
         endDate: input.endDate,
         notes: input.notes
@@ -459,7 +464,7 @@ export const financialManagementRouter = router({
         invoiceNumber: input.invoiceNumber,
         clientName: input.clientName,
         items: JSON.stringify(input.items),
-        totalAmount: input.totalAmount.toString(),
+        totalAmount: input.totalAmount,
         dueDate: input.dueDate,
         status: "draft",
         notes: input.notes

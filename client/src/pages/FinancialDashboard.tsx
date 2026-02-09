@@ -128,6 +128,11 @@ export const FinancialDashboard: React.FC = () => {
       return;
     }
 
+    // DEBUG: Log the form data before sending
+    console.log("DEBUG: expenseForm before mutation:", expenseForm);
+    console.log("DEBUG: expenseType value:", expenseForm.expenseType);
+    console.log("DEBUG: expenseType type:", typeof expenseForm.expenseType);
+
     await createExpenseMutation.mutateAsync({
       farmId,
       expenseType: expenseForm.expenseType as any,

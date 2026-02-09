@@ -1,0 +1,286 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "accountStatusHistory"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "alertHistory"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "alerts"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "animalHealthRecords"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "animalTypes"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "animals"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "auditLogs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "breedingRecords"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "bulkImportJobs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "challenges"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "cropCycles"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "cropHealthRecords"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "cropTreatments"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "crops"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "customRoles"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "enrollments"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "farmActivities"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "farmAssets"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "farmExpenses"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "farmRevenue"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "farmWorkers"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "farms"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "feedingRecords"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "fertilizerApplications"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "fieldWorkerActivityLogs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "fishPondActivities"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "fishPonds"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "fishStockingRecords"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "inventoryAlerts"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "inventory_audit_logs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "inventory_forecasts"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "inventory_items"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "inventory_transactions"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "iotDevices"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "irrigation_events"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "irrigation_recommendations"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "irrigation_schedules"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "irrigation_statistics"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "irrigation_zones"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "kpiValues"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "kpis"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "low_stock_alerts"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceBulkPricingTiers"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceCart"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceDeliveryZones"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceOrderDisputes"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceOrderItems"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceOrderReviews"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceOrders"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceProductImages"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceProductReviews"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceProducts"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceReviews"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceSellerPayouts"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceTransactions"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "marketplaceWishlist"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "mfaBackupCodeUsage"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "modulePermissions"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "monitoringVisits"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "notificationPreferences"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "notifications"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "orderItems"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "orders"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "passwordResetRequests"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "performanceMetrics"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "productListings"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "reportHistory"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "reportSchedules"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "rolePermissions"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "securityAuditLogs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "securitySettings"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "sellerVerifications"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "sensorReadings"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "soilTests"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "soil_moisture_readings"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "specialistProfiles"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "strategicGoals"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "swotAnalysis"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "taskHistory"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "themeConfigs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "timeTrackerLogs"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "trainingPrograms"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "trainingSessions"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "transportRequests"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "userApprovalRequests"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "userRoles"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "userSessions"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "users"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "validationRules"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "weatherHistory"
+    },
+    {
+      "Tables_in_WZQk4bD8DnsRHwYBkmh7FN": "yieldRecords"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_WZQk4bD8DnsRHwYBkmh7FN\n__drizzle_migrations\naccountStatusHistory\nalertHistory\nalerts\nanimalHealthRecords\nanimalTypes\nanimals\nauditLogs\nbreedingRecords\nbulkImportJobs\nchallenges\ncropCycles\ncropHealthRecords\ncropTreatments\ncrops\ncustomRoles\nenrollments\nfarmActivities\nfarmAssets\nfarmExpenses\nfarmRevenue\nfarmWorkers\nfarms\nfeedingRecords\nfertilizerApplications\nfieldWorkerActivityLogs\nfishPondActivities\nfishPonds\nfishStockingRecords\ninventoryAlerts\ninventory_audit_logs\ninventory_forecasts\ninventory_items\ninventory_transactions\niotDevices\nirrigation_events\nirrigation_recommendations\nirrigation_schedules\nirrigation_statistics\nirrigation_zones\nkpiValues\nkpis\nlow_stock_alerts\nmarketplaceBulkPricingTiers\nmarketplaceCart\nmarketplaceDeliveryZones\nmarketplaceOrderDisputes\nmarketplaceOrderItems\nmarketplaceOrderReviews\nmarketplaceOrders\nmarketplaceProductImages\nmarketplaceProductReviews\nmarketplaceProducts\nmarketplaceReviews\nmarketplaceSellerPayouts\nmarketplaceTransactions\nmarketplaceWishlist\nmfaBackupCodeUsage\nmodulePermissions\nmonitoringVisits\nnotificationPreferences\nnotifications\norderItems\norders\npasswordResetRequests\nperformanceMetrics\nproductListings\nreportHistory\nreportSchedules\nrolePermissions\nsecurityAuditLogs\nsecuritySettings\nsellerVerifications\nsensorReadings\nsoilTests\nsoil_moisture_readings\nspecialistProfiles\nstrategicGoals\nswotAnalysis\ntaskHistory\nthemeConfigs\ntimeTrackerLogs\ntrainingPrograms\ntrainingSessions\ntransportRequests\nuserApprovalRequests\nuserRoles\nuserSessions\nusers\nvalidationRules\nweatherHistory\nyieldRecords\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

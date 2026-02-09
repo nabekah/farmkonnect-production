@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `invoices` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `farmId` int NOT NULL,\n  `invoiceNumber` varchar(100) NOT NULL,\n  `clientName` varchar(255) NOT NULL,\n  `items` json NOT NULL,\n  `totalAmount` decimal(12,2) NOT NULL,\n  `dueDate` date NOT NULL,\n  `status` enum('draft','sent','paid','overdue','cancelled') NOT NULL DEFAULT 'draft',\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `invoices_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS `invoices` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `farmId` int NOT NULL,\n  `invoiceNumber` varchar(100) NOT NULL,\n  `clientName` varchar(255) NOT NULL,\n  `items` json NOT NULL,\n  `totalAmount` decimal(12,2) NOT NULL,\n  `dueDate` date NOT NULL,\n  `status` enum('draft','sent','paid','overdue','cancelled') NOT NULL DEFAULT 'draft',\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `invoices_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 162
+}

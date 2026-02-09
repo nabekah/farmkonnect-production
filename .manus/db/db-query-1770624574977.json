@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO `expenses` (`farmId`, `expenseType`, `description`, `amount`, `vendor`, `paymentStatus`, `expenseDate`) VALUES (2, 'labor', 'pay farm worker', 499, 'Papa farms', 'pending', '2026-02-09');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute INSERT INTO `expenses` (`farmId`, `expenseType`, `description`, `amount`, `vendor`, `paymentStatus`, `expenseDate`) VALUES (2, 'labor', 'pay farm worker', 499, 'Papa farms', 'pending', '2026-02-09');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 67
+}
