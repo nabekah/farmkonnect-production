@@ -38,6 +38,8 @@ import { performanceAlertsRouter } from "./routers/performanceAlerts";
 import { securityControlsRouter } from "./routers/securityControls";
 import { smsNotificationsRouter } from "./routers/smsNotifications";
 import { complianceReportsRouter } from "./routers/complianceReports";
+import { deviceFingerprintingRouter } from "./routers/deviceFingerprinting";
+import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
 import { exportRouter } from "./exportRouter";
 import { alertHistoryRouter } from "./alertHistoryRouter";
 import { fertilizerRouter } from "./fertilizerRouter";
@@ -127,6 +129,8 @@ export const appRouter = router({
   securityControls: securityControlsRouter,
   smsNotifications: smsNotificationsRouter,
   complianceReports: complianceReportsRouter,
+  deviceFingerprinting: deviceFingerprintingRouter,
+  incidentPlaybooks: incidentPlaybooksRouter,
   upload: uploadRouter,
   financial: financialRouter,
   livestock: livestockRouter,

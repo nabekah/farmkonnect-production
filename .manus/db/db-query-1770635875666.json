@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS incident_playbooks (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  farmId INT NOT NULL,\n  playbookName VARCHAR(255) NOT NULL,\n  description TEXT,\n  incidentType VARCHAR(100) NOT NULL,\n  severity ENUM('low', 'medium', 'high', 'critical') NOT NULL,\n  triggerConditions JSON,\n  responseSteps JSON,\n  escalationLevels JSON,\n  notificationRecipients JSON,\n  isActive BOOLEAN DEFAULT TRUE,\n  createdBy VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (farmId) REFERENCES farms(id) ON DELETE CASCADE,\n  INDEX idx_farmId_incidentType (farmId, incidentType)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS incident_playbooks (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  farmId INT NOT NULL,\n  playbookName VARCHAR(255) NOT NULL,\n  description TEXT,\n  incidentType VARCHAR(100) NOT NULL,\n  severity ENUM('low', 'medium', 'high', 'critical') NOT NULL,\n  triggerConditions JSON,\n  responseSteps JSON,\n  escalationLevels JSON,\n  notificationRecipients JSON,\n  isActive BOOLEAN DEFAULT TRUE,\n  createdBy VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (farmId) REFERENCES farms(id) ON DELETE CASCADE,\n  INDEX idx_farmId_incidentType (farmId, incidentType)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 175
+}
