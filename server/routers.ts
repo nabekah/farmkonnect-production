@@ -98,6 +98,7 @@ import { financialManagementCleanRouter } from "./routers/financialManagementCle
 import { laborManagementCleanRouter } from "./routers/laborManagementClean";
 import { trainingCertificationCleanRouter } from "./routers/trainingCertificationClean";
 import { equipmentManagementCleanRouter } from "./routers/equipmentManagementClean";
+import { certificationRenewalCleanRouter } from "./routers/certificationRenewalClean";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -202,6 +203,7 @@ export const appRouter = router({
   laborManagement: laborManagementCleanRouter,
   training: trainingCertificationCleanRouter,
   equipment: equipmentManagementCleanRouter,
+  certificationRenewal: certificationRenewalCleanRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
