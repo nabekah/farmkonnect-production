@@ -2,8 +2,6 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
-import { notificationRouter } from "./notificationRouter";
-import { feedingRouter } from "./feedingRouter";
 import { marketplaceRouter } from "./marketplaceRouter";
 import { iotRouter } from "./iotRouter";
 import { weatherRouter } from "./weatherRouter";
@@ -17,7 +15,6 @@ import { transportRouter } from "./transportRouter";
 import { businessRouter } from "./businessRouter";
 import { paymentRouter } from "./paymentRouter";
 import { smsRouter } from "./smsRouter";
-import { securityRouter } from "./securityRouter";
 import { passwordResetRouter } from "./passwordResetRouter";
 import { uploadRouter } from "./uploadRouter";
 import { financialRouter } from "./financialRouter";
@@ -26,8 +23,6 @@ import { workforceRouter } from "./workforceRouter";
 import { fishFarmingRouter } from "./fishFarmingRouter";
 import { assetRouter } from "./assetRouter";
 import { reportingRouter } from "./reportingRouter";
-import { analyticsRouter } from "./analyticsRouter";
-import { notificationSettingsRouter } from "./notificationSettingsRouter";
 import { rbacRouter } from "./routers/rbac";
 import { invitationsRouter } from "./routers/invitations";
 import { auditLogsRouter } from "./routers/auditLogs";
@@ -43,18 +38,7 @@ import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
 import { exportRouter } from "./exportRouter";
 import { alertHistoryRouter } from "./alertHistoryRouter";
 import { fertilizerRouter } from "./fertilizerRouter";
-import { reportSchedulingRouter } from "./routers/reportScheduling";
-import { reportTemplatesRouter } from "./routers/reportTemplates";
-import { reportAnalyticsRouter } from "./routers/reportAnalytics";
-import { recipientManagementRouter } from "./routers/recipientManagement";
-import { reportExportRouter } from "./routers/reportExport";
-import { reportTemplateCustomizationRouter } from "./routers/reportTemplateCustomization";
-import { reportExecutionRouter } from "./routers/reportExecution";
-import { fertilizerManagementRouter } from "./routers/fertilizerManagement";
-import { navigationRouter } from "./routers/navigation";
-import { fieldWorkerRouter } from "./routers/fieldWorker";
 import { adminRouter } from "./routers/admin";
-import { farmPermissionsRouter } from "./farmPermissionsRouter";
 import { activityApprovalRouter } from "./routers/activityApproval";
 import { animalBulkRegistrationRouter } from "./routers/animalBulkRegistration";
 import { animalBulkEditingRouter } from "./routers/animalBulkEditing";
@@ -66,33 +50,18 @@ import { breedingRecommendationEngineRouter } from "./routers/breedingRecommenda
 import { animalMovementTrackingRouter } from "./routers/animalMovementTracking";
 import { animalBatchEditingRouter } from "./routers/animalBatchEditing";
 import { animalImportWizardRouter } from "./routers/animalImportWizard";
-import { animalSearchFiltersRouter } from "./routers/animalSearchFilters";
 import { bulkHealthOperationsRouter } from "./routers/bulkHealthOperations";
 import { healthAlertsRouter } from "./routers/healthAlerts";
-import { vetAppointmentsRouter } from "./routers/vetAppointments";
 import { healthReportsRouter } from "./routers/healthReports";
 import { medicationTrackingRouter } from "./routers/medicationTracking";
 import { healthTrendsAnalyticsRouter } from "./routers/healthTrendsAnalytics";
-import { searchRouter } from "./routers/search";
-import { searchEnhancementsRouter } from "./routers/searchEnhancements";
-import { multiSpeciesRouter } from "./routers/multiSpecies";
-import { animalMigrationRouter } from "./routers/animalMigration";
-import { speciesReportsRouter } from "./routers/speciesReports";
-import { veterinaryIntegrationRouter } from "./routers/veterinaryIntegration";
 import { csvImportRouter } from "./routers/csvImport";
-import { ghanaExtensionServicesRouter } from "./routers/ghanaExtensionServices";
 import { financialManagementRouter } from "./routers/financialManagement";
 import { recurringExpensesRouter } from "./routers/recurringExpenses";
 import { budgetAlertsRouter } from "./routers/budgetAlerts";
 import { accountingExportRouter } from "./routers/accountingExport";
 import { expenseNotifications } from "./routers/expenseNotifications";
 import { farmAnalytics } from "./routers/farmAnalytics";
-import { vetDirectoryRouter } from "./routers/vetDirectory";
-import { prescriptionManagementRouter } from "./routers/prescriptionManagement";
-import { telemedicineManagementRouter } from "./routers/telemedicineManagement";
-import { insuranceClaimTrackingRouter } from "./routers/insuranceClaimTracking";
-import { prescriptionNotificationsRouter } from "./routers/prescriptionNotifications";
-import { vetRatingsRouter } from "./routers/vetRatings";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -137,23 +106,11 @@ export const appRouter = router({
   workforce: workforceRouter,
   fishFarming: fishFarmingRouter,
   assets: assetRouter,
-  farmPermissions: farmPermissionsRouter,
   reporting: reportingRouter,
-  analytics: analyticsRouter,
-  notificationSettings: notificationSettingsRouter,
   export: exportRouter,
   alertHistory: alertHistoryRouter,
   fertilizer: fertilizerRouter,
-  reportScheduling: reportSchedulingRouter,
   reportTemplates: reportTemplatesRouter,
-  reportAnalytics: reportAnalyticsRouter,
-  recipientManagement: recipientManagementRouter,
-  reportExport: reportExportRouter,
-  reportTemplateCustomization: reportTemplateCustomizationRouter,
-    reportExecution: reportExecutionRouter,
-    fertilizerManagement: fertilizerManagementRouter,
-  navigation: navigationRouter,
-  fieldWorker: fieldWorkerRouter,
   admin: adminRouter,
   animalBulkRegistration: animalBulkRegistrationRouter,
   animalBulkEditing: animalBulkEditingRouter,
@@ -164,34 +121,19 @@ export const appRouter = router({
   animalMovementTracking: animalMovementTrackingRouter,
   animalBatchEditing: animalBatchEditingRouter,
   animalImportWizard: animalImportWizardRouter,
-  animalSearchFilters: animalSearchFiltersRouter,
   tagIdTemplates: tagIdTemplatesRouter,
   bulkHealthOperations: bulkHealthOperationsRouter,
   healthAlerts: healthAlertsRouter,
-  vetAppointments: vetAppointmentsRouter,
   healthReports: healthReportsRouter,
   medicationTracking: medicationTrackingRouter,
   healthTrendsAnalytics: healthTrendsAnalyticsRouter,
-  search: searchRouter,
-  searchEnhancements: searchEnhancementsRouter,
-  multiSpecies: multiSpeciesRouter,
-  animalMigration: animalMigrationRouter,
-  speciesReports: speciesReportsRouter,
-  veterinaryIntegration: veterinaryIntegrationRouter,
   csvImport: csvImportRouter,
-  ghanaExtensionServices: ghanaExtensionServicesRouter,
   financialManagement: financialManagementRouter,
   recurringExpenses: recurringExpensesRouter,
   budgetAlerts: budgetAlertsRouter,
   accountingExport: accountingExportRouter,
   expenseNotifications: expenseNotifications,
   farmAnalytics: farmAnalytics,
-  vetDirectory: vetDirectoryRouter,
-  prescriptionManagement: prescriptionManagementRouter,
-  telemedicineManagement: telemedicineManagementRouter,
-  insuranceClaims: insuranceClaimTrackingRouter,
-  prescriptionNotifications: prescriptionNotificationsRouter,
-  vetRatings: vetRatingsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

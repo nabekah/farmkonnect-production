@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { notifications, animals, breedingRecords, productListings } from "../drizzle/schema";
+import { notificationLogs, animals, breedingRecords, productListings } from "../drizzle/schema";
 import { eq, and, lte, gte, sql } from "drizzle-orm";
 
 /**

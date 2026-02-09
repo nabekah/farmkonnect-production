@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
 import { eq, and, gte, lte, inArray } from "drizzle-orm";
-import { animals, animalHealthRecords, breedingRecords, feedingRecords, performanceMetrics, farms } from "../drizzle/schema";
+import { animals, animalHealthRecords, breedingRecords, performanceMetrics, farms } from "../drizzle/schema";
 import { router, protectedProcedure } from "./_core/trpc";
 
 export const livestockRouter = router({

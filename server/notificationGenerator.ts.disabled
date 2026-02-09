@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { notifications, breedingRecords } from "../drizzle/schema";
+import { notificationLogs, breedingRecords } from "../drizzle/schema";
 import { eq, lt, gt, and } from "drizzle-orm";
 
 export async function generateBreedingNotifications(userId: number) {
