@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `budget_alerts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `budget_id` int NOT NULL,\n  `farm_id` int NOT NULL,\n  `alert_type` enum('warning','critical','exceeded') NOT NULL,\n  `threshold_percentage` int NOT NULL DEFAULT 80,\n  `current_spending` decimal(12,2) NOT NULL,\n  `budget_amount` decimal(12,2) NOT NULL,\n  `is_read` boolean NOT NULL DEFAULT false,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `budget_alerts_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS `budget_alerts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `budget_id` int NOT NULL,\n  `farm_id` int NOT NULL,\n  `alert_type` enum('warning','critical','exceeded') NOT NULL,\n  `threshold_percentage` int NOT NULL DEFAULT 80,\n  `current_spending` decimal(12,2) NOT NULL,\n  `budget_amount` decimal(12,2) NOT NULL,\n  `is_read` boolean NOT NULL DEFAULT false,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `budget_alerts_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 146
+}

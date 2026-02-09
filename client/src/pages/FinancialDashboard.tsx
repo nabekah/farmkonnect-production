@@ -12,10 +12,12 @@ import { DollarSign, TrendingUp, TrendingDown, AlertCircle, Plus } from "lucide-
 import { toast } from "sonner";
 import { ExpenseRevenueHistory } from "@/components/ExpenseRevenueHistory";
 import { RecurringExpenseManager } from "@/components/RecurringExpenseManager";
+import { BudgetAlertsWidget } from "@/components/BudgetAlertsWidget";
 import { generateExpensePDF, generateRevenuePDF, downloadTextFile } from "@/lib/exportPdf";
 
 export const FinancialDashboard: React.FC = () => {
   const { user } = useAuth();
+  const utils = trpc.useUtils();
   const [dateRange, setDateRange] = useState<"month" | "quarter" | "year">("month");
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
@@ -24,14 +26,16 @@ export const FinancialDashboard: React.FC = () => {
   // Fetch user's farms
   const { data: farms = [] } = trpc.farms.list.useQuery();
 
-  // Set default farm on load
+  // Set default to "all" on load
   React.useEffect(() => {
     if (farms.length > 0 && !selectedFarmId) {
-      setSelectedFarmId(farms[0].id.toString());
+      setSelectedFarmId("all");
     }
   }, [farms, selectedFarmId]);
 
-  const farmId = selectedFarmId || (farms[0]?.id.toString() ?? "");
+  // Get farm IDs for queries - "all" means all farms
+  const farmIds = selectedFarmId === "all" ? farms.map(f => f.id.toString()) : [selectedFarmId];
+  const farmId = selectedFarmId === "all" ? farms.map(f => f.id.toString()).join(",") : selectedFarmId;
 
   // Expense form state
   const [expenseForm, setExpenseForm] = useState({
@@ -67,22 +71,22 @@ export const FinancialDashboard: React.FC = () => {
   // Fetch financial data
   const { data: summary } = trpc.financialManagement.getFinancialSummary.useQuery(
     farmId ? { farmId, startDate, endDate } : undefined,
-    { enabled: !!farmId }
+    { enabled: !!farmId, staleTime: 0, gcTime: 0 }
   );
 
   const { data: expenseBreakdown } = trpc.financialManagement.getExpenseBreakdown.useQuery(
     farmId ? { farmId, startDate, endDate } : undefined,
-    { enabled: !!farmId }
+    { enabled: !!farmId, staleTime: 0, gcTime: 0 }
   );
 
   const { data: revenueBreakdown } = trpc.financialManagement.getRevenueBreakdown.useQuery(
     farmId ? { farmId, startDate, endDate } : undefined,
-    { enabled: !!farmId }
+    { enabled: !!farmId, staleTime: 0, gcTime: 0 }
   );
 
   const { data: costPerAnimal } = trpc.financialManagement.calculateCostPerAnimal.useQuery(
     farmId ? { farmId, startDate, endDate } : undefined,
-    { enabled: !!farmId }
+    { enabled: !!farmId, staleTime: 0, gcTime: 0 }
   );
 
   // Mutations
@@ -98,6 +102,11 @@ export const FinancialDashboard: React.FC = () => {
         animalId: ""
       });
       setIsAddExpenseOpen(false);
+      // Invalidate relevant queries to refetch data
+      utils.financialManagement.getExpenses.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+      utils.financialManagement.getExpenseBreakdown.invalidate();
+      utils.financialManagement.calculateCostPerAnimal.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to record expense");
@@ -116,6 +125,11 @@ export const FinancialDashboard: React.FC = () => {
         animalId: ""
       });
       setIsAddRevenueOpen(false);
+      // Invalidate relevant queries to refetch data
+      utils.financialManagement.getRevenue.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+      utils.financialManagement.getRevenueBreakdown.invalidate();
+      utils.financialManagement.calculateCostPerAnimal.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to record revenue");
@@ -200,9 +214,10 @@ export const FinancialDashboard: React.FC = () => {
               onChange={(e) => setSelectedFarmId(e.target.value)}
               className="mt-2 border rounded px-3 py-2 text-sm"
             >
+              <option value="all">📊 All Farms (Consolidated)</option>
               {farms.map((farm: any) => (
                 <option key={farm.id} value={farm.id.toString()}>
-                  {farm.farmName}
+                  🏠 {farm.farmName}
                 </option>
               ))}
             </select>
@@ -496,6 +511,9 @@ export const FinancialDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Budget Alerts Widget */}
+      {farmId && <BudgetAlertsWidget farmId={farmId} />}
 
       {/* Recurring Expense Manager */}
       {farmId && <RecurringExpenseManager farmId={farmId} />}

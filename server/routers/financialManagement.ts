@@ -1,7 +1,7 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { eq, and, gte, lte, sum } from "drizzle-orm";
+import { eq, and, gte, lte, sum, inArray } from "drizzle-orm";
 import {
   expenses,
   revenue,
@@ -81,8 +81,9 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const conditions = [eq(expenses.farmId, parseInt(input.farmId))];
-      if (input.category) conditions.push(eq(expenses.category, input.category));
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const conditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
+      if (input.category) conditions.push(eq(expenses.expenseType, input.category));
       if (input.startDate) conditions.push(gte(expenses.expenseDate, input.startDate));
       if (input.endDate) conditions.push(lte(expenses.expenseDate, input.endDate));
 
@@ -164,7 +165,8 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const conditions = [eq(revenue.farmId, parseInt(input.farmId))];
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const conditions = [farmIds.length > 1 ? inArray(revenue.farmId, farmIds) : eq(revenue.farmId, farmIds[0])];
       if (input.revenueType) conditions.push(eq(revenue.revenueType, input.revenueType));
       if (input.startDate) conditions.push(gte(revenue.revenueDate, input.startDate));
       if (input.endDate) conditions.push(lte(revenue.revenueDate, input.endDate));
@@ -181,6 +183,7 @@ export const financialManagementRouter = router({
 
   /**
    * Get financial summary (total revenue, expenses, profit, margin)
+   * Supports single farm or multiple farms (comma-separated)
    */
   getFinancialSummary: protectedProcedure
     .input(z.object({
@@ -192,8 +195,10 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const expenseConditions = [eq(expenses.farmId, parseInt(input.farmId))];
-      const revenueConditions = [eq(revenue.farmId, parseInt(input.farmId))];
+      // Support multiple farms (comma-separated)
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const expenseConditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
+      const revenueConditions = [farmIds.length > 1 ? inArray(revenue.farmId, farmIds) : eq(revenue.farmId, farmIds[0])];
 
       if (input.startDate) {
         expenseConditions.push(gte(expenses.expenseDate, input.startDate));
@@ -240,7 +245,8 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const conditions = [eq(expenses.farmId, parseInt(input.farmId))];
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const conditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
       if (input.startDate) conditions.push(gte(expenses.expenseDate, input.startDate));
       if (input.endDate) conditions.push(lte(expenses.expenseDate, input.endDate));
 
@@ -275,7 +281,8 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const conditions = [eq(expenses.farmId, parseInt(input.farmId))];
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const conditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
       if (input.startDate) conditions.push(gte(expenses.expenseDate, input.startDate));
       if (input.endDate) conditions.push(lte(expenses.expenseDate, input.endDate));
 
@@ -314,7 +321,8 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const conditions = [eq(revenue.farmId, parseInt(input.farmId))];
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const conditions = [farmIds.length > 1 ? inArray(revenue.farmId, farmIds) : eq(revenue.farmId, farmIds[0])];
       if (input.startDate) conditions.push(gte(revenue.revenueDate, input.startDate));
       if (input.endDate) conditions.push(lte(revenue.revenueDate, input.endDate));
 

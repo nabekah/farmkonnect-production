@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `recurring_expense_templates` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `farm_id` int NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `category` enum('feed','medication','labor','equipment','utilities','transport','veterinary','fertilizer','seeds','pesticides','water','rent','insurance','maintenance','other') NOT NULL,\n  `description` varchar(500),\n  `amount` decimal(12,2) NOT NULL,\n  `frequency` enum('daily','weekly','biweekly','monthly','quarterly','yearly') NOT NULL,\n  `start_date` date NOT NULL,\n  `end_date` date,\n  `is_active` boolean NOT NULL DEFAULT true,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `recurring_expense_templates_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS `recurring_expense_templates` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `farm_id` int NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `category` enum('feed','medication','labor','equipment','utilities','transport','veterinary','fertilizer','seeds','pesticides','water','rent','insurance','maintenance','other') NOT NULL,\n  `description` varchar(500),\n  `amount` decimal(12,2) NOT NULL,\n  `frequency` enum('daily','weekly','biweekly','monthly','quarterly','yearly') NOT NULL,\n  `start_date` date NOT NULL,\n  `end_date` date,\n  `is_active` boolean NOT NULL DEFAULT true,\n  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `recurring_expense_templates_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 206
+}

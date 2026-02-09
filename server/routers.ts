@@ -71,6 +71,7 @@ import { csvImportRouter } from "./routers/csvImport";
 import { ghanaExtensionServicesRouter } from "./routers/ghanaExtensionServices";
 import { financialManagementRouter } from "./routers/financialManagement";
 import { recurringExpensesRouter } from "./routers/recurringExpenses";
+import { budgetAlertsRouter } from "./routers/budgetAlerts";
 import { accountingExportRouter } from "./routers/accountingExport";
 import { expenseNotifications } from "./routers/expenseNotifications";
 import { farmAnalytics } from "./routers/farmAnalytics";
@@ -157,6 +158,7 @@ export const appRouter = router({
   ghanaExtensionServices: ghanaExtensionServicesRouter,
   financialManagement: financialManagementRouter,
   recurringExpenses: recurringExpensesRouter,
+  budgetAlerts: budgetAlertsRouter,
   accountingExport: accountingExportRouter,
   expenseNotifications: expenseNotifications,
   farmAnalytics: farmAnalytics,
