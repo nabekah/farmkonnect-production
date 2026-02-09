@@ -1,28 +1,15 @@
 import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-
-// Veterinarian schema
-const veterinarianSchema = z.object({
-  id: z.number().optional(),
-  name: z.string(),
-  specialty: z.string(),
-  region: z.string(),
-  phone: z.string(),
-  email: z.string().email(),
-  clinicName: z.string().optional(),
-  licenseNumber: z.string().optional(),
-  yearsOfExperience: z.number().optional(),
-  averageRating: z.number().min(0).max(5).optional(),
-  verified: z.boolean().default(false),
-  consultationFee: z.number().optional(),
-  emergencyAvailable: z.boolean().default(true),
-  emergencyFee: z.number().optional(),
-  bio: z.string().optional(),
-  qualifications: z.string().optional(),
-  languages: z.string().optional(),
-  serviceRadius: z.number().optional(),
-});
+import { getDb } from '../db';
+import {
+  veterinaryDirectory,
+  veterinaryReviews,
+  veterinaryAvailability,
+  veterinaryServices,
+  appointments,
+} from '../../drizzle/schema';
+import { eq, and, gte, like, desc, sql } from 'drizzle-orm';
 
 export const veterinaryDirectoryRouter = router({
   /**
@@ -40,109 +27,54 @@ export const veterinaryDirectoryRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock data - replace with actual database query
-        const veterinarians = [
-          {
-            id: 1,
-            name: 'Dr. Kwame Mensah',
-            specialty: 'Cattle',
-            region: 'Ashanti',
-            phone: '+233 24 123 4567',
-            email: 'kwame@vetclinic.com',
-            clinicName: 'Ashanti Veterinary Clinic',
-            licenseNumber: 'VET-2024-001',
-            yearsOfExperience: 12,
-            averageRating: 4.8,
-            totalReviews: 45,
-            verified: true,
-            consultationFee: 150,
-            emergencyAvailable: true,
-            emergencyFee: 300,
-            bio: 'Specialized in cattle health and productivity',
-            qualifications: 'DVM, University of Ghana',
-            languages: 'English, Twi',
-            serviceRadius: 50,
-            availabilityStatus: 'available',
-          },
-          {
-            id: 2,
-            name: 'Dr. Ama Osei',
-            specialty: 'Small Ruminants',
-            region: 'Greater Accra',
-            phone: '+233 24 234 5678',
-            email: 'ama@vetcare.com',
-            clinicName: 'Accra Veterinary Care',
-            licenseNumber: 'VET-2024-002',
-            yearsOfExperience: 8,
-            averageRating: 4.6,
-            totalReviews: 32,
-            verified: true,
-            consultationFee: 120,
-            emergencyAvailable: true,
-            emergencyFee: 250,
-            bio: 'Expert in goat and sheep health management',
-            qualifications: 'DVM, Kwame Nkrumah University',
-            languages: 'English, Ga',
-            serviceRadius: 30,
-            availabilityStatus: 'available',
-          },
-          {
-            id: 3,
-            name: 'Dr. Kofi Boateng',
-            specialty: 'Poultry',
-            region: 'Eastern',
-            phone: '+233 24 345 6789',
-            email: 'kofi@poultryvet.com',
-            clinicName: 'Eastern Poultry Veterinary',
-            licenseNumber: 'VET-2024-003',
-            yearsOfExperience: 6,
-            averageRating: 4.4,
-            totalReviews: 18,
-            verified: false,
-            consultationFee: 100,
-            emergencyAvailable: false,
-            emergencyFee: null,
-            bio: 'Specialized in poultry disease management',
-            qualifications: 'DVM, University of Education',
-            languages: 'English',
-            serviceRadius: 40,
-            availabilityStatus: 'available',
-          },
-        ];
+        const db = getDb();
 
-        // Filter based on input
-        let filtered = veterinarians;
+        // Build query conditions
+        const conditions = [];
 
         if (input.region) {
-          filtered = filtered.filter((v) =>
-            v.region.toLowerCase().includes(input.region!.toLowerCase())
-          );
+          conditions.push(like(veterinaryDirectory.region, `%${input.region}%`));
         }
 
         if (input.specialty) {
-          filtered = filtered.filter((v) =>
-            v.specialty.toLowerCase().includes(input.specialty!.toLowerCase())
-          );
+          conditions.push(like(veterinaryDirectory.specialty, `%${input.specialty}%`));
         }
 
         if (input.minRating !== undefined) {
-          filtered = filtered.filter((v) => v.averageRating >= input.minRating!);
+          conditions.push(gte(veterinaryDirectory.averageRating, input.minRating));
         }
 
         if (input.verified !== undefined) {
-          filtered = filtered.filter((v) => v.verified === input.verified);
+          conditions.push(eq(veterinaryDirectory.verified, input.verified ? 1 : 0));
         }
 
         if (input.emergencyAvailable !== undefined) {
-          filtered = filtered.filter((v) => v.emergencyAvailable === input.emergencyAvailable);
+          conditions.push(eq(veterinaryDirectory.emergencyAvailable, input.emergencyAvailable ? 1 : 0));
         }
 
-        // Pagination
-        const total = filtered.length;
-        const results = filtered.slice(input.offset, input.offset + input.limit);
+        // Fetch veterinarians
+        const vets = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(veterinaryDirectory.averageRating))
+          .limit(input.limit)
+          .offset(input.offset);
+
+        // Get total count
+        const countResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(veterinaryDirectory)
+          .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+        const total = countResult[0]?.count || 0;
 
         return {
-          data: results,
+          data: vets.map((vet) => ({
+            ...vet,
+            verified: vet.verified === 1,
+            emergencyAvailable: vet.emergencyAvailable === 1,
+          })),
           total,
           limit: input.limit,
           offset: input.offset,
@@ -164,75 +96,57 @@ export const veterinaryDirectoryRouter = router({
     .input(z.number())
     .query(async ({ input }) => {
       try {
-        // Mock data
+        const db = getDb();
+
+        // Fetch veterinarian
+        const vet = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(eq(veterinaryDirectory.id, input));
+
+        if (!vet.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Veterinarian not found',
+          });
+        }
+
+        // Fetch services
+        const services = await db
+          .select()
+          .from(veterinaryServices)
+          .where(eq(veterinaryServices.veterinarianId, vet[0].veterinarianId));
+
+        // Fetch availability
+        const availability = await db
+          .select()
+          .from(veterinaryAvailability)
+          .where(eq(veterinaryAvailability.veterinarianId, vet[0].veterinarianId));
+
+        // Fetch recent reviews
+        const reviews = await db
+          .select()
+          .from(veterinaryReviews)
+          .where(eq(veterinaryReviews.veterinarianId, vet[0].veterinarianId))
+          .orderBy(desc(veterinaryReviews.createdAt))
+          .limit(5);
+
         return {
-          id: input,
-          name: 'Dr. Kwame Mensah',
-          specialty: 'Cattle',
-          region: 'Ashanti',
-          phone: '+233 24 123 4567',
-          email: 'kwame@vetclinic.com',
-          clinicName: 'Ashanti Veterinary Clinic',
-          licenseNumber: 'VET-2024-001',
-          yearsOfExperience: 12,
-          averageRating: 4.8,
-          totalReviews: 45,
-          verified: true,
-          consultationFee: 150,
-          emergencyAvailable: true,
-          emergencyFee: 300,
-          bio: 'Specialized in cattle health and productivity',
-          qualifications: 'DVM, University of Ghana',
-          languages: 'English, Twi',
-          serviceRadius: 50,
-          availabilityStatus: 'available',
-          services: [
-            {
-              id: 1,
-              serviceName: 'General Consultation',
-              basePrice: 150,
-              estimatedDuration: 30,
-            },
-            {
-              id: 2,
-              serviceName: 'Vaccination',
-              basePrice: 200,
-              estimatedDuration: 45,
-            },
-            {
-              id: 3,
-              serviceName: 'Surgical Procedure',
-              basePrice: 500,
-              estimatedDuration: 120,
-            },
-          ],
-          availability: [
-            { dayOfWeek: 'monday', startTime: '08:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'tuesday', startTime: '08:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'wednesday', startTime: '08:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'thursday', startTime: '08:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'friday', startTime: '08:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'saturday', startTime: '09:00', endTime: '13:00', isAvailable: true },
-            { dayOfWeek: 'sunday', startTime: '00:00', endTime: '00:00', isAvailable: false },
-          ],
-          recentReviews: [
-            {
-              id: 1,
-              rating: 5,
-              title: 'Excellent service',
-              review: 'Dr. Mensah provided excellent care for my cattle',
-              reviewer: 'John Farmer',
-              createdAt: new Date('2024-02-05'),
-            },
-            {
-              id: 2,
-              rating: 4,
-              title: 'Good professional',
-              review: 'Professional and knowledgeable',
-              reviewer: 'Jane Smith',
-              createdAt: new Date('2024-02-01'),
-            },
-          ],
+          ...vet[0],
+          verified: vet[0].verified === 1,
+          emergencyAvailable: vet[0].emergencyAvailable === 1,
+          services: services.map((s) => ({
+            ...s,
+            isAvailable: s.isAvailable === 1,
+          })),
+          availability: availability.map((a) => ({
+            ...a,
+            isAvailable: a.isAvailable === 1,
+          })),
+          recentReviews: reviews.map((r) => ({
+            ...r,
+            verified: r.verified === 1,
+          })),
         };
       } catch (error) {
         console.error('Error fetching veterinarian details:', error);
@@ -254,29 +168,86 @@ export const veterinaryDirectoryRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock available slots
-        const baseSlots = [
-          '08:00',
-          '09:00',
-          '10:00',
-          '11:00',
-          '13:00',
-          '14:00',
-          '15:00',
-          '16:00',
-        ];
+        const db = getDb();
 
-        // Simulate some booked slots
-        const bookedSlots = ['09:00', '14:00'];
-        const availableSlots = baseSlots.filter((slot) => !bookedSlots.includes(slot));
+        // Get day of week
+        const dayOfWeek = input.date.toLocaleDateString('en-US', { weekday: 'lowercase' });
+
+        // Get availability for this day
+        const vet = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(eq(veterinaryDirectory.id, input.veterinarianId));
+
+        if (!vet.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Veterinarian not found',
+          });
+        }
+
+        const availability = await db
+          .select()
+          .from(veterinaryAvailability)
+          .where(
+            and(
+              eq(veterinaryAvailability.veterinarianId, vet[0].veterinarianId),
+              eq(veterinaryAvailability.dayOfWeek, dayOfWeek as any)
+            )
+          );
+
+        if (!availability.length || !availability[0].isAvailable) {
+          return {
+            veterinarianId: input.veterinarianId,
+            date: input.date,
+            availableSlots: [],
+            totalAvailable: 0,
+          };
+        }
+
+        // Generate time slots (30-minute intervals)
+        const slots = [];
+        const [startHour, startMin] = availability[0].startTime.split(':').map(Number);
+        const [endHour, endMin] = availability[0].endTime.split(':').map(Number);
+
+        let currentHour = startHour;
+        let currentMin = startMin;
+
+        while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
+          const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
+          slots.push(timeStr);
+
+          currentMin += 30;
+          if (currentMin >= 60) {
+            currentMin = 0;
+            currentHour += 1;
+          }
+        }
+
+        // Check for booked appointments
+        const dateStr = input.date.toISOString().split('T')[0];
+        const bookedAppointments = await db
+          .select()
+          .from(appointments)
+          .where(
+            and(
+              eq(appointments.appointmentDate, dateStr),
+              eq(appointments.vetId, vet[0].veterinarianId)
+            )
+          );
+
+        const bookedTimes = bookedAppointments.map((a) => a.appointmentTime);
+        const availableSlots = slots
+          .filter((slot) => !bookedTimes.includes(slot))
+          .map((slot) => ({
+            time: slot,
+            available: true,
+          }));
 
         return {
           veterinarianId: input.veterinarianId,
           date: input.date,
-          availableSlots: availableSlots.map((slot) => ({
-            time: slot,
-            available: true,
-          })),
+          availableSlots,
           totalAvailable: availableSlots.length,
         };
       } catch (error) {
@@ -289,7 +260,7 @@ export const veterinaryDirectoryRouter = router({
     }),
 
   /**
-   * Book an appointment directly from directory
+   * Book an appointment
    */
   bookAppointment: protectedProcedure
     .input(z.object({
@@ -302,11 +273,41 @@ export const veterinaryDirectoryRouter = router({
       consultationType: z.string().optional(),
       reason: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        // Mock booking
+        const db = getDb();
+
+        // Get veterinarian
+        const vet = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(eq(veterinaryDirectory.id, input.veterinarianId));
+
+        if (!vet.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Veterinarian not found',
+          });
+        }
+
+        // Create appointment
+        const appointmentId = `APT-${Date.now()}`;
+        const dateStr = input.appointmentDate.toISOString().split('T')[0];
+
+        await db.insert(appointments).values({
+          id: appointmentId,
+          vetId: vet[0].veterinarianId,
+          farmId: input.farmId.toString(),
+          animalId: input.animalId.toString(),
+          appointmentDate: dateStr,
+          appointmentTime: input.appointmentTime,
+          consultationType: input.consultationType,
+          status: 'confirmed',
+          createdAt: new Date().toISOString(),
+        });
+
         return {
-          appointmentId: `APT-${Date.now()}`,
+          appointmentId,
           veterinarianId: input.veterinarianId,
           animalId: input.animalId,
           appointmentDate: input.appointmentDate,
@@ -326,7 +327,7 @@ export const veterinaryDirectoryRouter = router({
     }),
 
   /**
-   * Add a review for a veterinarian
+   * Add a review
    */
   addReview: protectedProcedure
     .input(z.object({
@@ -340,9 +341,39 @@ export const veterinaryDirectoryRouter = router({
       timeliness: z.number().min(1).max(5).optional(),
       valueForMoney: z.number().min(1).max(5).optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        // Mock review submission
+        const db = getDb();
+
+        // Get veterinarian
+        const vet = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(eq(veterinaryDirectory.id, input.veterinarianId));
+
+        if (!vet.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Veterinarian not found',
+          });
+        }
+
+        // Insert review
+        await db.insert(veterinaryReviews).values({
+          veterinarianId: vet[0].veterinarianId,
+          farmerId: ctx.user?.id || 0,
+          appointmentId: input.appointmentId?.toString(),
+          rating: input.rating,
+          title: input.title,
+          review: input.review,
+          professionalism: input.professionalism,
+          communication: input.communication,
+          timeliness: input.timeliness,
+          valueForMoney: input.valueForMoney,
+          verified: 0,
+          createdAt: new Date().toISOString(),
+        });
+
         return {
           reviewId: `REV-${Date.now()}`,
           veterinarianId: input.veterinarianId,
@@ -369,35 +400,28 @@ export const veterinaryDirectoryRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock featured veterinarians
-        return [
-          {
-            id: 1,
-            name: 'Dr. Kwame Mensah',
-            specialty: 'Cattle',
-            region: 'Ashanti',
-            averageRating: 4.8,
-            totalReviews: 45,
-            consultationFee: 150,
-            clinicName: 'Ashanti Veterinary Clinic',
-            verified: true,
-            featured: true,
-            featureRank: 1,
-          },
-          {
-            id: 2,
-            name: 'Dr. Ama Osei',
-            specialty: 'Small Ruminants',
-            region: 'Greater Accra',
-            averageRating: 4.6,
-            totalReviews: 32,
-            consultationFee: 120,
-            clinicName: 'Accra Veterinary Care',
-            verified: true,
-            featured: true,
-            featureRank: 2,
-          },
-        ];
+        const db = getDb();
+
+        const conditions = [];
+
+        if (input.region) {
+          conditions.push(like(veterinaryDirectory.region, `%${input.region}%`));
+        }
+
+        conditions.push(eq(veterinaryDirectory.verified, 1));
+
+        const featured = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(veterinaryDirectory.averageRating))
+          .limit(input.limit);
+
+        return featured.map((vet) => ({
+          ...vet,
+          verified: vet.verified === 1,
+          emergencyAvailable: vet.emergencyAvailable === 1,
+        }));
       } catch (error) {
         console.error('Error fetching featured veterinarians:', error);
         throw new TRPCError({
@@ -408,7 +432,7 @@ export const veterinaryDirectoryRouter = router({
     }),
 
   /**
-   * Get veterinarian statistics
+   * Get directory statistics
    */
   getStatistics: protectedProcedure
     .input(z.object({
@@ -416,26 +440,48 @@ export const veterinaryDirectoryRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock statistics
+        const db = getDb();
+
+        const conditions = input.region ? [like(veterinaryDirectory.region, `%${input.region}%`)] : [];
+
+        // Get all veterinarians
+        const allVets = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+        const verifiedVets = allVets.filter((v) => v.verified === 1).length;
+        const emergencyAvailable = allVets.filter((v) => v.emergencyAvailable === 1).length;
+
+        // Calculate averages
+        const totalRating = allVets.reduce((sum, v) => sum + (Number(v.averageRating) || 0), 0);
+        const averageRating = allVets.length > 0 ? (totalRating / allVets.length).toFixed(1) : '0';
+
+        const totalFee = allVets.reduce((sum, v) => sum + (Number(v.consultationFee) || 0), 0);
+        const averageConsultationFee = allVets.length > 0 ? Math.round(totalFee / allVets.length) : 0;
+
+        // Group by specialty and region
+        const specialties: Record<string, number> = {};
+        const regions: Record<string, number> = {};
+
+        allVets.forEach((vet) => {
+          specialties[vet.specialty] = (specialties[vet.specialty] || 0) + 1;
+          regions[vet.region] = (regions[vet.region] || 0) + 1;
+        });
+
+        // Get total reviews
+        const reviews = await db.select().from(veterinaryReviews);
+        const totalReviews = reviews.length;
+
         return {
-          totalVeterinarians: 45,
-          verifiedVeterinarians: 38,
-          averageRating: 4.5,
-          specialties: {
-            'Cattle': 18,
-            'Small Ruminants': 12,
-            'Poultry': 10,
-            'Mixed Animals': 5,
-          },
-          regions: {
-            'Ashanti': 12,
-            'Greater Accra': 15,
-            'Eastern': 8,
-            'Western': 10,
-          },
-          emergencyAvailable: 35,
-          averageConsultationFee: 145,
-          totalReviews: 523,
+          totalVeterinarians: allVets.length,
+          verifiedVeterinarians: verifiedVets,
+          averageRating: parseFloat(averageRating as string),
+          specialties,
+          regions,
+          emergencyAvailable,
+          averageConsultationFee,
+          totalReviews,
           averageResponseTime: '2 hours',
         };
       } catch (error) {
@@ -448,7 +494,7 @@ export const veterinaryDirectoryRouter = router({
     }),
 
   /**
-   * Get veterinarians near a location
+   * Get nearby veterinarians
    */
   getNearby: protectedProcedure
     .input(z.object({
@@ -459,29 +505,30 @@ export const veterinaryDirectoryRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock nearby veterinarians
-        return [
-          {
-            id: 1,
-            name: 'Dr. Kwame Mensah',
-            specialty: 'Cattle',
-            distance: 12.5,
-            phone: '+233 24 123 4567',
-            clinicName: 'Ashanti Veterinary Clinic',
-            averageRating: 4.8,
-            verified: true,
-          },
-          {
-            id: 2,
-            name: 'Dr. Ama Osei',
-            specialty: 'Small Ruminants',
-            distance: 28.3,
-            phone: '+233 24 234 5678',
-            clinicName: 'Accra Veterinary Care',
-            averageRating: 4.6,
-            verified: true,
-          },
-        ];
+        const db = getDb();
+
+        const conditions = [];
+
+        if (input.specialty) {
+          conditions.push(like(veterinaryDirectory.specialty, `%${input.specialty}%`));
+        }
+
+        conditions.push(eq(veterinaryDirectory.verified, 1));
+
+        const nearby = await db
+          .select()
+          .from(veterinaryDirectory)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(veterinaryDirectory.averageRating))
+          .limit(10);
+
+        // Calculate distance (simplified - in production use actual GPS calculation)
+        return nearby.map((vet) => ({
+          ...vet,
+          distance: Math.random() * input.radiusKm,
+          verified: vet.verified === 1,
+          emergencyAvailable: vet.emergencyAvailable === 1,
+        }));
       } catch (error) {
         console.error('Error fetching nearby veterinarians:', error);
         throw new TRPCError({

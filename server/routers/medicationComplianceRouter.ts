@@ -1,69 +1,59 @@
 import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-
-// Medication compliance schema
-const medicationComplianceSchema = z.object({
-  id: z.number().optional(),
-  prescriptionId: z.number(),
-  animalId: z.number(),
-  farmId: z.number(),
-  medicationName: z.string(),
-  scheduledDate: z.date(),
-  scheduledTime: z.string().optional(),
-  administeredDate: z.date().optional(),
-  administeredTime: z.string().optional(),
-  dosageGiven: z.string().optional(),
-  status: z.enum(['pending', 'administered', 'missed', 'skipped']).default('pending'),
-  notes: z.string().optional(),
-  sideEffects: z.string().optional(),
-});
+import { getDb } from '../db';
+import { medicationCompliance, medicationComplianceSummary, prescriptions, animals, farms } from '../../drizzle/schema';
+import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 
 export const medicationComplianceRouter = router({
   /**
-   * Get compliance records for a prescription
+   * Get compliance records for a specific prescription
    */
   getByPrescription: protectedProcedure
     .input(z.object({
       prescriptionId: z.number(),
-      status: z.enum(['pending', 'administered', 'missed', 'skipped']).optional(),
+      status: z.string().optional(),
+      limit: z.number().default(50),
+      offset: z.number().default(0),
     }))
     .query(async ({ input }) => {
       try {
-        // Mock data - replace with actual database query
-        const records = [
-          {
-            id: 1,
-            prescriptionId: input.prescriptionId,
-            animalId: 1,
-            medicationName: 'Amoxicillin',
-            scheduledDate: new Date('2024-02-10'),
-            scheduledTime: '08:00',
-            administeredDate: new Date('2024-02-10'),
-            administeredTime: '08:15',
-            dosageGiven: '500mg',
-            status: 'administered',
-            notes: 'Animal ate well after medication',
-          },
-          {
-            id: 2,
-            prescriptionId: input.prescriptionId,
-            animalId: 1,
-            medicationName: 'Amoxicillin',
-            scheduledDate: new Date('2024-02-11'),
-            scheduledTime: '08:00',
-            administeredDate: null,
-            administeredTime: null,
-            dosageGiven: null,
-            status: input.status || 'pending',
-            notes: null,
-          },
-        ];
+        const db = getDb();
 
-        if (input.status) {
-          return records.filter((r) => r.status === input.status);
-        }
-        return records;
+        // Fetch compliance records
+        const records = await db
+          .select()
+          .from(medicationCompliance)
+          .where(
+            and(
+              eq(medicationCompliance.prescriptionId, input.prescriptionId.toString()),
+              input.status ? eq(medicationCompliance.status, input.status as any) : undefined
+            )
+          )
+          .orderBy(desc(medicationCompliance.scheduledDate))
+          .limit(input.limit)
+          .offset(input.offset);
+
+        // Get total count
+        const countResult = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(medicationCompliance)
+          .where(
+            and(
+              eq(medicationCompliance.prescriptionId, input.prescriptionId.toString()),
+              input.status ? eq(medicationCompliance.status, input.status as any) : undefined
+            )
+          );
+
+        const total = countResult[0]?.count || 0;
+
+        return {
+          data: records,
+          total,
+          limit: input.limit,
+          offset: input.offset,
+          hasMore: input.offset + input.limit < total,
+        };
       } catch (error) {
         console.error('Error fetching compliance records:', error);
         throw new TRPCError({
@@ -78,25 +68,40 @@ export const medicationComplianceRouter = router({
    */
   recordAdministration: protectedProcedure
     .input(z.object({
-      complianceId: z.number(),
+      prescriptionId: z.number(),
+      animalId: z.number(),
+      farmId: z.number(),
+      medicationName: z.string(),
+      scheduledDate: z.date(),
       administeredDate: z.date(),
       administeredTime: z.string(),
       dosageGiven: z.string(),
       notes: z.string().optional(),
       sideEffects: z.string().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        // Mock recording
-        return {
-          complianceId: input.complianceId,
-          status: 'administered',
-          administeredDate: input.administeredDate,
+        const db = getDb();
+
+        // Insert compliance record
+        const result = await db.insert(medicationCompliance).values({
+          prescriptionId: input.prescriptionId.toString(),
+          animalId: input.animalId,
+          farmId: input.farmId,
+          medicationName: input.medicationName,
+          scheduledDate: input.scheduledDate.toISOString().split('T')[0],
+          administeredDate: input.administeredDate.toISOString().split('T')[0],
           administeredTime: input.administeredTime,
           dosageGiven: input.dosageGiven,
+          administeredBy: ctx.user?.id,
+          status: 'administered',
           notes: input.notes,
           sideEffects: input.sideEffects,
-          updatedAt: new Date(),
+        });
+
+        return {
+          success: true,
+          message: 'Medication administration recorded successfully',
         };
       } catch (error) {
         console.error('Error recording administration:', error);
@@ -108,26 +113,41 @@ export const medicationComplianceRouter = router({
     }),
 
   /**
-   * Mark medication as missed
+   * Mark dose as missed
    */
   markAsMissed: protectedProcedure
     .input(z.object({
-      complianceId: z.number(),
+      prescriptionId: z.number(),
+      animalId: z.number(),
+      farmId: z.number(),
+      medicationName: z.string(),
+      scheduledDate: z.date(),
       reason: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
       try {
-        return {
-          complianceId: input.complianceId,
+        const db = getDb();
+
+        // Insert missed dose record
+        await db.insert(medicationCompliance).values({
+          prescriptionId: input.prescriptionId.toString(),
+          animalId: input.animalId,
+          farmId: input.farmId,
+          medicationName: input.medicationName,
+          scheduledDate: input.scheduledDate.toISOString().split('T')[0],
           status: 'missed',
-          reason: input.reason,
-          updatedAt: new Date(),
+          notes: input.reason,
+        });
+
+        return {
+          success: true,
+          message: 'Missed dose recorded successfully',
         };
       } catch (error) {
-        console.error('Error marking as missed:', error);
+        console.error('Error marking dose as missed:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to mark medication as missed',
+          message: 'Failed to mark dose as missed',
         });
       }
     }),
@@ -141,25 +161,37 @@ export const medicationComplianceRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock summary
-        return {
-          prescriptionId: input.prescriptionId,
-          totalScheduled: 14,
-          totalAdministered: 12,
-          totalMissed: 2,
-          totalSkipped: 0,
-          compliancePercentage: 85.71,
-          startDate: new Date('2024-02-01'),
-          endDate: new Date('2024-02-14'),
-          status: 'in_progress',
-          alerts: [
-            {
-              type: 'missed_dose',
-              message: '2 doses missed',
-              severity: 'warning',
-            },
-          ],
-        };
+        const db = getDb();
+
+        // Fetch summary
+        const summary = await db
+          .select()
+          .from(medicationComplianceSummary)
+          .where(eq(medicationComplianceSummary.prescriptionId, input.prescriptionId.toString()));
+
+        if (summary.length === 0) {
+          // Calculate from compliance records if summary doesn't exist
+          const records = await db
+            .select()
+            .from(medicationCompliance)
+            .where(eq(medicationCompliance.prescriptionId, input.prescriptionId.toString()));
+
+          const total = records.length;
+          const administered = records.filter((r) => r.status === 'administered').length;
+          const missed = records.filter((r) => r.status === 'missed').length;
+          const skipped = records.filter((r) => r.status === 'skipped').length;
+
+          return {
+            prescriptionId: input.prescriptionId,
+            totalScheduled: total,
+            totalAdministered: administered,
+            totalMissed: missed,
+            totalSkipped: skipped,
+            compliancePercentage: total > 0 ? ((administered / total) * 100).toFixed(2) : '0',
+          };
+        }
+
+        return summary[0];
       } catch (error) {
         console.error('Error fetching compliance summary:', error);
         throw new TRPCError({
@@ -170,7 +202,7 @@ export const medicationComplianceRouter = router({
     }),
 
   /**
-   * Get compliance dashboard for a farm
+   * Get farm-wide compliance dashboard
    */
   getDashboard: protectedProcedure
     .input(z.object({
@@ -178,42 +210,83 @@ export const medicationComplianceRouter = router({
     }))
     .query(async ({ input }) => {
       try {
-        // Mock dashboard
+        const db = getDb();
+
+        // Get all compliance records for the farm
+        const records = await db
+          .select()
+          .from(medicationCompliance)
+          .where(eq(medicationCompliance.farmId, input.farmId));
+
+        // Calculate metrics
+        const total = records.length;
+        const administered = records.filter((r) => r.status === 'administered').length;
+        const missed = records.filter((r) => r.status === 'missed').length;
+        const pending = records.filter((r) => r.status === 'pending').length;
+
+        const averageCompliance = total > 0 ? Math.round((administered / total) * 100) : 0;
+
+        // Get unique animals on medication
+        const uniqueAnimals = new Set(records.map((r) => r.animalId));
+        const animalsWithPerfectCompliance = new Set();
+
+        for (const animalId of uniqueAnimals) {
+          const animalRecords = records.filter((r) => r.animalId === animalId);
+          const animalAdministered = animalRecords.filter((r) => r.status === 'administered').length;
+          if (animalRecords.length > 0 && animalAdministered === animalRecords.length) {
+            animalsWithPerfectCompliance.add(animalId);
+          }
+        }
+
+        // Recent missed doses
+        const recentMissedDoses = records
+          .filter((r) => r.status === 'missed')
+          .sort((a, b) => new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime())
+          .slice(0, 5).length;
+
+        // Compliance trend (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const trendData = [];
+        for (let i = 0; i < 30; i++) {
+          const date = new Date(thirtyDaysAgo);
+          date.setDate(date.getDate() + i);
+          const dateStr = date.toISOString().split('T')[0];
+
+          const dayRecords = records.filter(
+            (r) => r.scheduledDate === dateStr
+          );
+          const dayAdministered = dayRecords.filter((r) => r.status === 'administered').length;
+          const dayCompliance = dayRecords.length > 0 ? Math.round((dayAdministered / dayRecords.length) * 100) : 0;
+
+          trendData.push({
+            date: dateStr,
+            compliance: dayCompliance,
+          });
+        }
+
+        // Animal compliance breakdown
+        const animalComplianceBreakdown = Array.from(uniqueAnimals).map((animalId) => {
+          const animalRecords = records.filter((r) => r.animalId === animalId);
+          const animalAdministered = animalRecords.filter((r) => r.status === 'administered').length;
+          const compliance = animalRecords.length > 0 ? Math.round((animalAdministered / animalRecords.length) * 100) : 0;
+
+          return {
+            animalId,
+            animalName: `Animal ${animalId}`,
+            compliance,
+            status: compliance >= 90 ? 'excellent' : compliance >= 70 ? 'good' : 'needs_attention',
+          };
+        });
+
         return {
-          farmId: input.farmId,
-          averageCompliance: 82.5,
-          totalAnimalsOnMedication: 5,
-          animalsWithPerfectCompliance: 3,
-          animalsWithLowCompliance: 1,
-          recentMissedDoses: 3,
-          upcomingScheduledMedications: 8,
-          complianceTrend: [
-            { date: '2024-02-01', compliance: 75 },
-            { date: '2024-02-02', compliance: 78 },
-            { date: '2024-02-03', compliance: 82 },
-            { date: '2024-02-04', compliance: 85 },
-            { date: '2024-02-05', compliance: 83 },
-          ],
-          animalComplianceBreakdown: [
-            {
-              animalId: 1,
-              animalName: 'Bessie',
-              compliance: 90,
-              status: 'excellent',
-            },
-            {
-              animalId: 2,
-              animalName: 'Daisy',
-              compliance: 75,
-              status: 'good',
-            },
-            {
-              animalId: 3,
-              animalName: 'Goat-01',
-              compliance: 60,
-              status: 'needs_attention',
-            },
-          ],
+          averageCompliance,
+          totalAnimalsOnMedication: uniqueAnimals.size,
+          animalsWithPerfectCompliance: animalsWithPerfectCompliance.size,
+          recentMissedDoses,
+          complianceTrend: trendData,
+          animalComplianceBreakdown,
         };
       } catch (error) {
         console.error('Error fetching compliance dashboard:', error);
@@ -230,39 +303,59 @@ export const medicationComplianceRouter = router({
   getAlerts: protectedProcedure
     .input(z.object({
       farmId: z.number(),
-      severity: z.enum(['critical', 'warning', 'info']).optional(),
     }))
     .query(async ({ input }) => {
       try {
-        // Mock alerts
-        const alerts = [
-          {
-            id: 1,
-            farmId: input.farmId,
-            animalId: 1,
-            animalName: 'Bessie',
-            type: 'missed_dose',
-            severity: 'warning',
-            message: 'Missed dose on 2024-02-10',
-            prescriptionId: 1,
-            createdAt: new Date('2024-02-10'),
-          },
-          {
-            id: 2,
-            farmId: input.farmId,
-            animalId: 2,
-            animalName: 'Daisy',
-            type: 'low_compliance',
-            severity: 'critical',
-            message: 'Compliance below 70% for prescription',
-            prescriptionId: 2,
-            createdAt: new Date('2024-02-09'),
-          },
-        ];
+        const db = getDb();
 
-        if (input.severity) {
-          return alerts.filter((a) => a.severity === input.severity);
+        const alerts = [];
+
+        // Get all compliance records for the farm
+        const records = await db
+          .select()
+          .from(medicationCompliance)
+          .where(eq(medicationCompliance.farmId, input.farmId));
+
+        // Check for missed doses in last 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const missedRecords = records.filter(
+          (r) => r.status === 'missed' && new Date(r.scheduledDate) >= sevenDaysAgo
+        );
+
+        for (const record of missedRecords) {
+          alerts.push({
+            id: `alert-${record.id}`,
+            animalId: record.animalId,
+            animalName: `Animal ${record.animalId}`,
+            severity: 'warning',
+            message: `Missed dose of ${record.medicationName} on ${record.scheduledDate}`,
+            type: 'missed_dose',
+            createdAt: new Date(),
+          });
         }
+
+        // Check for low compliance animals
+        const uniqueAnimals = new Set(records.map((r) => r.animalId));
+        for (const animalId of uniqueAnimals) {
+          const animalRecords = records.filter((r) => r.animalId === animalId);
+          const animalAdministered = animalRecords.filter((r) => r.status === 'administered').length;
+          const compliance = animalRecords.length > 0 ? (animalAdministered / animalRecords.length) * 100 : 0;
+
+          if (compliance < 70) {
+            alerts.push({
+              id: `alert-compliance-${animalId}`,
+              animalId,
+              animalName: `Animal ${animalId}`,
+              severity: compliance < 50 ? 'critical' : 'warning',
+              message: `Low medication compliance (${Math.round(compliance)}%) for animal`,
+              type: 'low_compliance',
+              createdAt: new Date(),
+            });
+          }
+        }
+
         return alerts;
       } catch (error) {
         console.error('Error fetching alerts:', error);
@@ -279,69 +372,92 @@ export const medicationComplianceRouter = router({
   generateReport: protectedProcedure
     .input(z.object({
       farmId: z.number(),
-      startDate: z.date(),
-      endDate: z.date(),
-      format: z.enum(['pdf', 'csv', 'json']).default('pdf'),
+      format: z.enum(['json', 'csv', 'pdf']).default('json'),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .query(async ({ input }) => {
       try {
-        // Mock report generation
-        return {
-          farmId: input.farmId,
-          reportId: `report_${Date.now()}`,
-          format: input.format,
-          startDate: input.startDate,
-          endDate: input.endDate,
+        const db = getDb();
+
+        // Fetch compliance records
+        const records = await db
+          .select()
+          .from(medicationCompliance)
+          .where(eq(medicationCompliance.farmId, input.farmId));
+
+        // Filter by date range if provided
+        let filteredRecords = records;
+        if (input.startDate && input.endDate) {
+          const startStr = input.startDate.toISOString().split('T')[0];
+          const endStr = input.endDate.toISOString().split('T')[0];
+          filteredRecords = records.filter(
+            (r) => r.scheduledDate >= startStr && r.scheduledDate <= endStr
+          );
+        }
+
+        // Calculate summary
+        const total = filteredRecords.length;
+        const administered = filteredRecords.filter((r) => r.status === 'administered').length;
+        const missed = filteredRecords.filter((r) => r.status === 'missed').length;
+        const pending = filteredRecords.filter((r) => r.status === 'pending').length;
+
+        const report = {
           generatedAt: new Date(),
-          downloadUrl: `/reports/${Date.now()}/compliance.${input.format}`,
-          summary: {
-            totalAnimals: 5,
-            averageCompliance: 82.5,
-            totalDoses: 150,
-            administeredDoses: 124,
-            missedDoses: 26,
+          farmId: input.farmId,
+          period: {
+            startDate: input.startDate || new Date(new Date().setDate(new Date().getDate() - 30)),
+            endDate: input.endDate || new Date(),
           },
+          summary: {
+            totalRecords: total,
+            administered,
+            missed,
+            pending,
+            compliancePercentage: total > 0 ? ((administered / total) * 100).toFixed(2) : '0',
+          },
+          details: filteredRecords,
+        };
+
+        return {
+          success: true,
+          format: input.format,
+          data: report,
+          message: `Report generated in ${input.format} format`,
         };
       } catch (error) {
         console.error('Error generating report:', error);
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to generate compliance report',
+          message: 'Failed to generate report',
         });
       }
     }),
 
   /**
-   * Get compliance history for an animal
+   * Get animal compliance history
    */
   getAnimalHistory: protectedProcedure
     .input(z.object({
       animalId: z.number(),
-      limit: z.number().default(50),
+      limit: z.number().default(100),
     }))
     .query(async ({ input }) => {
       try {
-        // Mock history
-        return [
-          {
-            id: 1,
-            prescriptionId: 1,
-            medicationName: 'Amoxicillin',
-            scheduledDate: new Date('2024-02-10'),
-            administeredDate: new Date('2024-02-10'),
-            status: 'administered',
-            dosageGiven: '500mg',
-          },
-          {
-            id: 2,
-            prescriptionId: 1,
-            medicationName: 'Amoxicillin',
-            scheduledDate: new Date('2024-02-11'),
-            administeredDate: null,
-            status: 'pending',
-            dosageGiven: null,
-          },
-        ];
+        const db = getDb();
+
+        const history = await db
+          .select()
+          .from(medicationCompliance)
+          .where(eq(medicationCompliance.animalId, input.animalId))
+          .orderBy(desc(medicationCompliance.scheduledDate))
+          .limit(input.limit);
+
+        return {
+          animalId: input.animalId,
+          totalRecords: history.length,
+          history,
+        };
       } catch (error) {
         console.error('Error fetching animal history:', error);
         throw new TRPCError({
