@@ -1,6 +1,6 @@
 import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
-import { db } from '../db';
+import { getDb } from '../db';
 
 /**
  * Prescriptions Router

@@ -62,6 +62,8 @@ import { budgetAlertsRouter } from "./routers/budgetAlerts";
 import { accountingExportRouter } from "./routers/accountingExport";
 import { expenseNotifications } from "./routers/expenseNotifications";
 import { farmAnalytics } from "./routers/farmAnalytics";
+import { veterinaryAppointmentsRouter } from "./routers/veterinaryAppointments";
+import { prescriptionsRouter } from "./routers/prescriptionsRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -800,6 +802,8 @@ export const appRouter = router({
   sms: smsRouter,
   passwordReset: passwordResetRouter,
   activityApproval: activityApprovalRouter,
+  veterinaryAppointments: veterinaryAppointmentsRouter,
+  prescriptions: prescriptionsRouter,
 });
 
 export type AppRouter = typeof appRouter;
