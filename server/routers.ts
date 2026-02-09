@@ -73,26 +73,26 @@ import { vetAppointmentsRouter } from "./routers/vetAppointments";
 import { healthReportsRouter } from "./routers/healthReports";
 import { medicationTrackingRouter } from "./routers/medicationTracking";
 import { healthTrendsAnalyticsRouter } from "./routers/healthTrendsAnalytics";
-import { searchRouter } from "./routers/search";
-import { searchEnhancementsRouter } from "./routers/searchEnhancements";
-import { multiSpeciesRouter } from "./routers/multiSpecies";
+// import { searchRouter } from "./routers/search";
+// import { searchEnhancementsRouter } from "./routers/searchEnhancements";
+// import { multiSpeciesRouter } from "./routers/multiSpecies";
 import { animalMigrationRouter } from "./routers/animalMigration";
-import { speciesReportsRouter } from "./routers/speciesReports";
+// import { speciesReportsRouter } from "./routers/speciesReports";
 import { veterinaryIntegrationRouter } from "./routers/veterinaryIntegration";
 import { csvImportRouter } from "./routers/csvImport";
 import { ghanaExtensionServicesRouter } from "./routers/ghanaExtensionServices";
-import { financialManagementRouter } from "./routers/financialManagement";
+// import { financialManagementRouter } from "./routers/financialManagement";
 import { recurringExpensesRouter } from "./routers/recurringExpenses";
 import { budgetAlertsRouter } from "./routers/budgetAlerts";
-import { accountingExportRouter } from "./routers/accountingExport";
-import { expenseNotifications } from "./routers/expenseNotifications";
-import { farmAnalytics } from "./routers/farmAnalytics";
-import { vetDirectoryRouter } from "./routers/vetDirectory";
-import { prescriptionManagementRouter } from "./routers/prescriptionManagement";
-import { telemedicineManagementRouter } from "./routers/telemedicineManagement";
-import { insuranceClaimTrackingRouter } from "./routers/insuranceClaimTracking";
-import { prescriptionNotificationsRouter } from "./routers/prescriptionNotifications";
-import { vetRatingsRouter } from "./routers/vetRatings";
+// import { accountingExportRouter } from "./routers/accountingExport";
+// import { expenseNotifications } from "./routers/expenseNotifications";
+// import { farmAnalytics } from "./routers/farmAnalytics";
+// import { vetDirectoryRouter } from "./routers/vetDirectory";
+// import { prescriptionManagementRouter } from "./routers/prescriptionManagement";
+// import { telemedicineManagementRouter } from "./routers/telemedicineManagement";
+// import { insuranceClaimTrackingRouter } from "./routers/insuranceClaimTracking";
+// import { prescriptionNotificationsRouter } from "./routers/prescriptionNotifications";
+// import { vetRatingsRouter } from "./routers/vetRatings";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -172,26 +172,26 @@ export const appRouter = router({
   healthReports: healthReportsRouter,
   medicationTracking: medicationTrackingRouter,
   healthTrendsAnalytics: healthTrendsAnalyticsRouter,
-  search: searchRouter,
-  searchEnhancements: searchEnhancementsRouter,
-  multiSpecies: multiSpeciesRouter,
+  // search: searchRouter,
+  // searchEnhancements: searchEnhancementsRouter,
+  // multiSpecies: multiSpeciesRouter,
   animalMigration: animalMigrationRouter,
-  speciesReports: speciesReportsRouter,
+  // speciesReports: speciesReportsRouter,
   veterinaryIntegration: veterinaryIntegrationRouter,
   csvImport: csvImportRouter,
   ghanaExtensionServices: ghanaExtensionServicesRouter,
-  financialManagement: financialManagementRouter,
+  // financialManagement: financialManagementRouter,
   recurringExpenses: recurringExpensesRouter,
   budgetAlerts: budgetAlertsRouter,
-  accountingExport: accountingExportRouter,
-  expenseNotifications: expenseNotifications,
-  farmAnalytics: farmAnalytics,
-  vetDirectory: vetDirectoryRouter,
-  prescriptionManagement: prescriptionManagementRouter,
-  telemedicineManagement: telemedicineManagementRouter,
-  insuranceClaims: insuranceClaimTrackingRouter,
-  prescriptionNotifications: prescriptionNotificationsRouter,
-  vetRatings: vetRatingsRouter,
+  // accountingExport: accountingExportRouter,
+  // expenseNotifications: expenseNotifications,
+  // farmAnalytics: farmAnalytics,
+  // vetDirectory: vetDirectoryRouter,
+  // prescriptionManagement: prescriptionManagementRouter,
+  // telemedicineManagement: telemedicineManagementRouter,
+  // insuranceClaims: insuranceClaimTrackingRouter,
+  // prescriptionNotifications: prescriptionNotificationsRouter,
+  // vetRatings: vetRatingsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
