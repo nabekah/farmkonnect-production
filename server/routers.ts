@@ -87,6 +87,7 @@ import {
 import { eq } from "drizzle-orm";
 
 export const appRouter = router({
+  security: securityRouter,
   system: systemRouter,
   rbac: rbacRouter,
   invitations: invitationsRouter,
@@ -110,7 +111,6 @@ export const appRouter = router({
   export: exportRouter,
   alertHistory: alertHistoryRouter,
   fertilizer: fertilizerRouter,
-  reportTemplates: reportTemplatesRouter,
   admin: adminRouter,
   animalBulkRegistration: animalBulkRegistrationRouter,
   animalBulkEditing: animalBulkEditingRouter,
@@ -793,17 +793,6 @@ export const appRouter = router({
         return await db.delete(themeConfigs).where(eq(themeConfigs.userId, ctx.user.id));
       }),
   }),
-
-  notifications: notificationRouter,
-  feeding: feedingRouter,
-  marketplace: marketplaceRouter,
-  iot: iotRouter,
-  weather: weatherRouter,
-  weatherNotifications: weatherNotificationRouter,
-  cropPlanning: cropPlanningRouter,
-  inventory: inventoryRouter,
-  training: trainingRouter,
-  roleManagement: roleManagementRouter,
   merl: merlRouter,
   transport: transportRouter,
   business: businessRouter,
@@ -815,3 +804,5 @@ export const appRouter = router({
 });
 
 export type AppRouter = typeof appRouter;
+
+

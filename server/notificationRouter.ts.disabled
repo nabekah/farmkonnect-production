@@ -1,85 +1,84 @@
 import { router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
-import { getDb } from "./db";
-import { TRPCError } from "@trpc/server";
+import { db } from "./db";
 import { notifications } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 
 export const notificationRouter = router({
-  getAll: protectedProcedure
-    .input(z.object({ limit: z.number().default(50), offset: z.number().default(0) }).optional())
+  // Get all notifications for current user
+  getNotifications: protectedProcedure
+    .input(z.object({ 
+      status: z.enum(['unread', 'read', 'archived']).optional(),
+      limit: z.number().default(20),
+      offset: z.number().default(0)
+    }).optional())
     .query(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) return [];
-      const limit = input?.limit || 50;
-      const offset = input?.offset || 0;
-      return await db.select().from(notifications)
-        .where(eq(notifications.userId, ctx.user.id))
-        .orderBy((n: any) => [n.createdAt])
-        .limit(limit)
-        .offset(offset);
+      const where = input?.status 
+        ? and(eq(notifications.userId, ctx.user.id), eq(notifications.status, input.status))
+        : eq(notifications.userId, ctx.user.id);
+      
+      const notifs = await db
+        .select()
+        .from(notifications)
+        .where(where)
+        .orderBy((t) => t.createdAt)
+        .limit(input?.limit || 20)
+        .offset(input?.offset || 0);
+      
+      return notifs;
     }),
 
-  getUnread: protectedProcedure
-    .query(async ({ ctx }) => {
-      const db = await getDb();
-      if (!db) return [];
-      return await db.select().from(notifications)
-        .where(and(eq(notifications.userId, ctx.user.id), eq(notifications.isRead, false)))
-        .orderBy((n: any) => [n.createdAt]);
-    }),
-
+  // Mark notification as read
   markAsRead: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ notificationId: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      return await db.update(notifications)
-        .set({ isRead: true, readAt: new Date() })
-        .where(eq(notifications.id, input.id));
+      const result = await db
+        .update(notifications)
+        .set({ status: 'read', readAt: new Date().toISOString() })
+        .where(and(
+          eq(notifications.id, input.notificationId),
+          eq(notifications.userId, ctx.user.id)
+        ));
+      
+      return { success: true };
     }),
 
-  markAllAsRead: protectedProcedure
-    .mutation(async ({ ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      return await db.update(notifications)
-        .set({ isRead: true, readAt: new Date() })
-        .where(eq(notifications.userId, ctx.user.id));
-    }),
-
-  delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      return await db.delete(notifications).where(eq(notifications.id, input.id));
-    }),
-
-  create: protectedProcedure
+  // Create notification
+  createNotification: protectedProcedure
     .input(z.object({
-      type: z.enum(["vaccination_due", "vaccination_overdue", "breeding_due", "breeding_overdue", "health_alert", "performance_alert", "feed_low", "task_reminder", "system_alert"]),
+      userId: z.number(),
+      farmId: z.number().optional(),
+      type: z.string(),
       title: z.string(),
       message: z.string(),
-      relatedAnimalId: z.number().optional(),
-      relatedBreedingId: z.number().optional(),
-      relatedVaccinationId: z.number().optional(),
-      priority: z.enum(["low", "medium", "high", "critical"]).default("medium"),
-      actionUrl: z.string().optional(),
+      actionUrl: z.string().optional()
     }))
-    .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      return await db.insert(notifications).values({
-        userId: ctx.user.id,
+    .mutation(async ({ input }) => {
+      const result = await db.insert(notifications).values({
+        userId: input.userId,
+        farmId: input.farmId,
         type: input.type,
         title: input.title,
         message: input.message,
-        relatedAnimalId: input.relatedAnimalId,
-        relatedBreedingId: input.relatedBreedingId,
-        relatedVaccinationId: input.relatedVaccinationId,
-        priority: input.priority,
         actionUrl: input.actionUrl,
+        status: 'unread',
+        createdAt: new Date().toISOString()
       });
+      
+      return { success: true, id: result.insertId };
     }),
+
+  // Delete notification
+  deleteNotification: protectedProcedure
+    .input(z.object({ notificationId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .delete(notifications)
+        .where(and(
+          eq(notifications.id, input.notificationId),
+          eq(notifications.userId, ctx.user.id)
+        ));
+      
+      return { success: true };
+    })
 });

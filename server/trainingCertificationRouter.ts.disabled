@@ -1,0 +1,155 @@
+import { router, protectedProcedure } from "./_core/trpc";
+import { z } from "zod";
+import { db } from "./db";
+import { trainingSessions, trainingCourses } from "../drizzle/schema";
+import { eq, and } from "drizzle-orm";
+
+export const trainingCertificationRouter = router({
+  // Get all training courses
+  getCourses: protectedProcedure
+    .input(z.object({
+      farmId: z.number().optional(),
+      status: z.enum(['active', 'completed', 'archived']).optional()
+    }).optional())
+    .query(async ({ input }) => {
+      const courses = await db
+        .select()
+        .from(trainingCourses)
+        .orderBy((t) => t.createdAt);
+      
+      return courses;
+    }),
+
+  // Create training course
+  createCourse: protectedProcedure
+    .input(z.object({
+      title: z.string(),
+      description: z.string(),
+      duration: z.number(),
+      category: z.string(),
+      level: z.enum(['beginner', 'intermediate', 'advanced']),
+      instructor: z.string(),
+      maxParticipants: z.number().optional(),
+      syllabus: z.string().optional()
+    }))
+    .mutation(async ({ input }) => {
+      const result = await db.insert(trainingCourses).values({
+        title: input.title,
+        description: input.description,
+        duration: input.duration,
+        category: input.category,
+        level: input.level,
+        instructor: input.instructor,
+        maxParticipants: input.maxParticipants,
+        syllabus: input.syllabus,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      });
+      
+      return { success: true, courseId: result.insertId };
+    }),
+
+  // Enroll user in course
+  enrollCourse: protectedProcedure
+    .input(z.object({
+      courseId: z.number(),
+      farmId: z.number()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await db.insert(trainingSessions).values({
+        userId: ctx.user.id,
+        courseId: input.courseId,
+        farmId: input.farmId,
+        enrollmentDate: new Date().toISOString(),
+        status: 'enrolled',
+        progress: 0,
+        createdAt: new Date().toISOString()
+      });
+      
+      return { success: true, sessionId: result.insertId };
+    }),
+
+  // Get user's training sessions
+  getTrainingSessions: protectedProcedure
+    .input(z.object({
+      status: z.enum(['enrolled', 'in-progress', 'completed']).optional()
+    }).optional())
+    .query(async ({ ctx, input }) => {
+      const sessions = await db
+        .select()
+        .from(trainingSessions)
+        .where(eq(trainingSessions.userId, ctx.user.id))
+        .orderBy((t) => t.enrollmentDate);
+      
+      return sessions;
+    }),
+
+  // Update training progress
+  updateProgress: protectedProcedure
+    .input(z.object({
+      sessionId: z.number(),
+      progress: z.number().min(0).max(100),
+      status: z.enum(['enrolled', 'in-progress', 'completed']).optional()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const updates: any = { progress: input.progress };
+      if (input.status) {
+        updates.status = input.status;
+        if (input.status === 'completed') {
+          updates.completionDate = new Date().toISOString();
+        }
+      }
+      
+      await db
+        .update(trainingSessions)
+        .set(updates)
+        .where(eq(trainingSessions.id, input.sessionId));
+      
+      return { success: true };
+    }),
+
+  // Issue certification
+  issueCertification: protectedProcedure
+    .input(z.object({
+      sessionId: z.number(),
+      certificateNumber: z.string(),
+      expiryDate: z.string().optional()
+    }))
+    .mutation(async ({ input }) => {
+      await db
+        .update(trainingSessions)
+        .set({
+          certificateIssued: true,
+          certificateNumber: input.certificateNumber,
+          certificateDate: new Date().toISOString(),
+          certificateExpiry: input.expiryDate
+        })
+        .where(eq(trainingSessions.id, input.sessionId));
+      
+      return { success: true, certificateNumber: input.certificateNumber };
+    }),
+
+  // Get training analytics
+  getTrainingAnalytics: protectedProcedure
+    .input(z.object({ farmId: z.number() }))
+    .query(async ({ input }) => {
+      const sessions = await db
+        .select()
+        .from(trainingSessions)
+        .where(eq(trainingSessions.farmId, input.farmId));
+      
+      const totalEnrolled = sessions.length;
+      const completed = sessions.filter(s => s.status === 'completed').length;
+      const inProgress = sessions.filter(s => s.status === 'in-progress').length;
+      const certified = sessions.filter(s => s.certificateIssued).length;
+      
+      return {
+        totalEnrolled,
+        completed,
+        inProgress,
+        certified,
+        completionRate: totalEnrolled > 0 ? (completed / totalEnrolled) * 100 : 0,
+        certificationRate: totalEnrolled > 0 ? (certified / totalEnrolled) * 100 : 0
+      };
+    })
+});

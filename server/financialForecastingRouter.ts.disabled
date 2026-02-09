@@ -1,0 +1,204 @@
+import { router, protectedProcedure } from "./_core/trpc";
+import { z } from "zod";
+
+export const financialForecastingRouter = router({
+  // Calculate revenue forecast
+  getRevenueForecast: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+      months: z.number().default(12),
+      historicalMonths: z.number().default(12)
+    }))
+    .query(async ({ input }) => {
+      // Mock forecast data based on seasonal patterns
+      const forecast = [];
+      const baseRevenue = 5000;
+      const seasonalFactors = [0.8, 0.85, 0.9, 1.0, 1.1, 1.15, 1.2, 1.15, 1.0, 0.9, 0.85, 0.8];
+      
+      for (let i = 0; i < input.months; i++) {
+        const month = new Date();
+        month.setMonth(month.getMonth() + i);
+        const seasonalFactor = seasonalFactors[month.getMonth()];
+        const revenue = baseRevenue * seasonalFactor * (1 + Math.random() * 0.1);
+        
+        forecast.push({
+          month: month.toISOString().split('T')[0],
+          revenue: Math.round(revenue),
+          confidence: 95 - (i * 2) // Confidence decreases over time
+        });
+      }
+      
+      return forecast;
+    }),
+
+  // Calculate expense forecast
+  getExpenseForecast: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+      months: z.number().default(12)
+    }))
+    .query(async ({ input }) => {
+      const forecast = [];
+      const baseExpense = 3000;
+      const seasonalFactors = [1.1, 1.0, 0.95, 0.9, 0.85, 0.8, 0.85, 0.9, 1.0, 1.1, 1.15, 1.2];
+      
+      for (let i = 0; i < input.months; i++) {
+        const month = new Date();
+        month.setMonth(month.getMonth() + i);
+        const seasonalFactor = seasonalFactors[month.getMonth()];
+        const expense = baseExpense * seasonalFactor * (1 + Math.random() * 0.08);
+        
+        forecast.push({
+          month: month.toISOString().split('T')[0],
+          expense: Math.round(expense),
+          category: ['Feed', 'Labor', 'Equipment', 'Utilities'][Math.floor(Math.random() * 4)]
+        });
+      }
+      
+      return forecast;
+    }),
+
+  // Calculate profitability forecast
+  getProfitabilityForecast: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+      months: z.number().default(12)
+    }))
+    .query(async ({ input }) => {
+      const revenues = [];
+      const expenses = [];
+      const profits = [];
+      
+      const baseRevenue = 5000;
+      const baseExpense = 3000;
+      const seasonalFactors = [0.8, 0.85, 0.9, 1.0, 1.1, 1.15, 1.2, 1.15, 1.0, 0.9, 0.85, 0.8];
+      
+      for (let i = 0; i < input.months; i++) {
+        const month = new Date();
+        month.setMonth(month.getMonth() + i);
+        const monthIndex = month.getMonth();
+        
+        const revenue = Math.round(baseRevenue * seasonalFactors[monthIndex] * (1 + Math.random() * 0.1));
+        const expense = Math.round(baseExpense * (2 - seasonalFactors[monthIndex]) * (1 + Math.random() * 0.08));
+        const profit = revenue - expense;
+        
+        revenues.push(revenue);
+        expenses.push(expense);
+        profits.push(profit);
+      }
+      
+      const totalRevenue = revenues.reduce((a, b) => a + b, 0);
+      const totalExpense = expenses.reduce((a, b) => a + b, 0);
+      const totalProfit = profits.reduce((a, b) => a + b, 0);
+      const avgProfit = Math.round(totalProfit / input.months);
+      const profitMargin = Math.round((totalProfit / totalRevenue) * 100);
+      
+      return {
+        forecast: profits.map((profit, i) => ({
+          month: new Date(new Date().getFullYear(), new Date().getMonth() + i).toISOString().split('T')[0],
+          profit,
+          revenue: revenues[i],
+          expense: expenses[i]
+        })),
+        summary: {
+          totalRevenue,
+          totalExpense,
+          totalProfit,
+          avgProfit,
+          profitMargin
+        }
+      };
+    }),
+
+  // Get budget recommendations
+  getBudgetRecommendations: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+      targetProfit: z.number().optional()
+    }))
+    .query(async ({ input }) => {
+      const recommendations = [
+        {
+          category: 'Feed Optimization',
+          currentBudget: 1200,
+          recommendedBudget: 1000,
+          savings: 200,
+          impact: 'High',
+          description: 'Optimize feed sourcing and bulk purchasing to reduce costs by 15-20%'
+        },
+        {
+          category: 'Labor Efficiency',
+          currentBudget: 1500,
+          recommendedBudget: 1400,
+          savings: 100,
+          impact: 'Medium',
+          description: 'Implement scheduling optimization to reduce overtime expenses'
+        },
+        {
+          category: 'Equipment Maintenance',
+          currentBudget: 800,
+          recommendedBudget: 900,
+          savings: -100,
+          impact: 'High',
+          description: 'Increase preventive maintenance budget to avoid costly repairs'
+        },
+        {
+          category: 'Utilities',
+          currentBudget: 500,
+          recommendedBudget: 400,
+          savings: 100,
+          impact: 'Medium',
+          description: 'Upgrade to energy-efficient systems to reduce electricity costs'
+        }
+      ];
+      
+      return {
+        recommendations,
+        totalSavings: recommendations.reduce((sum, r) => sum + r.savings, 0),
+        projectedProfitIncrease: recommendations.reduce((sum, r) => sum + Math.max(r.savings, 0), 0)
+      };
+    }),
+
+  // Get cash flow analysis
+  getCashFlowAnalysis: protectedProcedure
+    .input(z.object({
+      farmId: z.number(),
+      months: z.number().default(6)
+    }))
+    .query(async ({ input }) => {
+      const cashFlow = [];
+      let cumulativeCash = 10000; // Starting cash
+      
+      for (let i = 0; i < input.months; i++) {
+        const month = new Date();
+        month.setMonth(month.getMonth() + i);
+        
+        const inflow = Math.round(5000 + Math.random() * 2000);
+        const outflow = Math.round(3000 + Math.random() * 1500);
+        const netFlow = inflow - outflow;
+        cumulativeCash += netFlow;
+        
+        cashFlow.push({
+          month: month.toISOString().split('T')[0],
+          inflow,
+          outflow,
+          netFlow,
+          cumulativeCash: Math.max(cumulativeCash, 0)
+        });
+      }
+      
+      const minCash = Math.min(...cashFlow.map(c => c.cumulativeCash));
+      const avgMonthlyFlow = Math.round(cashFlow.reduce((sum, c) => sum + c.netFlow, 0) / input.months);
+      
+      return {
+        cashFlow,
+        summary: {
+          startingCash: 10000,
+          endingCash: cumulativeCash,
+          minCash,
+          avgMonthlyFlow,
+          riskLevel: minCash < 2000 ? 'High' : minCash < 5000 ? 'Medium' : 'Low'
+        }
+      };
+    })
+});
