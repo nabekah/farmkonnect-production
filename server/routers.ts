@@ -74,6 +74,7 @@ import { sellerAnalyticsRouter } from "./routers/sellerAnalyticsRouter";
 import { inventoryManagementRouter } from "./routers/inventoryManagementRouter";
 import { marketplaceFinancialRouter } from "./routers/marketplaceFinancialRouter";
 import { settlementTaxPayoutRouter } from "./routers/settlementTaxPayoutRouter";
+import { fieldWorkerRouter } from "./routers/fieldWorkerRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -825,6 +826,7 @@ export const appRouter = router({
   inventoryManagement: inventoryManagementRouter,
   marketplaceFinancial: marketplaceFinancialRouter,
   settlementTaxPayout: settlementTaxPayoutRouter,
+  fieldWorker: fieldWorkerRouter,
 });
 
 export type AppRouter = typeof appRouter;
