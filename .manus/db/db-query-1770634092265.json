@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS performance_alerts (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId VARCHAR(255) NOT NULL,\n  farmId INT NOT NULL,\n  alertType ENUM('low_activity', 'low_quality', 'high_absence', 'task_overdue', 'attendance_drop') NOT NULL,\n  severity ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',\n  message TEXT NOT NULL,\n  isRead BOOLEAN DEFAULT FALSE,\n  readAt TIMESTAMP NULL,\n  actionTaken VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (farmId) REFERENCES farms(id) ON DELETE CASCADE,\n  INDEX idx_userId (userId),\n  INDEX idx_farmId (farmId),\n  INDEX idx_severity (severity),\n  INDEX idx_isRead (isRead),\n  INDEX idx_createdAt (createdAt)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS performance_alerts (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId VARCHAR(255) NOT NULL,\n  farmId INT NOT NULL,\n  alertType ENUM('low_activity', 'low_quality', 'high_absence', 'task_overdue', 'attendance_drop') NOT NULL,\n  severity ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',\n  message TEXT NOT NULL,\n  isRead BOOLEAN DEFAULT FALSE,\n  readAt TIMESTAMP NULL,\n  actionTaken VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  FOREIGN KEY (farmId) REFERENCES farms(id) ON DELETE CASCADE,\n  INDEX idx_userId (userId),\n  INDEX idx_farmId (farmId),\n  INDEX idx_severity (severity),\n  INDEX idx_isRead (isRead),\n  INDEX idx_createdAt (createdAt)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 225
+}

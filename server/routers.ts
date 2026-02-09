@@ -32,6 +32,9 @@ import { rbacRouter } from "./routers/rbac";
 import { invitationsRouter } from "./routers/invitations";
 import { auditLogsRouter } from "./routers/auditLogs";
 import { workerPerformanceRouter } from "./routers/workerPerformance";
+import { mfaRouter } from "./routers/mfa";
+import { userApprovalRouter } from "./routers/userApproval";
+import { performanceAlertsRouter } from "./routers/performanceAlerts";
 import { exportRouter } from "./exportRouter";
 import { alertHistoryRouter } from "./alertHistoryRouter";
 import { fertilizerRouter } from "./fertilizerRouter";
@@ -115,6 +118,9 @@ export const appRouter = router({
   invitations: invitationsRouter,
   auditLogs: auditLogsRouter,
   workerPerformance: workerPerformanceRouter,
+  mfa: mfaRouter,
+  userApproval: userApprovalRouter,
+  performanceAlerts: performanceAlertsRouter,
   upload: uploadRouter,
   financial: financialRouter,
   livestock: livestockRouter,

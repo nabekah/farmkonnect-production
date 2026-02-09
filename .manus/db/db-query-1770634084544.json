@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS mfa_settings (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId VARCHAR(255) NOT NULL UNIQUE,\n  totpSecret VARCHAR(255),\n  totpEnabled BOOLEAN DEFAULT FALSE,\n  smsPhoneNumber VARCHAR(20),\n  smsEnabled BOOLEAN DEFAULT FALSE,\n  backupCodes JSON,\n  lastUsedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_userId (userId)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS mfa_settings (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId VARCHAR(255) NOT NULL UNIQUE,\n  totpSecret VARCHAR(255),\n  totpEnabled BOOLEAN DEFAULT FALSE,\n  smsPhoneNumber VARCHAR(20),\n  smsEnabled BOOLEAN DEFAULT FALSE,\n  backupCodes JSON,\n  lastUsedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_userId (userId)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 214
+}
