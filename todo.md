@@ -326,6 +326,40 @@
 - [x] Create budget optimization recommendations engine
 - [x] Build Financial Forecasting dashboard with visualizations
 
+## Mobile App for Field Workers (IN PROGRESS)
+- [ ] Design React Native mobile app architecture
+- [ ] Set up React Native project with Expo
+- [ ] Create mobile-optimized UI components
+- [ ] Implement offline sync with SQLite
+- [ ] Build attendance tracking (clock in/out)
+- [ ] Add biometric authentication (fingerprint)
+- [ ] Implement push notifications
+- [ ] Create mobile dashboard
+- [ ] Add camera integration for photo evidence
+- [ ] Build sync queue for offline data
+- [ ] Add location tracking for field work
+- [ ] Create mobile worker profile
+- [ ] Implement data encryption for offline storage
+- [ ] Add battery optimization
+- [ ] Write mobile app tests
+
+## Advanced Workforce Analytics (IN PROGRESS)
+- [ ] Create workforce analytics backend service
+- [ ] Implement turnover prediction model
+- [ ] Build salary benchmarking engine
+- [ ] Create productivity metrics calculation
+- [ ] Implement retention risk scoring
+- [ ] Build performance prediction model
+- [ ] Create workforce analytics tRPC router
+- [ ] Build Workforce Analytics Dashboard
+- [ ] Add predictive turnover charts
+- [ ] Add salary benchmarking comparison
+- [ ] Create productivity trends visualization
+- [ ] Add retention risk alerts
+- [ ] Build workforce planning recommendations
+- [ ] Create export reports functionality
+- [ ] Write analytics tests
+
 ## Current Issues and Enhancements
 - [x] Fix crop list dropdown - not loading crops properly
 - [x] Fix marketplace product details display
