@@ -68,6 +68,7 @@ import { medicationComplianceRouter } from "./routers/medicationComplianceRouter
 import { veterinaryDirectoryRouter } from "./routers/veterinaryDirectoryRouter";
 import { notificationRouter } from "./routers/notificationRouter";
 import { veterinarianVerificationRouter } from "./routers/veterinarianVerificationRouter";
+import { complianceAutomationRouter } from "./routers/complianceAutomationRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -812,6 +813,7 @@ export const appRouter = router({
   veterinaryDirectory: veterinaryDirectoryRouter,
   notifications: notificationRouter,
   veterinarianVerification: veterinarianVerificationRouter,
+  complianceAutomation: complianceAutomationRouter,
 });
 
 export type AppRouter = typeof appRouter;

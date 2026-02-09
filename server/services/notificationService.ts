@@ -2,14 +2,13 @@ import { TRPCError } from '@trpc/server';
 import { getDb } from '../db';
 import { medicationCompliance, farms, animals } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
-
-// Twilio configuration
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || '';
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || '';
-const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || '';
-
-// SendGrid configuration
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
+import {
+  sendSMSWithTwilio,
+  sendEmailWithSendGrid,
+  retrySMSDelivery,
+  retryEmailDelivery,
+  getDeliveryStatus,
+} from './twilioSendgridService';
 
 interface ComplianceAlert {
   farmId: number;
@@ -25,7 +24,7 @@ interface ComplianceAlert {
 interface NotificationResult {
   success: boolean;
   method: 'sms' | 'email' | 'both';
-  messageId?: string;
+  messageIds?: { sms?: string; email?: string };
   error?: string;
 }
 
@@ -37,19 +36,11 @@ export async function sendSMSAlert(
   message: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
-    if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-      console.warn('Twilio credentials not configured');
-      return { success: false, error: 'SMS service not configured' };
-    }
-
-    // In production, use actual Twilio SDK
-    // For now, we'll simulate the API call
-    const messageId = `SMS-${Date.now()}`;
-    console.log(`[SMS] To: ${phoneNumber}, Message: ${message}`);
-
+    const result = await sendSMSWithTwilio(phoneNumber, message);
     return {
-      success: true,
-      messageId,
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
     };
   } catch (error) {
     console.error('Error sending SMS:', error);
@@ -66,22 +57,15 @@ export async function sendSMSAlert(
 export async function sendEmailAlert(
   email: string,
   subject: string,
-  htmlContent: string
+  htmlContent: string,
+  textContent?: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
-    if (!SENDGRID_API_KEY) {
-      console.warn('SendGrid API key not configured');
-      return { success: false, error: 'Email service not configured' };
-    }
-
-    // In production, use actual SendGrid SDK
-    // For now, we'll simulate the API call
-    const messageId = `EMAIL-${Date.now()}`;
-    console.log(`[EMAIL] To: ${email}, Subject: ${subject}`);
-
+    const result = await sendEmailWithSendGrid(email, subject, htmlContent, textContent);
     return {
-      success: true,
-      messageId,
+      success: result.success,
+      messageId: result.messageId,
+      error: result.error,
     };
   } catch (error) {
     console.error('Error sending email:', error);
@@ -159,6 +143,7 @@ export async function checkAndSendComplianceAlerts(
  */
 export async function sendComplianceAlert(alert: ComplianceAlert): Promise<NotificationResult> {
   try {
+    const messageIds: { sms?: string; email?: string } = {};
     const results: { sms?: boolean; email?: boolean } = {};
 
     // Send SMS if phone number is available
@@ -166,6 +151,9 @@ export async function sendComplianceAlert(alert: ComplianceAlert): Promise<Notif
       const smsMessage = `Alert: ${alert.animalName} on farm ${alert.farmName} has low medication compliance (${alert.compliancePercentage}%). ${alert.missedDoses} doses missed. Please take action.`;
       const smsResult = await sendSMSAlert(alert.phoneNumber, smsMessage);
       results.sms = smsResult.success;
+      if (smsResult.messageId) {
+        messageIds.sms = smsResult.messageId;
+      }
     }
 
     // Send email if email is available
@@ -181,6 +169,9 @@ export async function sendComplianceAlert(alert: ComplianceAlert): Promise<Notif
       `;
       const emailResult = await sendEmailAlert(alert.email, emailSubject, emailContent);
       results.email = emailResult.success;
+      if (emailResult.messageId) {
+        messageIds.email = emailResult.messageId;
+      }
     }
 
     const method = results.sms && results.email ? 'both' : results.sms ? 'sms' : 'email';
@@ -189,6 +180,7 @@ export async function sendComplianceAlert(alert: ComplianceAlert): Promise<Notif
     return {
       success,
       method,
+      messageIds: Object.keys(messageIds).length > 0 ? messageIds : undefined,
     };
   } catch (error) {
     console.error('Error sending compliance alert:', error);
@@ -211,6 +203,7 @@ export async function sendDoseReminder(
   email?: string
 ): Promise<NotificationResult> {
   try {
+    const messageIds: { sms?: string; email?: string } = {};
     const results: { sms?: boolean; email?: boolean } = {};
 
     // Send SMS reminder
@@ -218,6 +211,9 @@ export async function sendDoseReminder(
       const smsMessage = `Reminder: Time to administer ${medicationName} to Animal ${animalId} at ${scheduledTime}. Please confirm administration.`;
       const smsResult = await sendSMSAlert(phoneNumber, smsMessage);
       results.sms = smsResult.success;
+      if (smsResult.messageId) {
+        messageIds.sms = smsResult.messageId;
+      }
     }
 
     // Send email reminder
@@ -232,6 +228,9 @@ export async function sendDoseReminder(
       `;
       const emailResult = await sendEmailAlert(email, emailSubject, emailContent);
       results.email = emailResult.success;
+      if (emailResult.messageId) {
+        messageIds.email = emailResult.messageId;
+      }
     }
 
     const method = results.sms && results.email ? 'both' : results.sms ? 'sms' : 'email';
@@ -240,6 +239,7 @@ export async function sendDoseReminder(
     return {
       success,
       method,
+      messageIds: Object.keys(messageIds).length > 0 ? messageIds : undefined,
     };
   } catch (error) {
     console.error('Error sending dose reminder:', error);
@@ -263,6 +263,7 @@ export async function sendAppointmentReminder(
   email?: string
 ): Promise<NotificationResult> {
   try {
+    const messageIds: { sms?: string; email?: string } = {};
     const results: { sms?: boolean; email?: boolean } = {};
 
     // Send SMS reminder
@@ -270,6 +271,9 @@ export async function sendAppointmentReminder(
       const smsMessage = `Reminder: Veterinary appointment for ${animalName} with ${vetName} on ${appointmentDate} at ${appointmentTime}. Please arrive on time.`;
       const smsResult = await sendSMSAlert(phoneNumber, smsMessage);
       results.sms = smsResult.success;
+      if (smsResult.messageId) {
+        messageIds.sms = smsResult.messageId;
+      }
     }
 
     // Send email reminder
@@ -285,6 +289,9 @@ export async function sendAppointmentReminder(
       `;
       const emailResult = await sendEmailAlert(email, emailSubject, emailContent);
       results.email = emailResult.success;
+      if (emailResult.messageId) {
+        messageIds.email = emailResult.messageId;
+      }
     }
 
     const method = results.sms && results.email ? 'both' : results.sms ? 'sms' : 'email';
@@ -293,6 +300,7 @@ export async function sendAppointmentReminder(
     return {
       success,
       method,
+      messageIds: Object.keys(messageIds).length > 0 ? messageIds : undefined,
     };
   } catch (error) {
     console.error('Error sending appointment reminder:', error);
@@ -338,4 +346,34 @@ export async function sendBulkComplianceNotifications(
       message: 'Failed to send bulk notifications',
     });
   }
+}
+
+/**
+ * Retry failed notification delivery
+ */
+export async function retryFailedNotification(
+  messageId: string,
+  type: 'sms' | 'email'
+): Promise<{ success: boolean; message: string; retryCount: number }> {
+  try {
+    if (type === 'sms') {
+      return await retrySMSDelivery(messageId);
+    } else {
+      return await retryEmailDelivery(messageId);
+    }
+  } catch (error) {
+    console.error('Error retrying notification:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to retry',
+      retryCount: 0,
+    };
+  }
+}
+
+/**
+ * Get notification delivery status
+ */
+export function getNotificationStatus(messageId: string): any {
+  return getDeliveryStatus(messageId);
 }
