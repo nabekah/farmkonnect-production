@@ -1,0 +1,8 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS workflow_executions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  workflowId INT NOT NULL,\n  triggeredBy VARCHAR(100),\n  triggerData JSON,\n  status ENUM('pending', 'running', 'completed', 'failed') DEFAULT 'pending',\n  executedActions JSON,\n  errorMessage TEXT,\n  startedAt TIMESTAMP NULL,\n  completedAt TIMESTAMP NULL,\n  duration INT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (workflowId) REFERENCES workflow_definitions(id) ON DELETE CASCADE,\n  INDEX idx_workflowId_status (workflowId, status),\n  INDEX idx_createdAt (createdAt)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute CREATE TABLE IF NOT EXISTS workflow_executions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  workflowId INT NOT NULL,\n  triggeredBy VARCHAR(100),\n  triggerData JSON,\n  status ENUM('pending', 'running', 'completed', 'failed') DEFAULT 'pending',\n  executedActions JSON,\n  errorMessage TEXT,\n  startedAt TIMESTAMP NULL,\n  completedAt TIMESTAMP NULL,\n  duration INT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (workflowId) REFERENCES workflow_definitions(id) ON DELETE CASCADE,\n  INDEX idx_workflowId_status (workflowId, status),\n  INDEX idx_createdAt (createdAt)\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1824 (HY000) at line 1: Failed to open the referenced table 'workflow_definitions'"
+  ]
+}
