@@ -814,6 +814,7 @@ export const appRouter = router({
   notifications: notificationRouter,
   veterinarianVerification: veterinarianVerificationRouter,
   complianceAutomation: complianceAutomationRouter,
+  marketplace: marketplaceRouter,
 });
 
 export type AppRouter = typeof appRouter;
