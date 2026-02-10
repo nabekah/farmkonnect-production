@@ -20,6 +20,8 @@ import { BudgetVarianceAnalysis } from "@/components/BudgetVarianceAnalysis";
 import { MobileOptimizedDashboard } from "@/components/MobileOptimizedDashboard";
 import { ForecastingDashboard } from "@/components/ForecastingDashboard";
 import { ReceiptUploadGallery } from "@/components/ReceiptUploadGallery";
+import { MobileFinancialDashboard } from "@/components/MobileFinancialDashboard";
+import { FinancialReportExporter } from "@/components/FinancialReportExporter";
 import { generateExpensePDF, generateRevenuePDF, downloadTextFile } from "@/lib/exportPdf";
 
 export const FinancialDashboard: React.FC = () => {
@@ -239,7 +241,24 @@ export const FinancialDashboard: React.FC = () => {
     <>
       {/* Mobile Optimized View - Hidden on desktop */}
       <div className="md:hidden">
-        <MobileOptimizedDashboard
+        <div className="flex justify-between items-center gap-2 px-4 py-4 border-b">
+          <h1 className="text-2xl font-bold">Financial Dashboard</h1>
+          {farms.length > 0 && (
+            <select
+              value={selectedFarmId}
+              onChange={(e) => setSelectedFarmId(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="all">All Farms</option>
+              {farms.map((farm: any) => (
+                <option key={farm.id} value={farm.id.toString()}>
+                  {farm.farmName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+        <MobileFinancialDashboard
           summary={summary}
           expenseBreakdown={expenseChartData}
           revenueBreakdown={revenueChartData}
@@ -275,21 +294,32 @@ export const FinancialDashboard: React.FC = () => {
           <Button
             variant={dateRange === "month" ? "default" : "outline"}
             onClick={() => setDateRange("month")}
+            size="sm"
           >
             Month
           </Button>
           <Button
             variant={dateRange === "quarter" ? "default" : "outline"}
             onClick={() => setDateRange("quarter")}
+            size="sm"
           >
             Quarter
           </Button>
           <Button
             variant={dateRange === "year" ? "default" : "outline"}
             onClick={() => setDateRange("year")}
+            size="sm"
           >
             Year
           </Button>
+          {selectedFarmId && selectedFarmId !== "all" && (
+            <FinancialReportExporter
+              farmId={selectedFarmId}
+              farmName={farms.find(f => f.id.toString() === selectedFarmId)?.farmName || "Farm"}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          )}
         </div>
       </div>
 
