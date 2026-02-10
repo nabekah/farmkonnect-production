@@ -115,6 +115,8 @@ import { financialManagementCleanRouter } from "./routers/financialManagementCle
 import { mobileAppSyncCleanRouter } from "./routers/mobileAppSyncClean";
 import { advancedAnalyticsCleanRouter } from "./routers/advancedAnalyticsClean";
 import { cooperativeCommunitiesCleanRouter } from "./routers/cooperativeCommunitiesClean";
+import { cropDiseaseDetectionCleanRouter } from "./routers/cropDiseaseDetectionClean";
+import { weatherIrrigationAutomationCleanRouter } from "./routers/weatherIrrigationAutomationClean";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -236,6 +238,8 @@ export const appRouter = router({
   mobileAppSync: mobileAppSyncCleanRouter,
   advancedAnalytics: advancedAnalyticsCleanRouter,
   cooperativeCommunities: cooperativeCommunitiesCleanRouter,
+  cropDiseaseDetection: cropDiseaseDetectionCleanRouter,
+  weatherIrrigationAutomation: weatherIrrigationAutomationCleanRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
