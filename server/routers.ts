@@ -124,6 +124,8 @@ import { mobileFirstDashboardCleanRouter } from "./routers/mobileFirstDashboardC
 import { biometricAuthenticationCleanRouter } from "./routers/biometricAuthenticationClean";
 import { equipmentRentalMarketplaceCleanRouter } from "./routers/equipmentRentalMarketplaceClean";
 import { cropYieldPredictionCleanRouter } from "./routers/cropYieldPredictionClean";
+import { farmerCooperativeDashboardCleanRouter } from "./routers/farmerCooperativeDashboardClean";
+import { weatherBasedCropInsuranceCleanRouter } from "./routers/weatherBasedCropInsuranceClean";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -254,6 +256,8 @@ export const appRouter = router({
   biometricAuthentication: biometricAuthenticationCleanRouter,
   equipmentRentalMarketplace: equipmentRentalMarketplaceCleanRouter,
   cropYieldPrediction: cropYieldPredictionCleanRouter,
+  farmerCooperativeDashboard: farmerCooperativeDashboardCleanRouter,
+  weatherBasedCropInsurance: weatherBasedCropInsuranceCleanRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
