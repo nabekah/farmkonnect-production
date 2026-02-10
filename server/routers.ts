@@ -117,6 +117,9 @@ import { advancedAnalyticsCleanRouter } from "./routers/advancedAnalyticsClean";
 import { cooperativeCommunitiesCleanRouter } from "./routers/cooperativeCommunitiesClean";
 import { cropDiseaseDetectionCleanRouter } from "./routers/cropDiseaseDetectionClean";
 import { weatherIrrigationAutomationCleanRouter } from "./routers/weatherIrrigationAutomationClean";
+import { farmerTrainingCertificationCleanRouter } from "./routers/farmerTrainingCertificationClean";
+import { cropInsuranceRiskManagementCleanRouter } from "./routers/cropInsuranceRiskManagementClean";
+import { communityForumKnowledgeSharingCleanRouter } from "./routers/communityForumKnowledgeSharingClean";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -240,6 +243,9 @@ export const appRouter = router({
   cooperativeCommunities: cooperativeCommunitiesCleanRouter,
   cropDiseaseDetection: cropDiseaseDetectionCleanRouter,
   weatherIrrigationAutomation: weatherIrrigationAutomationCleanRouter,
+  farmerTrainingCertification: farmerTrainingCertificationCleanRouter,
+  cropInsuranceRiskManagement: cropInsuranceRiskManagementCleanRouter,
+  communityForumKnowledgeSharing: communityForumKnowledgeSharingCleanRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
