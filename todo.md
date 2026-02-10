@@ -4261,3 +4261,19 @@
 - [x] Implement real-time notification updates via WebSocket
 - [x] Add notification statistics (unread, critical, warnings, total)
 - [x] Implement time formatting (just now, hours ago, days ago)
+
+
+## Vet-Appointment Page Fixes (COMPLETED)
+- [x] Fix frontend query endpoint - change from trpc.veterinary.getAppointments to trpc.vetAppointments.getUpcomingAppointments
+- [x] Add getAppointmentsByFarm procedure to vetAppointmentsRouter
+- [x] Create appointment creation/editing dialog component
+- [x] Wire up Edit button to open edit dialog with pre-populated data
+- [x] Wire up Delete button to trigger cancelAppointment mutation
+- [x] Add appointment cost field to form and database
+- [x] Implement form validation with proper error messages
+- [x] Add real-time updates after mutations (invalidate queries)
+- [x] Add loading states for buttons during mutations
+- [x] Add success/error toast notifications
+- [x] Get farmId from user context instead of hardcoding
+- [x] Add farm selector dropdown for multi-farm support
+- [x] Implement full appointment CRUD operations

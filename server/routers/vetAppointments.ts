@@ -210,4 +210,27 @@ export const vetAppointmentsRouter = router({
 
       return (reminders as any).rows || [];
     }),
+
+  // Get all appointments for a farm
+  getAppointmentsByFarm: protectedProcedure
+    .input(z.object({ farmId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
+
+      const appointments = await db.execute(
+        sql`
+          SELECT 
+            v.id, v.farmId, v.animalId, a.uniqueTagId, a.breed, v.appointmentDate, v.appointmentTime, 
+            v.veterinarian, v.clinic, v.reason, v.notes, v.status, v.cost,
+            v.appointmentType, v.duration, v.diagnosis, v.treatment, v.recommendations
+          FROM vetAppointments v
+          LEFT JOIN animals a ON v.animalId = a.id
+          WHERE v.farmId = ${input.farmId}
+          ORDER BY v.appointmentDate DESC
+        `
+      );
+
+      return (appointments as any).rows || [];
+    }),
 });
