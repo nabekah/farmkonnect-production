@@ -31,7 +31,7 @@ function createAuthContext(): TrpcContext {
   return ctx;
 }
 
-describe.skip("Financial Management tRPC Procedures - Comprehensive Tests", () => {
+describe("Financial Management tRPC Procedures - Comprehensive Tests", () => {
   const testFarmId = "test-farm-001";
 
   describe("Expense Tracking", () => {
@@ -250,7 +250,7 @@ describe.skip("Financial Management tRPC Procedures - Comprehensive Tests", () =
   });
 
   describe("Invoice Management", () => {
-    it.skip("should create an invoice successfully", async () => {
+    it("should create an invoice successfully", async () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
@@ -275,7 +275,7 @@ describe.skip("Financial Management tRPC Procedures - Comprehensive Tests", () =
       expect(result.success).toBe(true);
     });
 
-    it.skip("should retrieve invoices for a farm", async () => {
+    it("should retrieve invoices for a farm", async () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
@@ -286,7 +286,7 @@ describe.skip("Financial Management tRPC Procedures - Comprehensive Tests", () =
       expect(Array.isArray(invoices)).toBe(true);
     });
 
-    it.skip("should update invoice status successfully", async () => {
+    it("should update invoice status successfully", async () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
@@ -305,7 +305,7 @@ describe.skip("Financial Management tRPC Procedures - Comprehensive Tests", () =
       }
     });
 
-    it.skip("should mark invoice as paid", async () => {
+    it("should mark invoice as paid", async () => {
       const ctx = createAuthContext();
       const caller = appRouter.createCaller(ctx);
 
