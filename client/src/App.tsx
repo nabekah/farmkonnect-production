@@ -65,6 +65,7 @@ import { Breadcrumb } from "./components/Breadcrumb";
 import { ThemeSelector } from "./components/ThemeSelector";
 import { MobileDrawer } from "./components/MobileDrawer";
 import { NotificationCenter } from "./components/NotificationCenter";
+import { NotificationAnalyticsDashboard } from "./pages/NotificationAnalyticsDashboard";
 import { FieldWorkerDashboard } from "./pages/FieldWorkerDashboard";
 import { ActivityLogger } from './pages/ActivityLogger';
 import { ViewAllTasks } from './pages/ViewAllTasks';
@@ -175,6 +176,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <FertilizerCostDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/notification-analytics">
+        {() => (
+          <DashboardLayout>
+            <NotificationAnalyticsDashboard />
           </DashboardLayout>
         )}
       </Route>

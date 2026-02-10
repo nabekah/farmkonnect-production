@@ -78,6 +78,7 @@ import { vetAppointmentsRouter } from "./routers/vetAppointments";
 import { healthReportsRouter } from "./routers/healthReports";
 import { medicationTrackingRouter } from "./routers/medicationTracking";
 import { healthTrendsAnalyticsRouter } from "./routers/healthTrendsAnalytics";
+import { pushNotificationsRouter } from "./routers/pushNotificationsRouter";
 // import { searchRouter } from "./routers/search";
 // import { searchEnhancementsRouter } from "./routers/searchEnhancements";
 // import { multiSpeciesRouter } from "./routers/multiSpecies";
@@ -223,6 +224,7 @@ export const appRouter = router({
   healthReports: healthReportsRouter,
   medicationTracking: medicationTrackingRouter,
   healthTrendsAnalytics: healthTrendsAnalyticsRouter,
+  pushNotifications: pushNotificationsRouter,
   // search: searchRouter,
   // searchEnhancements: searchEnhancementsRouter,
   // multiSpecies: multiSpeciesRouter,
