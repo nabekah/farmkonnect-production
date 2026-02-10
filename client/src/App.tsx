@@ -64,6 +64,7 @@ import { CommandPalette } from "./components/CommandPalette";
 import { Breadcrumb } from "./components/Breadcrumb";
 import { ThemeSelector } from "./components/ThemeSelector";
 import { MobileDrawer } from "./components/MobileDrawer";
+import { NotificationCenter } from "./components/NotificationCenter";
 import { FieldWorkerDashboard } from "./pages/FieldWorkerDashboard";
 import { ActivityLogger } from './pages/ActivityLogger';
 import { ViewAllTasks } from './pages/ViewAllTasks';
@@ -709,6 +710,7 @@ function AppContent() {
                     </div>
                     <div className="hidden md:flex items-center gap-4">
                       <CommandPalette />
+                      <NotificationCenter />
                       <ThemeSelector />
                     </div>
                     <MobileDrawer
