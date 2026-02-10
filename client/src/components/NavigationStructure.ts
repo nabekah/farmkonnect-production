@@ -42,6 +42,7 @@ import {
   Image as ImageIcon,
   Zap,
   Layers,
+  Calculator,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -286,6 +287,23 @@ export const navigationStructure: MenuGroup[] = [
       { icon: Users, label: "Community Forum", path: "/community-forum" },
       { icon: TrendingUp, label: "Supply Chain", path: "/supply-chain" },
       { icon: Users, label: "Cooperative", path: "/cooperative" },
+    ],
+  },
+
+  {
+    title: "Financial Management",
+    description: "Income, expenses, budgets, and financial planning",
+    collapsible: true,
+    defaultExpanded: true,
+    items: [
+      { icon: DollarSign, label: "Financial Dashboard", path: "/financial-dashboard" },
+      { icon: Wallet, label: "Income & Expenses", path: "/income-expenses" },
+      { icon: BarChart3, label: "Budget Planning", path: "/budget-planning" },
+      { icon: TrendingUp, label: "Loan Management", path: "/loan-management" },
+      { icon: History, label: "Payment History", path: "/payment-history" },
+      { icon: FileText, label: "Financial Reports", path: "/financial-reports" },
+      { icon: Calculator, label: "Tax Planning", path: "/tax-planning" },
+      { icon: Shield, label: "Insurance Management", path: "/insurance-management" },
     ],
   },
 ];
