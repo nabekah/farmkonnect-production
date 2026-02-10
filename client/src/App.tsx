@@ -103,6 +103,7 @@ import { useNotification } from "./contexts/NotificationContext";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { FinancialDashboard } from "./pages/FinancialDashboard";
 import { FinancialManagement } from "./pages/FinancialManagement";
+import { FinancialForecastingDashboard } from "./pages/FinancialForecastingDashboard";
 import { GhanaExtensionServicesDashboard } from "./pages/GhanaExtensionServicesDashboard";
 import { InvoiceAndTaxReporting } from "./pages/InvoiceAndTaxReporting";
 import VeterinaryDirectory from "./pages/VeterinaryDirectory";
@@ -306,6 +307,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <FinancialManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/financial-forecasting">
+        {() => (
+          <DashboardLayout>
+            <FinancialForecastingDashboard />
           </DashboardLayout>
         )}
       </Route>

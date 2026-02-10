@@ -298,6 +298,7 @@ export const navigationStructure: MenuGroup[] = [
     items: [
       { icon: DollarSign, label: "Financial Dashboard", path: "/financial-dashboard" },
       { icon: BarChart3, label: "Financial Management", path: "/financial-management" },
+      { icon: TrendingUp, label: "Financial Forecasting", path: "/financial-forecasting" },
       { icon: Wallet, label: "Income & Expenses", path: "/income-expenses" },
       { icon: BarChart3, label: "Budget Planning", path: "/budget-planning" },
       { icon: TrendingUp, label: "Loan Management", path: "/loan-management" },
