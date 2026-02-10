@@ -18,6 +18,8 @@ import { BudgetForecasting } from "@/components/BudgetForecasting";
 import { FinancialReportsExport } from "@/components/FinancialReportsExport";
 import { BudgetVarianceAnalysis } from "@/components/BudgetVarianceAnalysis";
 import { MobileOptimizedDashboard } from "@/components/MobileOptimizedDashboard";
+import { ForecastingDashboard } from "@/components/ForecastingDashboard";
+import { ReceiptUploadGallery } from "@/components/ReceiptUploadGallery";
 import { generateExpensePDF, generateRevenuePDF, downloadTextFile } from "@/lib/exportPdf";
 
 export const FinancialDashboard: React.FC = () => {
@@ -27,6 +29,7 @@ export const FinancialDashboard: React.FC = () => {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
   const [selectedFarmId, setSelectedFarmId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>("overview");
 
   // Fetch user's farms
   const { data: farms = [] } = trpc.farms.list.useQuery();
@@ -500,6 +503,17 @@ export const FinancialDashboard: React.FC = () => {
         </Dialog>
       </div>
 
+      {/* Tabs for different sections */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="forecasting">Forecasting</TabsTrigger>
+          <TabsTrigger value="receipts">Receipts</TabsTrigger>
+          <TabsTrigger value="profitability">Profitability</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -630,6 +644,49 @@ export const FinancialDashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
+
+        {/* Forecasting Tab */}
+        <TabsContent value="forecasting" className="space-y-6">
+          {selectedFarmId && selectedFarmId !== "all" ? (
+            <ForecastingDashboard farmId={selectedFarmId} />
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <p className="text-gray-500 text-center">Select a specific farm to view forecasting</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Receipts Tab */}
+        <TabsContent value="receipts" className="space-y-6">
+          {selectedFarmId && selectedFarmId !== "all" ? (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold">Expense Receipts</h2>
+              <ReceiptUploadGallery
+                expenseId={0}
+                farmId={selectedFarmId}
+                onReceiptUpdated={() => utils.financialManagement.getFinancialSummary.invalidate()}
+              />
+            </div>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <p className="text-gray-500 text-center">Select a specific farm to manage receipts</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Profitability Tab */}
+        <TabsContent value="profitability" className="space-y-6">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Animal Profitability Analysis</h2>
+            <p className="text-gray-600">Analyze profitability by animal type to optimize farm operations.</p>
+          </div>
+        </TabsContent>
+      </Tabs>
       </div>
       </>
   );

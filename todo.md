@@ -4366,3 +4366,13 @@
 - [x] Build period selector
 - [x] Create profitability metrics cards
 - [x] Add trend analysis summary
+
+## Financial Dashboard Integration (COMPLETED)
+- [x] Add ForecastingDashboard and ReceiptUploadGallery imports
+- [x] Create tab navigation (Overview, Forecasting, Receipts, Profitability)
+- [x] Integrate ForecastingDashboard into Forecasting tab
+- [x] Integrate ReceiptUploadGallery into Receipts tab
+- [x] Add farm selection requirement for new tabs
+- [x] Add empty state messages for consolidated view
+- [x] Wrap existing content in Overview tab
+- [x] Create unified financial hub with 4 main sections
