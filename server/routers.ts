@@ -126,6 +126,8 @@ import { equipmentRentalMarketplaceCleanRouter } from "./routers/equipmentRental
 import { cropYieldPredictionCleanRouter } from "./routers/cropYieldPredictionClean";
 import { farmerCooperativeDashboardCleanRouter } from "./routers/farmerCooperativeDashboardClean";
 import { weatherBasedCropInsuranceCleanRouter } from "./routers/weatherBasedCropInsuranceClean";
+import { mobileAppReactNativeCleanRouter } from "./routers/mobileAppReactNativeClean";
+import { farmerMentorshipProgramCleanRouter } from "./routers/farmerMentorshipProgramClean";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -258,6 +260,8 @@ export const appRouter = router({
   cropYieldPrediction: cropYieldPredictionCleanRouter,
   farmerCooperativeDashboard: farmerCooperativeDashboardCleanRouter,
   weatherBasedCropInsurance: weatherBasedCropInsuranceCleanRouter,
+  mobileAppReactNative: mobileAppReactNativeCleanRouter,
+  farmerMentorshipProgram: farmerMentorshipProgramCleanRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
