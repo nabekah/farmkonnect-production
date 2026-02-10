@@ -76,12 +76,17 @@ export function ActivityApprovalManager() {
   // Get activities from response
   const activities = useMemo(() => {
     if (!activitiesData) return [];
-    return Array.isArray(activitiesData) ? activitiesData : (activitiesData?.logs || []);
+    if (Array.isArray(activitiesData)) return activitiesData;
+    if (activitiesData && typeof activitiesData === 'object' && 'logs' in activitiesData) {
+      const logs = (activitiesData as any).logs;
+      return Array.isArray(logs) ? logs : [];
+    }
+    return [];
   }, [activitiesData]);
 
   // Filter to show only submitted/draft activities
   const pendingActivities = useMemo(() => {
-    return activities.filter((a: any) => a.status === 'submitted' || a.status === 'draft');
+    return activities.filter((a: ActivityLog) => a.status === 'submitted' || a.status === 'draft');
   }, [activities]);
 
   // Approval mutations

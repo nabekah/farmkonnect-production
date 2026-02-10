@@ -59,6 +59,11 @@ import { InventoryManagement } from "./pages/InventoryManagement";
 import { SoilHealthRecommendations } from "./pages/SoilHealthRecommendations";
 import { FertilizerCostDashboard } from "./pages/FertilizerCostDashboard";
 import { FloatingElements } from "./components/FloatingElements";
+import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
+import { CommandPalette } from "./components/CommandPalette";
+import { Breadcrumb } from "./components/Breadcrumb";
+import { ThemeSelector } from "./components/ThemeSelector";
+import { MobileDrawer } from "./components/MobileDrawer";
 import { FieldWorkerDashboard } from "./pages/FieldWorkerDashboard";
 import { ActivityLogger } from './pages/ActivityLogger';
 import { ViewAllTasks } from './pages/ViewAllTasks';
@@ -691,19 +696,58 @@ function AppContent() {
       <DarkModeProvider>
         <ThemeProvider
           defaultTheme="light"
-          // switchable
+          switchable
         >
-          <TooltipProvider>
-            <Toaster />
-            <FloatingElements />
-            <WebSocketStatus isConnected={isConnected} isReconnecting={isReconnecting} />
-            <ActivityNotificationContainer
-              notifications={notifications}
-              onDismiss={removeNotification}
-              position="top-right"
-            />
-            <Router />
-          </TooltipProvider>
+          <BreadcrumbProvider>
+            <TooltipProvider>
+              <div className="min-h-screen flex flex-col bg-background">
+                {/* Top Navigation Bar */}
+                <nav className="border-b bg-background sticky top-0 z-40 shadow-sm">
+                  <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 flex-1">
+                      <h1 className="text-xl font-bold text-foreground">FarmKonnect</h1>
+                    </div>
+                    <div className="hidden md:flex items-center gap-4">
+                      <CommandPalette />
+                      <ThemeSelector />
+                    </div>
+                    <MobileDrawer
+                      items={[
+                        { label: "Home", href: "/" },
+                        { label: "Farms", href: "/farms" },
+                        { label: "Crops", href: "/crops" },
+                        { label: "Livestock", href: "/livestock" },
+                        { label: "Marketplace", href: "/marketplace" },
+                        { label: "Analytics", href: "/analytics" },
+                        { label: "Settings", href: "/settings" },
+                      ]}
+                      title="FarmKonnect"
+                    />
+                  </div>
+                </nav>
+
+                {/* Breadcrumb Navigation */}
+                <div className="border-b bg-muted/30">
+                  <div className="container mx-auto px-4 py-2">
+                    <Breadcrumb />
+                  </div>
+                </div>
+
+                {/* Main Content */}
+                <div className="flex-1 overflow-auto">
+                  <Toaster />
+                  <FloatingElements />
+                  <WebSocketStatus isConnected={isConnected} isReconnecting={isReconnecting} />
+                  <ActivityNotificationContainer
+                    notifications={notifications}
+                    onDismiss={removeNotification}
+                    position="top-right"
+                  />
+                  <Router />
+                </div>
+              </div>
+            </TooltipProvider>
+          </BreadcrumbProvider>
         </ThemeProvider>
       </DarkModeProvider>
     </ErrorBoundary>
