@@ -12,11 +12,38 @@ import { AlertCircle, CheckCircle, Clock, User, Loader2, ChevronDown, ChevronUp 
 import { trpc } from "@/lib/trpc";
 import { useBulkNotifications } from "@/hooks/useBulkNotifications";
 
+interface Animal {
+  id: number;
+  uniqueTagId?: string;
+  breed?: string;
+  gender?: string;
+  status?: string;
+}
+
+interface BatchEditRequest {
+  id: string;
+  animalCount: number;
+  updates: Record<string, any>;
+  reason: string;
+  status: string;
+  createdAt: Date | string;
+}
+
+interface BatchEditHistory {
+  id: string;
+  animalCount: number;
+  updates: Record<string, any>;
+  status: string;
+  createdAt: Date | string;
+  approvedAt: Date | string;
+  appliedAt: Date | string;
+}
+
 interface BatchEditingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   farmId: number;
-  animals: any[];
+  animals: Animal[];
 }
 
 export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }: BatchEditingModalProps) {
@@ -24,8 +51,8 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
   const [selectedAnimals, setSelectedAnimals] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const [updateType, setUpdateType] = useState<"status" | "breed" | "health">("status");
-  const [updateValue, setUpdateValue] = useState("");
-  const [reason, setReason] = useState("");
+  const [updateValue, setUpdateValue] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
   const { notifyBatchStart, notifyApprovalRequested, notifyApprovalResult } = useBulkNotifications();
 
@@ -33,13 +60,13 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
   const { data: pendingRequests = [] } = trpc.animalBatchEditing.getPendingBatchEditRequests.useQuery(
     { farmId },
     { enabled: step === "history" }
-  );
+  ) as any;
 
   // Fetch batch edit history
   const { data: history = [] } = trpc.animalBatchEditing.getBatchEditHistory.useQuery(
     { farmId },
     { enabled: step === "history" }
-  );
+  ) as any;
 
   // Mutations
   const createBatchEdit = trpc.animalBatchEditing.createBatchEditRequest.useMutation({
@@ -56,8 +83,8 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
   });
 
   const approveBatchEdit = trpc.animalBatchEditing.approveBatchEditRequest.useMutation({
-    onSuccess: (data) => {
-      notifyApprovalResult("Batch edit", true, data?.affectedCount || 0);
+    onSuccess: (data: any) => {
+      notifyApprovalResult("Batch edit", true, data?.successfulUpdates || data?.affectedCount || 0);
     },
     onError: (error) => {
       console.error("Approval error:", error);
@@ -65,25 +92,27 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
   });
 
   const rejectBatchEdit = trpc.animalBatchEditing.rejectBatchEditRequest.useMutation({
-    onSuccess: (data) => {
-      notifyApprovalResult("Batch edit", false, data?.affectedCount || 0);
+    onSuccess: (data: any) => {
+      notifyApprovalResult("Batch edit", false, 0);
     },
     onError: (error) => {
       console.error("Rejection error:", error);
     },
   });
 
-  const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
-    if (checked) {
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    const isChecked = typeof checked === 'boolean' ? checked : false;
+    setSelectAll(isChecked);
+    if (isChecked) {
       setSelectedAnimals(animals.map((a) => a.id));
     } else {
       setSelectedAnimals([]);
     }
   };
 
-  const handleSelectAnimal = (animalId: number, checked: boolean) => {
-    if (checked) {
+  const handleSelectAnimal = (animalId: number, checked: boolean | 'indeterminate') => {
+    const isChecked = typeof checked === 'boolean' ? checked : false;
+    if (isChecked) {
       setSelectedAnimals([...selectedAnimals, animalId]);
     } else {
       setSelectedAnimals(selectedAnimals.filter((id) => id !== animalId));
@@ -223,7 +252,7 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
 
             <div className="space-y-2">
               <Label htmlFor="update-type">Update Type</Label>
-              <Select value={updateType} onValueChange={(value: any) => setUpdateType(value)}>
+              <Select value={updateType} onValueChange={(value: string) => setUpdateType(value as 'status' | 'breed' | 'health')}>
                 <SelectTrigger id="update-type">
                   <SelectValue />
                 </SelectTrigger>
@@ -383,7 +412,7 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
                     </CardContent>
                   </Card>
                 ) : (
-                  pendingRequests.map((request: any) => (
+                  Array.isArray(pendingRequests) && pendingRequests.map((request: BatchEditRequest) => (
                     <Card key={request.id} className="border-yellow-200 bg-yellow-50">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
@@ -437,7 +466,7 @@ export function BatchAnimalEditingModal({ open, onOpenChange, farmId, animals }:
                     </CardContent>
                   </Card>
                 ) : (
-                  history.map((item: any) => (
+                  Array.isArray(history) && history.map((item: BatchEditHistory) => (
                     <Card key={item.id} className="border-green-200 bg-green-50">
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">

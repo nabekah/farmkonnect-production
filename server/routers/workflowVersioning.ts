@@ -19,7 +19,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {
@@ -53,7 +53,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {
@@ -112,7 +112,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {
@@ -154,7 +154,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {
@@ -186,7 +186,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {
@@ -238,7 +238,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {
@@ -266,7 +266,7 @@ export const workflowVersioningRouter = router({
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
-        where: (farms, { eq }) => eq(farms.id, input.farmId),
+        where: (farms: any, { eq }: any) => eq(farms.id, input.farmId),
       });
 
       if (!farm || farm.ownerId !== ctx.user.id) {

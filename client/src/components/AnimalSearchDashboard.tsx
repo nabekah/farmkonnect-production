@@ -11,30 +11,67 @@ import { Search, Filter, Download, Save, Trash2, ChevronDown, ChevronUp, Loader2
 import { trpc } from "@/lib/trpc";
 import { useBulkNotifications } from "@/hooks/useBulkNotifications";
 
+interface FilterOptions {
+  breeds: string[];
+  statuses: string[];
+  genders: string[];
+}
+
+interface SearchSuggestions {
+  tagIds: string[];
+  breeds: string[];
+}
+
+interface SavedPreset {
+  id: string;
+  presetName: string;
+  filters: {
+    breed: string;
+    status: string;
+    gender: string;
+  };
+  description: string;
+  usageCount: number;
+  createdAt: Date;
+}
+
+interface Animal {
+  id: number;
+  uniqueTagId?: string;
+  breed?: string;
+  status?: string;
+  gender?: string;
+  createdAt?: Date | string;
+}
+
 interface AnimalSearchDashboardProps {
   farmId: number;
-  animals: any[];
+  animals: Animal[];
 }
 
 export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboardProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [showFilters, setShowFilters] = useState(true);
-  const [selectedFilters, setSelectedFilters] = useState({
+  const [selectedFilters, setSelectedFilters] = useState<{
+    breed: string;
+    status: string;
+    gender: string;
+  }>({
     breed: "",
     status: "",
     gender: "",
   });
-  const [presetName, setPresetName] = useState("");
+  const [presetName, setPresetName] = useState<string>("");
   const [showSavePreset, setShowSavePreset] = useState(false);
   const [selectedAnimals, setSelectedAnimals] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
   const { notifyExportComplete } = useBulkNotifications();
 
   // Fetch filter options
-  const { data: filterOptions } = trpc.animalSearchFilters.getFilterOptions.useQuery({ farmId });
+  const { data: filterOptions = { breeds: [], statuses: [], genders: [] } } = trpc.animalSearchFilters.getFilterOptions.useQuery({ farmId });
 
   // Fetch saved presets
-  const { data: savedPresets = [] } = trpc.animalSearchFilters.getSavedPresets.useQuery({ farmId });
+  const { data: savedPresets = [] } = trpc.animalSearchFilters.getSavedPresets.useQuery({ farmId }) as any;
 
   // Fetch search suggestions
   const { data: suggestions } = trpc.animalSearchFilters.getSearchSuggestions.useQuery(
@@ -97,7 +134,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
     }
   };
 
-  const handleSelectAnimal = (animalId: number, checked: boolean) => {
+  const handleSelectAnimal = (animalId: number, checked: boolean | 'indeterminate') => {
     if (checked) {
       setSelectedAnimals([...selectedAnimals, animalId]);
     } else {
@@ -119,7 +156,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
     });
   };
 
-  const handleApplyPreset = (preset: any) => {
+  const handleApplyPreset = (preset: SavedPreset) => {
     setSelectedFilters(preset.filters);
   };
 
@@ -157,7 +194,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Tag IDs</p>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {suggestions.tagIds.map((id) => (
+                    {suggestions?.tagIds?.map((id: string) => (
                       <Badge
                         key={id}
                         variant="outline"
@@ -175,7 +212,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Breeds</p>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {suggestions.breeds.map((breed) => (
+                    {suggestions?.breeds?.map((breed: string) => (
                       <Badge
                         key={breed}
                         variant="outline"
@@ -222,7 +259,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All breeds</SelectItem>
-                    {filterOptions?.breeds.map((breed) => (
+                    {filterOptions?.breeds?.map((breed: string) => (
                       <SelectItem key={breed} value={breed}>
                         {breed}
                       </SelectItem>
@@ -239,7 +276,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All statuses</SelectItem>
-                    {filterOptions?.statuses.map((status) => (
+                    {filterOptions?.statuses?.map((status: string) => (
                       <SelectItem key={status} value={status}>
                         {status}
                       </SelectItem>
@@ -256,7 +293,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All genders</SelectItem>
-                    {filterOptions?.genders.map((gender) => (
+                    {filterOptions?.genders?.map((gender: string) => (
                       <SelectItem key={gender} value={gender}>
                         {gender}
                       </SelectItem>
@@ -295,7 +332,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {savedPresets.map((preset: any) => (
+              {Array.isArray(savedPresets) && savedPresets.map((preset: SavedPreset) => (
                 <div key={preset.id} className="flex items-center gap-2">
                   <Badge
                     variant="outline"
@@ -417,7 +454,7 @@ export function AnimalSearchDashboard({ farmId, animals }: AnimalSearchDashboard
                         <td className="px-4 py-2">
                           <Checkbox
                             checked={selectedAnimals.includes(animal.id)}
-                            onCheckedChange={(checked) => handleSelectAnimal(animal.id, checked as boolean)}
+                            onCheckedChange={(checked) => handleSelectAnimal(animal.id, typeof checked === 'boolean' ? checked : false)}
                           />
                         </td>
                         <td className="px-4 py-2 font-medium">{animal.uniqueTagId || `Animal #${animal.id}`}</td>

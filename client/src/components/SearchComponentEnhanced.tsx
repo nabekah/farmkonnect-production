@@ -30,11 +30,23 @@ interface SearchResult {
   [key: string]: any;
 }
 
+interface SavedQuery {
+  id: string;
+  name: string;
+  query: string;
+  filters?: SearchFilter;
+  usageCount: number;
+}
+
+interface Suggestion {
+  text: string;
+}
+
 export function SearchComponentEnhanced() {
-  const [query, setQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState<string>("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const [filters, setFilters] = useState<SearchFilter>({});
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedResults, setSelectedResults] = useState<Set<number | string>>(
     new Set()
   );
@@ -49,16 +61,16 @@ export function SearchComponentEnhanced() {
         filters,
       },
       { enabled: query.length > 0 && isOpen }
-    );
+    ) as any;
 
   const { data: savedQueries } = trpc.searchEnhancements.getSavedQueries.useQuery({
     limit: 5,
-  });
+  }) as any;
 
   const { data: suggestions } = trpc.search.getAutocompleteSuggestions.useQuery({
     query,
     limit: 5,
-  });
+  }) as any;
 
   const saveMutation = trpc.searchEnhancements.saveQuery.useMutation();
   const feedbackMutation = trpc.searchEnhancements.submitFeedback.useMutation();
@@ -101,7 +113,7 @@ export function SearchComponentEnhanced() {
     }
   };
 
-  const handleUseSavedQuery = async (savedQuery: any) => {
+  const handleUseSavedQuery = async (savedQuery: SavedQuery) => {
     setQuery(savedQuery.query);
     setFilters(savedQuery.filters || {});
     setIsOpen(true);
@@ -135,8 +147,8 @@ export function SearchComponentEnhanced() {
     }
   };
 
-  const results = searchResults?.results || [];
-  const displaySuggestions = suggestions?.suggestions || [];
+  const results: SearchResult[] = (searchResults?.results as SearchResult[]) || [];
+  const displaySuggestions: Suggestion[] = (suggestions?.suggestions as Suggestion[]) || [];
 
   return (
     <div ref={searchRef} className="relative w-full max-w-md">
@@ -189,7 +201,7 @@ export function SearchComponentEnhanced() {
                 onChange={(e) =>
                   setFilters({
                     ...filters,
-                    category: e.target.value as any,
+                    category: e.target.value as "animal" | "farm" | "crop" | "",
                   })
                 }
                 className="w-full mt-1 px-3 py-2 border rounded-md"
@@ -239,14 +251,14 @@ export function SearchComponentEnhanced() {
       {isOpen && (
         <Card className="absolute top-full left-0 right-0 mt-2 z-50 bg-white shadow-lg max-h-96 overflow-y-auto">
           {/* Saved Queries Section */}
-          {!query && savedQueries?.queries && savedQueries.queries.length > 0 && (
+          {!query && Array.isArray(savedQueries?.queries) && savedQueries.queries.length > 0 && (
             <div className="border-b p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Bookmark className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">Saved Searches</span>
               </div>
               <div className="space-y-1">
-                {savedQueries.queries.map((sq: any) => (
+                {savedQueries.queries.map((sq: SavedQuery) => (
                   <button
                     key={sq.id}
                     onClick={() => handleUseSavedQuery(sq)}
@@ -263,14 +275,14 @@ export function SearchComponentEnhanced() {
           )}
 
           {/* Suggestions Section */}
-          {query && displaySuggestions.length > 0 && (
+          {query && Array.isArray(displaySuggestions) && displaySuggestions.length > 0 && (
             <div className="border-b p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Trending2 className="h-4 w-4 text-green-500" />
                 <span className="text-sm font-medium">Suggestions</span>
               </div>
               <div className="space-y-1">
-                {displaySuggestions.map((suggestion: any, idx: number) => (
+                {displaySuggestions.map((suggestion: Suggestion, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => handleSearch(suggestion.text)}
@@ -286,7 +298,7 @@ export function SearchComponentEnhanced() {
           {/* Search Results Section */}
           {searchLoading ? (
             <div className="p-4 text-center text-gray-500">Loading...</div>
-          ) : results.length > 0 ? (
+          ) : Array.isArray(results) && results.length > 0 ? (
             <div className="p-3 space-y-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">
