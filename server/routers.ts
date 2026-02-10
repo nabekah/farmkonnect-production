@@ -48,6 +48,9 @@ import { reportTemplatesRouter } from "./routers/reportTemplates";
 import { reportAnalyticsRouter } from "./routers/reportAnalytics";
 import { recipientManagementRouter } from "./routers/recipientManagement";
 import { reportExportRouter } from "./routers/reportExport";
+import { notificationServicesRouter } from "./routers/notificationServicesClean";
+import { veterinarianCalendarRouter } from "./routers/veterinarianCalendarClean";
+import { telemedicineRouter } from "./routers/telemedicineClean";
 import { reportTemplateCustomizationRouter } from "./routers/reportTemplateCustomization";
 import { reportExecutionRouter } from "./routers/reportExecution";
 import { fertilizerManagementRouter } from "./routers/fertilizerManagement";
@@ -284,6 +287,9 @@ export const appRouter = router({
   farmerToBuyerDirectSales: farmerToBuyerDirectSalesCleanRouter,
   farmerCooperativeManagement: farmerCooperativeManagementCleanRouter,
   livestockManagement: livestockManagementCleanRouter,
+  notificationServices: notificationServicesRouter,
+  veterinarianCalendar: veterinarianCalendarRouter,
+  telemedicine: telemedicineRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -91,6 +91,11 @@ import { FinancialDashboard } from "./pages/FinancialDashboard";
 import { GhanaExtensionServicesDashboard } from "./pages/GhanaExtensionServicesDashboard";
 import { InvoiceAndTaxReporting } from "./pages/InvoiceAndTaxReporting";
 import VeterinaryDirectory from "./pages/VeterinaryDirectory";
+import VeterinaryAppointments from "./pages/VeterinaryAppointments";
+import VeterinaryPrescriptions from "./pages/VeterinaryPrescriptions";
+import VeterinaryTelemedicine from "./pages/VeterinaryTelemedicine";
+import VeterinaryHealthRecords from "./pages/VeterinaryHealthRecords";
+import VeterinaryAlerts from "./pages/VeterinaryAlerts";
 import ExtensionAgents from "./pages/ExtensionAgents";
 
 function Router() {
@@ -258,6 +263,41 @@ function Router() {
         {() => (
           <DashboardLayout>
             <VeterinaryDirectory />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/veterinary/appointments">
+        {() => (
+          <DashboardLayout>
+            <VeterinaryAppointments />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/veterinary/prescriptions">
+        {() => (
+          <DashboardLayout>
+            <VeterinaryPrescriptions />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/veterinary/telemedicine">
+        {() => (
+          <DashboardLayout>
+            <VeterinaryTelemedicine />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/veterinary/health-records">
+        {() => (
+          <DashboardLayout>
+            <VeterinaryHealthRecords />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/veterinary/alerts">
+        {() => (
+          <DashboardLayout>
+            <VeterinaryAlerts />
           </DashboardLayout>
         )}
       </Route>
