@@ -77,6 +77,9 @@ import { bulkHealthOperationsRouter } from "./routers/bulkHealthOperations";
 import { healthAlertsRouter } from "./routers/healthAlerts";
 import { vetAppointmentsRouter } from "./routers/vetAppointments";
 import { veterinarianAvailabilityRouter } from "./routers/veterinarianAvailability";
+import { financialForecastingRouter } from "./routers/financialForecasting";
+import { expenseReceiptsRouter } from "./routers/expenseReceipts";
+import { animalProfitabilityRouter } from "./routers/animalProfitability";
 import { healthReportsRouter } from "./routers/healthReports";
 import { medicationTrackingRouter } from "./routers/medicationTracking";
 import { healthTrendsAnalyticsRouter } from "./routers/healthTrendsAnalytics";
@@ -244,6 +247,9 @@ export const appRouter = router({
   healthAlerts: healthAlertsRouter,
   vetAppointments: vetAppointmentsRouter,
   veterinarianAvailability: veterinarianAvailabilityRouter,
+  financialForecasting: financialForecastingRouter,
+  expenseReceipts: expenseReceiptsRouter,
+  animalProfitability: animalProfitabilityRouter,
   healthReports: healthReportsRouter,
   medicationTracking: medicationTrackingRouter,
   healthTrendsAnalytics: healthTrendsAnalyticsRouter,

@@ -3196,3 +3196,101 @@ export const auditTrail = mysqlTable("auditTrail", {
 
 export type AuditTrailEntry = typeof auditTrail.$inferSelect;
 export type InsertAuditTrailEntry = typeof auditTrail.$inferInsert;
+
+
+/**
+ * Expense receipts for document tracking and OCR
+ */
+export const expenseReceipts = mysqlTable("expenseReceipts", {
+  id: int("id").autoincrement().primaryKey(),
+  expenseId: int("expenseId").notNull(),
+  farmId: int("farmId").notNull(),
+  receiptUrl: varchar("receiptUrl", { length: 500 }).notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileSize: int("fileSize"), // in bytes
+  mimeType: varchar("mimeType", { length: 50 }),
+  // OCR extracted data
+  extractedAmount: decimal("extractedAmount", { precision: 12, scale: 2 }),
+  extractedDate: date("extractedDate"),
+  extractedVendor: varchar("extractedVendor", { length: 255 }),
+  extractedDescription: text("extractedDescription"),
+  ocrConfidence: decimal("ocrConfidence", { precision: 5, scale: 2 }), // 0-100
+  ocrProcessed: boolean("ocrProcessed").default(false).notNull(),
+  uploadedBy: int("uploadedBy").notNull(), // userId
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ExpenseReceipt = typeof expenseReceipts.$inferSelect;
+export type InsertExpenseReceipt = typeof expenseReceipts.$inferInsert;
+
+/**
+ * Financial forecasts based on historical trends
+ */
+export const financialForecasts = mysqlTable("financialForecasts", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  forecastType: mysqlEnum("forecastType", ["revenue", "expense", "profit"]).notNull(),
+  category: varchar("category", { length: 100 }), // expense type or revenue type
+  forecastPeriod: varchar("forecastPeriod", { length: 20 }).notNull(), // YYYY-MM or YYYY-Q1
+  historicalAverage: decimal("historicalAverage", { precision: 12, scale: 2 }).notNull(),
+  forecastedAmount: decimal("forecastedAmount", { precision: 12, scale: 2 }).notNull(),
+  confidence: decimal("confidence", { precision: 5, scale: 2 }).notNull(), // 0-100
+  trend: mysqlEnum("trend", ["increasing", "decreasing", "stable"]).notNull(),
+  trendPercentage: decimal("trendPercentage", { precision: 5, scale: 2 }), // % change
+  dataPointsUsed: int("dataPointsUsed"), // number of historical periods used
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FinancialForecast = typeof financialForecasts.$inferSelect;
+export type InsertFinancialForecast = typeof financialForecasts.$inferInsert;
+
+/**
+ * Budget variance alerts
+ */
+export const budgetVarianceAlerts = mysqlTable("budgetVarianceAlerts", {
+  id: int("id").autoincrement().primaryKey(),
+  budgetLineItemId: int("budgetLineItemId").notNull(),
+  farmId: int("farmId").notNull(),
+  varianceAmount: decimal("varianceAmount", { precision: 12, scale: 2 }).notNull(),
+  variancePercentage: decimal("variancePercentage", { precision: 5, scale: 2 }).notNull(),
+  alertType: mysqlEnum("alertType", ["over_budget", "approaching_budget", "under_budget"]).notNull(),
+  severity: mysqlEnum("severity", ["low", "medium", "high", "critical"]).notNull(),
+  acknowledged: boolean("acknowledged").default(false).notNull(),
+  acknowledgedBy: int("acknowledgedBy"),
+  acknowledgedAt: timestamp("acknowledgedAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BudgetVarianceAlert = typeof budgetVarianceAlerts.$inferSelect;
+export type InsertBudgetVarianceAlert = typeof budgetVarianceAlerts.$inferInsert;
+
+/**
+ * Animal profitability tracking
+ */
+export const animalProfitability = mysqlTable("animalProfitability", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  animalTypeId: int("animalTypeId").notNull(), // Reference to animal type/breed
+  animalType: varchar("animalType", { length: 100 }).notNull(), // e.g., "Cattle", "Poultry", "Goat"
+  period: varchar("period", { length: 20 }).notNull(), // YYYY-MM or YYYY-Q1
+  totalAnimals: int("totalAnimals").notNull(),
+  totalRevenue: decimal("totalRevenue", { precision: 12, scale: 2 }).notNull(),
+  totalExpenses: decimal("totalExpenses", { precision: 12, scale: 2 }).notNull(),
+  netProfit: decimal("netProfit", { precision: 12, scale: 2 }).notNull(),
+  profitMargin: decimal("profitMargin", { precision: 5, scale: 2 }).notNull(), // percentage
+  revenuePerAnimal: decimal("revenuePerAnimal", { precision: 12, scale: 2 }).notNull(),
+  costPerAnimal: decimal("costPerAnimal", { precision: 12, scale: 2 }).notNull(),
+  roi: decimal("roi", { precision: 5, scale: 2 }), // Return on Investment percentage
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AnimalProfitability = typeof animalProfitability.$inferSelect;
+export type InsertAnimalProfitability = typeof animalProfitability.$inferInsert;
