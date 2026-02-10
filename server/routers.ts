@@ -151,6 +151,10 @@ import { livestockManagementCleanRouter } from "./routers/livestockManagementCle
 import { cropRecommendationRouter } from "./routers/cropRecommendationRouter";
 import { forumRouter } from "./routers/forumRouter";
 import { reputationRouter } from "./routers/reputationRouter";
+import { mobileAppRouter } from "./routers/mobileAppRouter";
+import { advancedAnalyticsRouter } from "./routers/advancedAnalyticsRouter";
+import { supplyChainRouter } from "./routers/supplyChainRouter";
+import { cooperativeRouter } from "./routers/cooperativeRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -248,6 +252,10 @@ export const appRouter = router({
   cropRecommendations: cropRecommendationRouter,
   forum: forumRouter,
   reputation: reputationRouter,
+  mobileApp: mobileAppRouter,
+  advancedAnalytics: advancedAnalyticsRouter,
+  supplyChain: supplyChainRouter,
+  cooperative: cooperativeRouter,
   // accountingExport: accountingExportRouter,
   // expenseNotifications: expenseNotifications,
   // farmAnalytics: farmAnalytics,
