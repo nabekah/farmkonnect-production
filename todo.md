@@ -4292,3 +4292,16 @@
 - [x] Add veterinarian filter to show specific vet availability
 - [x] Implement time zone handling for scheduling
 - [x] Add appointment reminders based on calendar bookings
+
+
+## Financial Dashboard Accuracy Issues (COMPLETED)
+- [x] Investigate financial dashboard data sources and calculations
+- [x] Check backend financial router queries for accuracy
+- [x] Verify income/expense aggregation logic
+- [x] Check date range filtering in financial queries
+- [x] Verify farm-level financial data isolation
+- [x] Test financial calculations with sample data
+- [x] Fix category field name (category -> expenseType)
+- [x] Fix decimal-to-number conversion for amounts
+- [x] Implement animal count calculation for cost per animal
+- [x] Fix date comparison with proper ISO string conversion

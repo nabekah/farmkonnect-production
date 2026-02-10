@@ -1,12 +1,13 @@
 import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { eq, and, gte, lte, sum, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, sum, inArray, sql } from "drizzle-orm";
 import {
   expenses,
   revenue,
   budgets,
-  invoices
+  invoices,
+  animals
 } from "../../drizzle/schema";
 
 export const financialManagementRouter = router({
@@ -81,11 +82,22 @@ export const financialManagementRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       
-      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+       const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
       const conditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
-      if (input.category) conditions.push(eq(expenses.expenseType, input.category));
-      if (input.startDate) conditions.push(gte(expenses.expenseDate, input.startDate));
-      if (input.endDate) conditions.push(lte(expenses.expenseDate, input.endDate));
+      
+      if (input.startDate) {
+        const startDateStr = input.startDate instanceof Date 
+          ? input.startDate.toISOString().split('T')[0]
+          : input.startDate.toString();
+        conditions.push(gte(expenses.expenseDate, startDateStr));
+      }
+      if (input.endDate) {
+        const endDateStr = input.endDate instanceof Date 
+          ? input.endDate.toISOString().split('T')[0]
+          : input.endDate.toString();
+        conditions.push(lte(expenses.expenseDate, endDateStr));
+      }
+
 
       const result = await db
         .select()
@@ -201,12 +213,18 @@ export const financialManagementRouter = router({
       const revenueConditions = [farmIds.length > 1 ? inArray(revenue.farmId, farmIds) : eq(revenue.farmId, farmIds[0])];
 
       if (input.startDate) {
-        expenseConditions.push(gte(expenses.expenseDate, input.startDate));
-        revenueConditions.push(gte(revenue.revenueDate, input.startDate));
+        const startDateStr = input.startDate instanceof Date 
+          ? input.startDate.toISOString().split('T')[0]
+          : input.startDate.toString();
+        expenseConditions.push(gte(expenses.expenseDate, startDateStr));
+        revenueConditions.push(gte(revenue.revenueDate, startDateStr));
       }
       if (input.endDate) {
-        expenseConditions.push(lte(expenses.expenseDate, input.endDate));
-        revenueConditions.push(lte(revenue.revenueDate, input.endDate));
+        const endDateStr = input.endDate instanceof Date 
+          ? input.endDate.toISOString().split('T')[0]
+          : input.endDate.toString();
+        expenseConditions.push(lte(expenses.expenseDate, endDateStr));
+        revenueConditions.push(lte(revenue.revenueDate, endDateStr));
       }
 
       const expenseResult = await db
@@ -219,8 +237,12 @@ export const financialManagementRouter = router({
         .from(revenue)
         .where(and(...revenueConditions));
 
-      const totalExpenses = parseFloat(expenseResult[0]?.total || 0);
-      const totalRevenue = parseFloat(revenueResult[0]?.total || 0);
+      const totalExpenses = typeof expenseResult[0]?.total === 'string'
+        ? parseFloat(expenseResult[0].total)
+        : Number(expenseResult[0]?.total || 0);
+      const totalRevenue = typeof revenueResult[0]?.total === 'string'
+        ? parseFloat(revenueResult[0].total)
+        : Number(revenueResult[0]?.total || 0);
       const profit = totalRevenue - totalExpenses;
       const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
 
@@ -247,18 +269,39 @@ export const financialManagementRouter = router({
 
       const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
       const conditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
-      if (input.startDate) conditions.push(gte(expenses.expenseDate, input.startDate));
-      if (input.endDate) conditions.push(lte(expenses.expenseDate, input.endDate));
+      
+      // Convert dates to ISO string format for proper comparison
+      if (input.startDate) {
+        const startDateStr = input.startDate instanceof Date 
+          ? input.startDate.toISOString().split('T')[0]
+          : input.startDate.toString();
+        conditions.push(gte(expenses.expenseDate, startDateStr));
+      }
+      if (input.endDate) {
+        const endDateStr = input.endDate instanceof Date 
+          ? input.endDate.toISOString().split('T')[0]
+          : input.endDate.toString();
+        conditions.push(lte(expenses.expenseDate, endDateStr));
+      }
 
       const expenseResult = await db
         .select({ total: sum(expenses.amount) })
         .from(expenses)
         .where(and(...conditions));
 
-      const totalExpenses = parseFloat(expenseResult[0]?.total || 0);
+      const totalExpenses = typeof expenseResult[0]?.total === 'string'
+        ? parseFloat(expenseResult[0].total)
+        : Number(expenseResult[0]?.total || 0);
       
-      // Get count of unique animals
-      const animalCount = 0; // Placeholder - would need animals table
+      // Get count of unique animals from the animals table
+      const animalConditions = [farmIds.length > 1 ? inArray(animals.farmId, farmIds) : eq(animals.farmId, farmIds[0])];
+      
+      const animalCountResult = await db
+        .select({ count: sql`COUNT(DISTINCT ${animals.id})` })
+        .from(animals)
+        .where(and(...animalConditions));
+      
+      const animalCount = Number(animalCountResult[0]?.count || 0);
       const costPerAnimal = animalCount > 0 ? totalExpenses / animalCount : 0;
 
       return {
@@ -283,8 +326,20 @@ export const financialManagementRouter = router({
 
       const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
       const conditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
-      if (input.startDate) conditions.push(gte(expenses.expenseDate, input.startDate));
-      if (input.endDate) conditions.push(lte(expenses.expenseDate, input.endDate));
+      
+      // Convert dates to ISO string format for proper comparison
+      if (input.startDate) {
+        const startDateStr = input.startDate instanceof Date 
+          ? input.startDate.toISOString().split('T')[0]
+          : input.startDate.toString();
+        conditions.push(gte(expenses.expenseDate, startDateStr));
+      }
+      if (input.endDate) {
+        const endDateStr = input.endDate instanceof Date 
+          ? input.endDate.toISOString().split('T')[0]
+          : input.endDate.toString();
+        conditions.push(lte(expenses.expenseDate, endDateStr));
+      }
 
       const result = await db
         .select()
@@ -295,8 +350,12 @@ export const financialManagementRouter = router({
       let total = 0;
 
       result.forEach(exp => {
-        const amount = parseFloat(exp.amount);
-        breakdown[exp.category] = (breakdown[exp.category] || 0) + amount;
+        // Properly convert decimal to number
+        const amount = typeof exp.amount === 'string' 
+          ? parseFloat(exp.amount) 
+          : Number(exp.amount);
+        // Use expenseType instead of category (correct field name)
+        breakdown[exp.expenseType] = (breakdown[exp.expenseType] || 0) + amount;
         total += amount;
       });
 
@@ -323,8 +382,20 @@ export const financialManagementRouter = router({
 
       const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
       const conditions = [farmIds.length > 1 ? inArray(revenue.farmId, farmIds) : eq(revenue.farmId, farmIds[0])];
-      if (input.startDate) conditions.push(gte(revenue.revenueDate, input.startDate));
-      if (input.endDate) conditions.push(lte(revenue.revenueDate, input.endDate));
+      
+      // Convert dates to ISO string format for proper comparison
+      if (input.startDate) {
+        const startDateStr = input.startDate instanceof Date 
+          ? input.startDate.toISOString().split('T')[0]
+          : input.startDate.toString();
+        conditions.push(gte(revenue.revenueDate, startDateStr));
+      }
+      if (input.endDate) {
+        const endDateStr = input.endDate instanceof Date 
+          ? input.endDate.toISOString().split('T')[0]
+          : input.endDate.toString();
+        conditions.push(lte(revenue.revenueDate, endDateStr));
+      }
 
       const result = await db
         .select()
@@ -335,7 +406,10 @@ export const financialManagementRouter = router({
       let total = 0;
 
       result.forEach(rev => {
-        const amount = parseFloat(rev.amount);
+        // Properly convert decimal to number
+        const amount = typeof rev.amount === 'string' 
+          ? parseFloat(rev.amount) 
+          : Number(rev.amount);
         breakdown[rev.revenueType] = (breakdown[rev.revenueType] || 0) + amount;
         total += amount;
       });
