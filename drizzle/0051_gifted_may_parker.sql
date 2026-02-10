@@ -1,0 +1,100 @@
+CREATE TABLE `auditTrail` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`supplyChainId` int NOT NULL,
+	`userId` int NOT NULL,
+	`action` varchar(100) NOT NULL,
+	`entityType` varchar(100) NOT NULL,
+	`entityId` int NOT NULL,
+	`previousValues` text,
+	`newValues` text,
+	`changeReason` text,
+	`ipAddress` varchar(45),
+	`userAgent` text,
+	`timestamp` timestamp NOT NULL DEFAULT (now()),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `auditTrail_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `blockchainTransactions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`supplyChainId` int NOT NULL,
+	`transactionHash` varchar(256) NOT NULL,
+	`previousHash` varchar(256),
+	`eventType` enum('production','processing','transport','storage','sale','certification') NOT NULL,
+	`actor` varchar(100) NOT NULL,
+	`actorId` int NOT NULL,
+	`location` varchar(255),
+	`latitude` decimal(10,8),
+	`longitude` decimal(11,8),
+	`temperature` decimal(5,2),
+	`humidity` decimal(5,2),
+	`notes` text,
+	`documentHash` varchar(256),
+	`timestamp` timestamp NOT NULL DEFAULT (now()),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `blockchainTransactions_id` PRIMARY KEY(`id`),
+	CONSTRAINT `blockchainTransactions_transactionHash_unique` UNIQUE(`transactionHash`)
+);
+--> statement-breakpoint
+CREATE TABLE `notificationLogs` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`notificationType` varchar(100) NOT NULL,
+	`subject` varchar(255),
+	`message` text NOT NULL,
+	`channel` enum('push','email','sms') NOT NULL,
+	`status` enum('sent','delivered','failed','pending','bounced') NOT NULL DEFAULT 'pending',
+	`failureReason` text,
+	`retryCount` int NOT NULL DEFAULT 0,
+	`maxRetries` int NOT NULL DEFAULT 3,
+	`nextRetryAt` timestamp,
+	`recipientEmail` varchar(320),
+	`recipientPhone` varchar(20),
+	`templateId` varchar(100),
+	`templateVariables` text,
+	`relatedId` int,
+	`relatedType` varchar(100),
+	`metadata` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`sentAt` timestamp,
+	`deliveredAt` timestamp,
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `notificationLogs_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `productCertifications` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`supplyChainId` int NOT NULL,
+	`certificationType` varchar(100) NOT NULL,
+	`certifyingBody` varchar(255) NOT NULL,
+	`certificateNumber` varchar(100) NOT NULL,
+	`issueDate` date NOT NULL,
+	`expiryDate` date NOT NULL,
+	`verificationUrl` varchar(500),
+	`documentHash` varchar(256),
+	`status` enum('valid','expired','revoked','pending') NOT NULL DEFAULT 'pending',
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `productCertifications_id` PRIMARY KEY(`id`),
+	CONSTRAINT `productCertifications_certificateNumber_unique` UNIQUE(`certificateNumber`)
+);
+--> statement-breakpoint
+CREATE TABLE `supplyChainRecords` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`productId` int NOT NULL,
+	`farmId` int NOT NULL,
+	`productName` varchar(255) NOT NULL,
+	`productType` varchar(100) NOT NULL,
+	`batchNumber` varchar(100) NOT NULL,
+	`quantity` decimal(10,2) NOT NULL,
+	`unit` varchar(50) NOT NULL,
+	`harvestDate` date NOT NULL,
+	`productionMethod` varchar(100),
+	`certifications` text,
+	`blockchainHash` varchar(256),
+	`status` enum('pending','verified','certified','archived') NOT NULL DEFAULT 'pending',
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `supplyChainRecords_id` PRIMARY KEY(`id`),
+	CONSTRAINT `supplyChainRecords_batchNumber_unique` UNIQUE(`batchNumber`)
+);

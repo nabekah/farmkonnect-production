@@ -3072,3 +3072,127 @@ export const userNotificationPreferences = mysqlTable("userNotificationPreferenc
 
 export type UserNotificationPreferences = typeof userNotificationPreferences.$inferSelect;
 export type InsertUserNotificationPreferences = typeof userNotificationPreferences.$inferInsert;
+
+
+/**
+ * Notification Logs - stores all notification delivery history for analytics and tracking
+ */
+export const notificationLogs = mysqlTable("notificationLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  notificationType: varchar("notificationType", { length: 100 }).notNull(), // breeding, vaccination, harvest, stock, weather, order, iot, training
+  subject: varchar("subject", { length: 255 }),
+  message: text("message").notNull(),
+  channel: mysqlEnum("channel", ["push", "email", "sms"]).notNull(),
+  status: mysqlEnum("status", ["sent", "delivered", "failed", "pending", "bounced"]).default("pending").notNull(),
+  failureReason: text("failureReason"),
+  retryCount: int("retryCount").default(0).notNull(),
+  maxRetries: int("maxRetries").default(3).notNull(),
+  nextRetryAt: timestamp("nextRetryAt"),
+  recipientEmail: varchar("recipientEmail", { length: 320 }),
+  recipientPhone: varchar("recipientPhone", { length: 20 }),
+  templateId: varchar("templateId", { length: 100 }),
+  templateVariables: text("templateVariables"), // JSON object with template variables
+  relatedId: int("relatedId"), // ID of related entity (animal, crop, order, etc.)
+  relatedType: varchar("relatedType", { length: 100 }), // Type of related entity
+  metadata: text("metadata"), // JSON object with additional metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  sentAt: timestamp("sentAt"),
+  deliveredAt: timestamp("deliveredAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationLog = typeof notificationLogs.$inferSelect;
+export type InsertNotificationLog = typeof notificationLogs.$inferInsert;
+
+/**
+ * Blockchain Supply Chain - tracks product origin and certification
+ */
+export const supplyChainRecords = mysqlTable("supplyChainRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  farmId: int("farmId").notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  productType: varchar("productType", { length: 100 }).notNull(), // crop, livestock, processed
+  batchNumber: varchar("batchNumber", { length: 100 }).notNull().unique(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }).notNull(),
+  unit: varchar("unit", { length: 50 }).notNull(), // kg, liters, units, etc.
+  harvestDate: date("harvestDate").notNull(),
+  productionMethod: varchar("productionMethod", { length: 100 }), // organic, conventional, etc.
+  certifications: text("certifications"), // JSON array of certification IDs
+  blockchainHash: varchar("blockchainHash", { length: 256 }), // Hash of blockchain record
+  status: mysqlEnum("status", ["pending", "verified", "certified", "archived"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SupplyChainRecord = typeof supplyChainRecords.$inferSelect;
+export type InsertSupplyChainRecord = typeof supplyChainRecords.$inferInsert;
+
+/**
+ * Blockchain Transactions - immutable record of all supply chain events
+ */
+export const blockchainTransactions = mysqlTable("blockchainTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  supplyChainId: int("supplyChainId").notNull(),
+  transactionHash: varchar("transactionHash", { length: 256 }).notNull().unique(),
+  previousHash: varchar("previousHash", { length: 256 }),
+  eventType: mysqlEnum("eventType", ["production", "processing", "transport", "storage", "sale", "certification"]).notNull(),
+  actor: varchar("actor", { length: 100 }).notNull(), // farmer, processor, transporter, retailer
+  actorId: int("actorId").notNull(),
+  location: varchar("location", { length: 255 }),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }), // For cold chain tracking
+  humidity: decimal("humidity", { precision: 5, scale: 2 }),
+  notes: text("notes"),
+  documentHash: varchar("documentHash", { length: 256 }), // Hash of supporting documents
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BlockchainTransaction = typeof blockchainTransactions.$inferSelect;
+export type InsertBlockchainTransaction = typeof blockchainTransactions.$inferInsert;
+
+/**
+ * Product Certifications - tracks certifications and compliance
+ */
+export const productCertifications = mysqlTable("productCertifications", {
+  id: int("id").autoincrement().primaryKey(),
+  supplyChainId: int("supplyChainId").notNull(),
+  certificationType: varchar("certificationType", { length: 100 }).notNull(), // organic, fair-trade, rainforest-alliance, etc.
+  certifyingBody: varchar("certifyingBody", { length: 255 }).notNull(),
+  certificateNumber: varchar("certificateNumber", { length: 100 }).notNull().unique(),
+  issueDate: date("issueDate").notNull(),
+  expiryDate: date("expiryDate").notNull(),
+  verificationUrl: varchar("verificationUrl", { length: 500 }),
+  documentHash: varchar("documentHash", { length: 256 }), // Hash of certification document
+  status: mysqlEnum("status", ["valid", "expired", "revoked", "pending"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProductCertification = typeof productCertifications.$inferSelect;
+export type InsertProductCertification = typeof productCertifications.$inferInsert;
+
+/**
+ * Audit Trail - comprehensive audit log for compliance and transparency
+ */
+export const auditTrail = mysqlTable("auditTrail", {
+  id: int("id").autoincrement().primaryKey(),
+  supplyChainId: int("supplyChainId").notNull(),
+  userId: int("userId").notNull(),
+  action: varchar("action", { length: 100 }).notNull(), // create, update, verify, certify, etc.
+  entityType: varchar("entityType", { length: 100 }).notNull(), // supplyChainRecord, transaction, certification
+  entityId: int("entityId").notNull(),
+  previousValues: text("previousValues"), // JSON object of previous values
+  newValues: text("newValues"), // JSON object of new values
+  changeReason: text("changeReason"),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditTrailEntry = typeof auditTrail.$inferSelect;
+export type InsertAuditTrailEntry = typeof auditTrail.$inferInsert;

@@ -90,7 +90,7 @@ import { ghanaExtensionServicesRouter } from "./routers/ghanaExtensionServices";
 // import { financialManagementRouter } from "./routers/financialManagement";
 import { recurringExpensesRouter } from "./routers/recurringExpenses";
 import { budgetAlertsRouter } from "./routers/budgetAlerts";
-// import { notificationDataRouter } from "./routers/notificationDataRouter"; // TODO: Add notificationLogs table to schema first
+import { notificationDataRouter } from "./routers/notificationDataRouter";
 // import { accountingExportRouter } from "./routers/accountingExport";
 // import { expenseNotifications } from "./routers/expenseNotifications";
 // import { farmAnalytics } from "./routers/farmAnalytics";
@@ -237,7 +237,7 @@ export const appRouter = router({
   // financialManagement: financialManagementRouter,
   recurringExpenses: recurringExpensesRouter,
   budgetAlerts: budgetAlertsRouter,
-  // notificationData: notificationDataRouter, // TODO: Enable after schema update
+  notificationData: notificationDataRouter,
   // accountingExport: accountingExportRouter,
   // expenseNotifications: expenseNotifications,
   // farmAnalytics: farmAnalytics,
