@@ -4011,3 +4011,44 @@
 - [x] Build blockchain UI components
 - [x] Implement mobile app optimization
 - [x] Create service worker for offline support
+
+
+## Next 3 Steps (In Progress)
+
+### Step 1: Connect Crop Recommendations to Real Farm Data
+- [x] Create cropRecommendationRouter.ts with tRPC procedures for farm data retrieval
+- [x] Implement getFarmConditions procedure to fetch farm data from database
+- [x] Implement generateRecommendations procedure to call AI engine with farm data
+- [x] Implement getCropRecommendationHistory procedure for past recommendations
+- [ ] Create database table for storing recommendation history
+- [ ] Update CropRecommendationPage to use real tRPC calls
+- [ ] Add error handling and loading states
+- [ ] Create unit tests for recommendation procedures (5+ tests)
+- [ ] Verify TypeScript compilation
+
+### Step 2: Implement Community Forum Database Integration
+- [ ] Create forumPosts and forumReplies database tables
+- [x] Create forumRouter.ts with tRPC procedures (9 procedures)
+- [x] Implement createPost, updatePost, deletePost procedures
+- [x] Implement getForumPosts with filtering and pagination
+- [ ] Implement createReply, updateReply, deleteReply procedures
+- [x] Implement likePost procedure
+- [x] Implement pinPost, unpinPost procedures (admin only)
+- [ ] Update FarmerCommunityForum to use real database calls
+- [ ] Add real-time updates with WebSocket integration
+- [ ] Create unit tests for forum procedures (8+ tests)
+- [ ] Verify TypeScript compilation
+
+### Step 3: Add Farmer Reputation & Gamification System
+- [ ] Create farmerReputation database table with reputation scores
+- [ ] Create achievements and badges database tables
+- [x] Create reputationRouter.ts with tRPC procedures (8 procedures)
+- [x] Implement reputation scoring system (post creation, likes, helpful replies)
+- [x] Implement achievement tracking (badges for milestones)
+- [x] Implement leaderboard calculation procedures
+- [ ] Create ReputationDashboard component showing user stats
+- [ ] Create AchievementsBadges component for displaying earned badges
+- [ ] Create LeaderboardPage component showing top contributors
+- [ ] Add reputation display to forum posts and user profiles
+- [ ] Create unit tests for reputation system (6+ tests)
+- [ ] Verify TypeScript compilation
