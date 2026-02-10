@@ -15,7 +15,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
@@ -49,7 +52,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
@@ -108,7 +114,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
@@ -150,7 +159,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
@@ -182,7 +194,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
@@ -234,7 +249,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
@@ -262,7 +280,10 @@ export const workflowVersioningRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const db = getDb(ctx.user.id);
+      const db = await getDb();
+      if (!db) {
+        throw new Error("Database connection failed");
+      }
       
       // Verify farm ownership
       const farm = await db.query.farms.findFirst({
