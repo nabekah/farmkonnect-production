@@ -31,6 +31,25 @@ export const FinancialManagement: React.FC = () => {
     "dashboard" | "expenses" | "revenue" | "budget" | "forecast" | "reports" | "tax" | "veterinary" | "insurance"
   >("dashboard");
   const [timeRange, setTimeRange] = useState<"month" | "quarter" | "year">("month");
+  const [selectedFarmId, setSelectedFarmId] = useState<number>(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Mock farms data
+  const farms = [
+    { id: 1, name: "Main Farm - Accra" },
+    { id: 2, name: "North Farm - Kumasi" },
+    { id: 3, name: "East Farm - Koforidua" },
+  ];
+
+  // Expense categories
+  const expenseCategories = [
+    { value: "all", label: "All Categories" },
+    { value: "equipment", label: "Equipment Maintenance" },
+    { value: "inputs", label: "Inputs" },
+    { value: "labor", label: "Labor" },
+    { value: "utilities", label: "Utilities" },
+    { value: "veterinary", label: "Veterinary" },
+  ];}
 
   // Mock financial data
   const dashboard = {
@@ -236,6 +255,40 @@ export const FinancialManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Farm and Category Selectors */}
+      <div className="flex gap-4 items-center bg-gray-50 p-4 rounded-lg">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium">Farm:</label>
+          <select
+            value={selectedFarmId}
+            onChange={(e) => setSelectedFarmId(Number(e.target.value))}
+            className="px-3 py-2 border rounded-md text-sm bg-white"
+          >
+            {farms.map((farm) => (
+              <option key={farm.id} value={farm.id}>
+                {farm.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {(viewMode === "expenses" || viewMode === "dashboard") && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-3 py-2 border rounded-md text-sm bg-white"
+            >
+              {expenseCategories.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
       {/* View Mode Tabs */}
       <div className="flex gap-2 border-b">
         {["dashboard", "expenses", "revenue", "budget", "forecast", "reports", "tax", "veterinary", "insurance"].map(
@@ -343,7 +396,13 @@ export const FinancialManagement: React.FC = () => {
         <Card className="p-6">
           <h2 className="text-xl font-bold mb-4">Expense Tracking</h2>
           <div className="space-y-3">
-            {expenses.map((expense) => (
+            {expenses
+              .filter(
+                (expense) =>
+                  selectedCategory === "all" ||
+                  expense.category.toLowerCase().includes(selectedCategory)
+              )
+              .map((expense) => (
               <div key={expense.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
                   <p className="font-medium">{expense.description}</p>
@@ -359,13 +418,12 @@ export const FinancialManagement: React.FC = () => {
                   >
                     {expense.status}
                   </span>
-                </div>
+                 </div>
               </div>
             ))}
           </div>
         </Card>
       )}
-
       {/* Veterinary Expenses View */}
       {viewMode === "veterinary" && (
         <Card className="p-6">
@@ -463,10 +521,41 @@ export const FinancialManagement: React.FC = () => {
 
       {/* Budget View */}
       {viewMode === "budget" && (
-        <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">Budget vs Actual</h2>
-          <div className="space-y-4">
-            {budgetData.categories.map((category) => (
+        <div className="space-y-6">
+          {/* Monthly Comparison Chart */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Monthly Budget Comparison</h2>
+            <div className="space-y-4">
+              {[
+                { month: "January", budgeted: 25000, actual: 23500 },
+                { month: "February", budgeted: 26000, actual: 24800 },
+                { month: "March", budgeted: 27000, actual: 25200 },
+                { month: "April", budgeted: 28000, actual: 26500 },
+              ].map((monthData) => (
+                <div key={monthData.month} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <p className="font-medium">{monthData.month}</p>
+                    <div className="flex gap-4 text-sm">
+                      <span className="text-gray-600">Budgeted: ₵{monthData.budgeted.toLocaleString()}</span>
+                      <span className="font-medium">Actual: ₵{monthData.actual.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 h-6">
+                    <div className="flex-1 bg-blue-200 rounded" style={{ width: "100%" }}>
+                      <div className="bg-blue-600 h-full rounded" style={{ width: `${(monthData.actual / monthData.budgeted) * 100}%` }}></div>
+                    </div>
+                    <span className="text-sm text-green-600 font-medium min-w-fit">-₵{(monthData.budgeted - monthData.actual).toLocaleString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Category Budget Details */}
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Budget by Category</h2>
+            <div className="space-y-4">
+              {budgetData.categories.map((category) => (
               <div key={category.name}>
                 <div className="flex justify-between mb-2">
                   <p className="font-medium">{category.name}</p>
