@@ -1,0 +1,63 @@
+CREATE TABLE `notificationDeliveryLog` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`notificationType` varchar(100) NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`message` text NOT NULL,
+	`channel` enum('push','email','sms') NOT NULL,
+	`deliveryStatus` enum('pending','sent','delivered','failed','bounced') NOT NULL DEFAULT 'pending',
+	`deliveryError` text,
+	`priority` enum('low','medium','high','urgent') NOT NULL DEFAULT 'medium',
+	`relatedId` int,
+	`relatedType` varchar(100),
+	`actionUrl` varchar(500),
+	`isRead` boolean NOT NULL DEFAULT false,
+	`readAt` timestamp,
+	`retryCount` int NOT NULL DEFAULT 0,
+	`nextRetryAt` timestamp,
+	`sentAt` timestamp,
+	`deliveredAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `notificationDeliveryLog_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `pushSubscriptions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`endpoint` varchar(500) NOT NULL,
+	`auth` varchar(255) NOT NULL,
+	`p256dh` varchar(255) NOT NULL,
+	`expirationTime` varchar(50),
+	`userAgent` varchar(500),
+	`isActive` boolean NOT NULL DEFAULT true,
+	`lastUsed` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `pushSubscriptions_id` PRIMARY KEY(`id`),
+	CONSTRAINT `pushSubscriptions_endpoint_unique` UNIQUE(`endpoint`)
+);
+--> statement-breakpoint
+CREATE TABLE `userNotificationPreferences` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`breedingReminders` boolean NOT NULL DEFAULT true,
+	`stockAlerts` boolean NOT NULL DEFAULT true,
+	`weatherAlerts` boolean NOT NULL DEFAULT true,
+	`vaccinationReminders` boolean NOT NULL DEFAULT true,
+	`harvestReminders` boolean NOT NULL DEFAULT true,
+	`marketplaceUpdates` boolean NOT NULL DEFAULT true,
+	`iotSensorAlerts` boolean NOT NULL DEFAULT true,
+	`trainingReminders` boolean NOT NULL DEFAULT true,
+	`pushNotificationsEnabled` boolean NOT NULL DEFAULT true,
+	`emailNotificationsEnabled` boolean NOT NULL DEFAULT true,
+	`smsNotificationsEnabled` boolean NOT NULL DEFAULT false,
+	`quietHoursEnabled` boolean NOT NULL DEFAULT false,
+	`quietHoursStart` varchar(5),
+	`quietHoursEnd` varchar(5),
+	`timezone` varchar(100) NOT NULL DEFAULT 'UTC',
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `userNotificationPreferences_id` PRIMARY KEY(`id`),
+	CONSTRAINT `userNotificationPreferences_userId_unique` UNIQUE(`userId`)
+);

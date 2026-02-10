@@ -2990,3 +2990,85 @@ export const vetReviewStats = mysqlTable("vetReviewStats", {
 
 export type VetReviewStats = typeof vetReviewStats.$inferSelect;
 export type InsertVetReviewStats = typeof vetReviewStats.$inferInsert;
+
+
+// ============================================================================
+// PUSH NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Push Notification Subscriptions - stores browser push notification endpoints
+ */
+export const pushSubscriptions = mysqlTable("pushSubscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  endpoint: varchar("endpoint", { length: 500 }).notNull().unique(),
+  auth: varchar("auth", { length: 255 }).notNull(),
+  p256dh: varchar("p256dh", { length: 255 }).notNull(),
+  expirationTime: varchar("expirationTime", { length: 50 }),
+  userAgent: varchar("userAgent", { length: 500 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  lastUsed: timestamp("lastUsed"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+/**
+ * Notification Delivery Log - tracks sent notifications and delivery status
+ */
+export const notificationDeliveryLog = mysqlTable("notificationDeliveryLog", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  notificationType: varchar("notificationType", { length: 100 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  channel: mysqlEnum("channel", ["push", "email", "sms"]).notNull(),
+  deliveryStatus: mysqlEnum("deliveryStatus", ["pending", "sent", "delivered", "failed", "bounced"]).default("pending").notNull(),
+  deliveryError: text("deliveryError"),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  relatedId: int("relatedId"),
+  relatedType: varchar("relatedType", { length: 100 }),
+  actionUrl: varchar("actionUrl", { length: 500 }),
+  isRead: boolean("isRead").default(false).notNull(),
+  readAt: timestamp("readAt"),
+  retryCount: int("retryCount").default(0).notNull(),
+  nextRetryAt: timestamp("nextRetryAt"),
+  sentAt: timestamp("sentAt"),
+  deliveredAt: timestamp("deliveredAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationDeliveryLog = typeof notificationDeliveryLog.$inferSelect;
+export type InsertNotificationDeliveryLog = typeof notificationDeliveryLog.$inferInsert;
+
+/**
+ * User Notification Preferences - stores user notification settings
+ */
+export const userNotificationPreferences = mysqlTable("userNotificationPreferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  breedingReminders: boolean("breedingReminders").default(true).notNull(),
+  stockAlerts: boolean("stockAlerts").default(true).notNull(),
+  weatherAlerts: boolean("weatherAlerts").default(true).notNull(),
+  vaccinationReminders: boolean("vaccinationReminders").default(true).notNull(),
+  harvestReminders: boolean("harvestReminders").default(true).notNull(),
+  marketplaceUpdates: boolean("marketplaceUpdates").default(true).notNull(),
+  iotSensorAlerts: boolean("iotSensorAlerts").default(true).notNull(),
+  trainingReminders: boolean("trainingReminders").default(true).notNull(),
+  pushNotificationsEnabled: boolean("pushNotificationsEnabled").default(true).notNull(),
+  emailNotificationsEnabled: boolean("emailNotificationsEnabled").default(true).notNull(),
+  smsNotificationsEnabled: boolean("smsNotificationsEnabled").default(false).notNull(),
+  quietHoursEnabled: boolean("quietHoursEnabled").default(false).notNull(),
+  quietHoursStart: varchar("quietHoursStart", { length: 5 }), // HH:MM format
+  quietHoursEnd: varchar("quietHoursEnd", { length: 5 }), // HH:MM format
+  timezone: varchar("timezone", { length: 100 }).default("UTC").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserNotificationPreferences = typeof userNotificationPreferences.$inferSelect;
+export type InsertUserNotificationPreferences = typeof userNotificationPreferences.$inferInsert;
