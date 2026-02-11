@@ -866,4 +866,164 @@ export const financialManagementRouter = router({
       });
       return result;
     }),
+
+  /**
+   * Get consolidated expenses across all user farms
+   */
+  getConsolidatedExpenses: protectedProcedure
+    .input(z.object({
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+      category: z.string().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const userId = ctx.user?.id;
+      if (!userId) return [];
+
+      let query = db
+        .select({
+          id: expenses.id,
+          farmId: expenses.farmId,
+          description: expenses.description,
+          expenseType: expenses.expenseType,
+          amount: expenses.amount,
+          expenseDate: expenses.expenseDate,
+          vendor: expenses.vendor,
+          paymentStatus: expenses.paymentStatus,
+        })
+        .from(expenses)
+        .innerJoin(sql`farms`, sql`${expenses.farmId} = farms.id`)
+        .where(sql`farms.farmerUserId = ${userId}`);
+
+      if (input.startDate && input.endDate) {
+        query = query.where(
+          and(
+            gte(expenses.expenseDate, input.startDate.toISOString().split('T')[0]),
+            lte(expenses.expenseDate, input.endDate.toISOString().split('T')[0])
+          )
+        );
+      }
+
+      if (input.category && input.category !== "all") {
+        query = query.where(eq(expenses.expenseType, input.category));
+      }
+
+      return await query.orderBy(sql`${expenses.expenseDate} DESC`);
+    }),
+
+  /**
+   * Get consolidated revenue across all user farms
+   */
+  getConsolidatedRevenue: protectedProcedure
+    .input(z.object({
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const userId = ctx.user?.id;
+      if (!userId) return [];
+
+      let query = db
+        .select({
+          id: revenue.id,
+          farmId: revenue.farmId,
+          description: revenue.description,
+          productId: revenue.productId,
+          quantity: revenue.quantity,
+          unitPrice: revenue.unitPrice,
+          totalAmount: revenue.totalAmount,
+          saleDate: revenue.saleDate,
+          buyerName: revenue.buyerName,
+        })
+        .from(revenue)
+        .innerJoin(sql`farms`, sql`${revenue.farmId} = farms.id`)
+        .where(sql`farms.farmerUserId = ${userId}`);
+
+      if (input.startDate && input.endDate) {
+        query = query.where(
+          and(
+            gte(revenue.saleDate, input.startDate.toISOString().split('T')[0]),
+            lte(revenue.saleDate, input.endDate.toISOString().split('T')[0])
+          )
+        );
+      }
+
+      return await query.orderBy(sql`${revenue.saleDate} DESC`);
+    }),
+
+  /**
+   * Update payment status for multiple expenses (bulk action)
+   */
+  updateExpensesPaymentStatus: protectedProcedure
+    .input(z.object({
+      expenseIds: z.array(z.number()),
+      paymentStatus: z.enum(["pending", "paid", "partial"]),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const result = await db
+        .update(expenses)
+        .set({ paymentStatus: input.paymentStatus })
+        .where(inArray(expenses.id, input.expenseIds));
+
+      return { success: true, updated: input.expenseIds.length };
+    }),
+
+  /**
+   * Delete multiple expenses (bulk action)
+   */
+  deleteExpenses: protectedProcedure
+    .input(z.object({
+      expenseIds: z.array(z.number()),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.delete(expenses).where(inArray(expenses.id, input.expenseIds));
+
+      return { success: true, deleted: input.expenseIds.length };
+    }),
+
+  /**
+   * Update payment status for multiple revenue records (bulk action)
+   */
+  updateRevenuePaymentStatus: protectedProcedure
+    .input(z.object({
+      revenueIds: z.array(z.number()),
+      paymentStatus: z.enum(["pending", "paid", "partial"]),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(revenue)
+        .set({ paymentStatus: input.paymentStatus })
+        .where(inArray(revenue.id, input.revenueIds));
+
+      return { success: true, updated: input.revenueIds.length };
+    }),
+
+  /**
+   * Delete multiple revenue records (bulk action)
+   */
+  deleteRevenue: protectedProcedure
+    .input(z.object({
+      revenueIds: z.array(z.number()),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db.delete(revenue).where(inArray(revenue.id, input.revenueIds));
+
+      return { success: true, deleted: input.revenueIds.length };
+    }),
 });

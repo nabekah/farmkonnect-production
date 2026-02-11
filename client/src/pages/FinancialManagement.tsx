@@ -53,6 +53,11 @@ export const FinancialManagement: React.FC = () => {
   const [exportFormat, setExportFormat] = useState<"pdf" | "csv" | "excel">("pdf");
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<number[]>([]);
+  const [selectedRevenueIds, setSelectedRevenueIds] = useState<number[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
 
   // Add Expense form state
   const [expenseForm, setExpenseForm] = useState({
@@ -112,6 +117,25 @@ export const FinancialManagement: React.FC = () => {
   // Fetch user's farms
   const { data: farms = [], isLoading: farmsLoading } = trpc.farms.list.useQuery();
 
+  // Fetch consolidated expenses when in consolidated view
+  const { data: consolidatedExpenses = [], isLoading: consolidatedExpensesLoading } = trpc.financialManagement.getConsolidatedExpenses.useQuery(
+    isConsolidated ? { 
+      startDate: customStartDate ? new Date(customStartDate) : startDate,
+      endDate: customEndDate ? new Date(customEndDate) : endDate,
+      category: selectedCategory !== "all" ? selectedCategory : undefined
+    } : undefined,
+    { enabled: isConsolidated }
+  );
+
+  // Fetch consolidated revenue when in consolidated view
+  const { data: consolidatedRevenue = [], isLoading: consolidatedRevenueLoading } = trpc.financialManagement.getConsolidatedRevenue.useQuery(
+    isConsolidated ? {
+      startDate: customStartDate ? new Date(customStartDate) : startDate,
+      endDate: customEndDate ? new Date(customEndDate) : endDate,
+    } : undefined,
+    { enabled: isConsolidated }
+  );
+
   // Set default farm on load
   React.useEffect(() => {
     if (farms.length > 0 && !selectedFarmId) {
@@ -146,16 +170,16 @@ export const FinancialManagement: React.FC = () => {
     };
   }, [isConsolidated, farms]);
 
-  // Fetch expenses
+  // Fetch expenses (only for individual farm view)
   const { data: expenseData, isLoading: expensesLoading } = trpc.financialManagement.getExpenses.useQuery(
-    farmId ? { farmId, category: selectedCategory !== "all" ? selectedCategory : undefined } : undefined,
-    { enabled: !!farmId }
+    farmId && !isConsolidated ? { farmId, category: selectedCategory !== "all" ? selectedCategory : undefined } : undefined,
+    { enabled: !!farmId && !isConsolidated }
   );
 
-  // Fetch revenue
+  // Fetch revenue (only for individual farm view)
   const { data: revenueData, isLoading: revenueLoading } = trpc.financialManagement.getRevenue.useQuery(
-    farmId ? { farmId } : undefined,
-    { enabled: !!farmId }
+    farmId && !isConsolidated ? { farmId } : undefined,
+    { enabled: !!farmId && !isConsolidated }
   );
 
   // Fetch budgets
@@ -244,6 +268,62 @@ export const FinancialManagement: React.FC = () => {
     },
     onError: (error) => {
       toast.error(`Failed to add revenue: ${error.message}`);
+    },
+  });
+
+  // Bulk update expense payment status
+  const updateExpenseStatusMutation = trpc.financialManagement.updateExpensesPaymentStatus.useMutation({
+    onSuccess: () => {
+      toast.success(`Updated ${selectedExpenseIds.length} expenses`);
+      setSelectedExpenseIds([]);
+      utils.financialManagement.getExpenses.invalidate();
+      utils.financialManagement.getConsolidatedExpenses.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to update expenses: ${error.message}`);
+    },
+  });
+
+  // Bulk delete expenses
+  const deleteExpensesMutation = trpc.financialManagement.deleteExpenses.useMutation({
+    onSuccess: () => {
+      toast.success(`Deleted ${selectedExpenseIds.length} expenses`);
+      setSelectedExpenseIds([]);
+      utils.financialManagement.getExpenses.invalidate();
+      utils.financialManagement.getConsolidatedExpenses.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete expenses: ${error.message}`);
+    },
+  });
+
+  // Bulk update revenue payment status
+  const updateRevenueStatusMutation = trpc.financialManagement.updateRevenuePaymentStatus.useMutation({
+    onSuccess: () => {
+      toast.success(`Updated ${selectedRevenueIds.length} revenue records`);
+      setSelectedRevenueIds([]);
+      utils.financialManagement.getRevenue.invalidate();
+      utils.financialManagement.getConsolidatedRevenue.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to update revenue: ${error.message}`);
+    },
+  });
+
+  // Bulk delete revenue
+  const deleteRevenueMutation = trpc.financialManagement.deleteRevenue.useMutation({
+    onSuccess: () => {
+      toast.success(`Deleted ${selectedRevenueIds.length} revenue records`);
+      setSelectedRevenueIds([]);
+      utils.financialManagement.getRevenue.invalidate();
+      utils.financialManagement.getConsolidatedRevenue.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete revenue: ${error.message}`);
     },
   });
 
@@ -405,7 +485,63 @@ export const FinancialManagement: React.FC = () => {
             </SelectContent>
           </Select>
         </div>
+        <div className="flex-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className="w-full mt-6"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Custom Dates
+          </Button>
+        </div>
       </div>
+
+      {/* Custom Date Range Picker */}
+      {showDatePicker && (
+        <Card className="p-4 bg-blue-50 border-blue-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Start Date</label>
+              <Input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">End Date</label>
+              <Input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <Button 
+                size="sm" 
+                onClick={() => {
+                  setCustomStartDate("");
+                  setCustomEndDate("");
+                  setShowDatePicker(false);
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Clear
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => setShowDatePicker(false)}
+                className="flex-1"
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Budget Alerts Panel */}
       {showBudgetAlerts && budgetAlerts.length > 0 && (
@@ -854,10 +990,58 @@ export const FinancialManagement: React.FC = () => {
               </DialogContent>
             </Dialog>
           </div>
+          {selectedExpenseIds.length > 0 && (
+            <Card className="p-4 bg-blue-50 border-blue-200 mb-4">
+              <div className="flex items-center justify-between">
+                <p className="font-medium">{selectedExpenseIds.length} expense(s) selected</p>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => updateExpenseStatusMutation.mutateAsync({ expenseIds: selectedExpenseIds, paymentStatus: "paid" })}
+                    disabled={updateExpenseStatusMutation.isPending}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Mark as Paid
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => {
+                      if (confirm(`Delete ${selectedExpenseIds.length} expense(s)?`)) {
+                        deleteExpensesMutation.mutateAsync({ expenseIds: selectedExpenseIds });
+                      }
+                    }}
+                    disabled={deleteExpensesMutation.isPending}
+                  >
+                    Delete
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setSelectedExpenseIds([])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
           <div className="space-y-3">
             {expenseData && expenseData.length > 0 ? (
               expenseData.map((expense) => (
-                <div key={expense.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={expense.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={selectedExpenseIds.includes(expense.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedExpenseIds([...selectedExpenseIds, expense.id]);
+                      } else {
+                        setSelectedExpenseIds(selectedExpenseIds.filter(id => id !== expense.id));
+                      }
+                    }}
+                    className="w-4 h-4 cursor-pointer"
+                  />
                   <div className="flex-1">
                     <p className="font-medium">{expense.description}</p>
                     <p className="text-sm text-gray-600">{expense.expenseType} • {expense.vendor}</p>
@@ -970,10 +1154,58 @@ export const FinancialManagement: React.FC = () => {
               </DialogContent>
             </Dialog>
           </div>
+          {selectedRevenueIds.length > 0 && (
+            <Card className="p-4 bg-blue-50 border-blue-200 mb-4">
+              <div className="flex items-center justify-between">
+                <p className="font-medium">{selectedRevenueIds.length} revenue record(s) selected</p>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    onClick={() => updateRevenueStatusMutation.mutateAsync({ revenueIds: selectedRevenueIds, paymentStatus: "paid" })}
+                    disabled={updateRevenueStatusMutation.isPending}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Mark as Paid
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => {
+                      if (confirm(`Delete ${selectedRevenueIds.length} revenue record(s)?`)) {
+                        deleteRevenueMutation.mutateAsync({ revenueIds: selectedRevenueIds });
+                      }
+                    }}
+                    disabled={deleteRevenueMutation.isPending}
+                  >
+                    Delete
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setSelectedRevenueIds([])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
           <div className="space-y-3">
             {revenueData && revenueData.length > 0 ? (
               revenueData.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={selectedRevenueIds.includes(item.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRevenueIds([...selectedRevenueIds, item.id]);
+                      } else {
+                        setSelectedRevenueIds(selectedRevenueIds.filter(id => id !== item.id));
+                      }
+                    }}
+                    className="w-4 h-4 cursor-pointer"
+                  />
                   <div className="flex-1">
                     <p className="font-medium">{item.description}</p>
                     <p className="text-sm text-gray-600">{item.productId}</p>
