@@ -23,6 +23,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const reconnectAttemptsRef = useRef<number>(0);
+  const maxReconnectAttemptsRef = useRef<number>(10);
 
   const connect = useCallback(() => {
     if (!user) {
@@ -87,11 +88,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         return;
       }
 
+      // Check max reconnection attempts
+      if (reconnectAttemptsRef.current >= maxReconnectAttemptsRef.current) {
+        console.error('[WebSocket] Max reconnection attempts reached');
+        setIsReconnecting(false);
+        return;
+      }
+
       // Exponential backoff reconnection
       const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
       reconnectAttemptsRef.current++;
 
-      console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`);
+      console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttemptsRef.current})`);
       setIsReconnecting(true);
 
       reconnectTimeoutRef.current = setTimeout(() => {
@@ -99,8 +107,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       }, delay);
     };
 
-    ws.onerror = (error) => {
-      console.error('[WebSocket] Error:', error);
+    ws.onerror = (event) => {
+      // Log error details safely
+      const errorMsg = event instanceof Event ? `WebSocket error: ${event.type}` : String(event);
+      console.error('[WebSocket]', errorMsg);
     };
 
     wsRef.current = ws;

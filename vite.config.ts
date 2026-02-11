@@ -207,10 +207,10 @@ export default defineConfig({
     ],
     hmr: {
       overlay: false,
-      protocol: "wss",
-      host: "3000-i08zezokrxmckhhg8hm77-f9f14256.us1.manus.computer", // Use the actual public host
-      port: 443, // Use 443 for wss
-      timeout: 60000, // Increase timeout to 60 seconds
+      protocol: process.env.VITE_HMR_PROTOCOL || "wss",
+      host: process.env.VITE_HMR_HOST || getPublicHost(),
+      port: process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 443,
+      timeout: 60000,
     },
     fs: {
       strict: false,
@@ -231,5 +231,8 @@ export default defineConfig({
   },
   define: {
     'process.env': JSON.stringify(process.env),
+    'import.meta.env.VITE_HMR_PROTOCOL': JSON.stringify(process.env.VITE_HMR_PROTOCOL || 'wss'),
+    'import.meta.env.VITE_HMR_HOST': JSON.stringify(process.env.VITE_HMR_HOST || getPublicHost()),
+    'import.meta.env.VITE_HMR_PORT': JSON.stringify(process.env.VITE_HMR_PORT || '443'),
   },
 });

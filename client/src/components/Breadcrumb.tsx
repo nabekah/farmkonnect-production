@@ -18,10 +18,8 @@ export function Breadcrumb() {
         <div key={index} className="flex items-center gap-2">
           {index > 0 && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
           {item.href ? (
-            <Link href={item.href}>
-              <a className="text-blue-600 hover:underline hover:text-blue-700 transition-colors">
-                {index === 0 ? <Home className="w-4 h-4" /> : item.label}
-              </a>
+            <Link href={item.href} className="text-blue-600 hover:underline hover:text-blue-700 transition-colors">
+              {index === 0 ? <Home className="w-4 h-4" /> : item.label}
             </Link>
           ) : item.onClick ? (
             <button

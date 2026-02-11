@@ -4477,3 +4477,15 @@
 - [x] Add CORS support for dev server
 - [x] Define process.env in Vite config for compatibility
 - [x] Restart dev server to apply configuration changes
+
+
+## Critical Production Errors (COMPLETED)
+- [x] Fix WebSocket connection error handling in useWebSocket.ts
+- [x] Fix WebSocket reconnection logic and max attempts (max 10 attempts)
+- [x] Fix latitude/longitude validation - handle undefined values
+- [x] Fix farm creation/update endpoints to accept optional coordinates
+- [x] Fix nested anchor tag HTML error in Breadcrumb component
+- [x] Fix Vite HMR WebSocket configuration for production
+- [x] Add proper error boundaries for WebSocket failures
+- [x] Add input validation for geographic coordinates
+- [x] Test all fixes in browser console

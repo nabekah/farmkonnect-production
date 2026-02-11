@@ -116,8 +116,8 @@ export const securityControlsRouter = router({
     .input(z.object({
       farmId: z.string(),
       zoneName: z.string(),
-      latitude: z.number(),
-      longitude: z.number(),
+      latitude: z.number().optional(),
+      longitude: z.number().optional(),
       radiusMeters: z.number().default(1000),
       alertOnExit: z.boolean().default(true)
     }))
@@ -187,8 +187,8 @@ export const securityControlsRouter = router({
   checkGeofenceStatus: protectedProcedure
     .input(z.object({
       farmId: z.string(),
-      latitude: z.number(),
-      longitude: z.number()
+      latitude: z.number().optional(),
+      longitude: z.number().optional()
     }))
     .query(async ({ ctx, input }) => {
       try {
