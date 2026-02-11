@@ -250,6 +250,10 @@ export const FinancialManagement: React.FC = () => {
   // ============ EVENT HANDLERS ============
 
   const handleAddExpense = async () => {
+    if (isConsolidated) {
+      toast.error("Cannot add expense in consolidated view. Please select a specific farm.");
+      return;
+    }
     if (!expenseForm.description || !expenseForm.amount || !farmId) {
       toast.error("Please fill in all required fields");
       return;
@@ -266,6 +270,10 @@ export const FinancialManagement: React.FC = () => {
   };
 
   const handleAddRevenue = async () => {
+    if (isConsolidated) {
+      toast.error("Cannot add revenue in consolidated view. Please select a specific farm.");
+      return;
+    }
     if (!revenueForm.description || !revenueForm.quantity || !revenueForm.unitPrice || !farmId) {
       toast.error("Please fill in all required fields");
       return;
@@ -769,7 +777,7 @@ export const FinancialManagement: React.FC = () => {
             <h2 className="text-xl font-bold">Expense Tracking</h2>
             <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" disabled={isConsolidated} title={isConsolidated ? "Select a specific farm to add expenses" : ""}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Expense
                 </Button>
@@ -1106,11 +1114,11 @@ export const FinancialManagement: React.FC = () => {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Veterinary Appointments</h3>
-              <Dialog>
+            <Dialog>
                 <DialogTrigger asChild>
-                  <Button size="sm">
+                  <Button size="sm" disabled={isConsolidated} title={isConsolidated ? "Select a specific farm to add revenue" : ""}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Appointment
+                    Add Revenue
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
