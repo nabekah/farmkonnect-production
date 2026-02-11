@@ -102,6 +102,7 @@ import { WebSocketStatus } from "./components/WebSocketStatus";
 import { useNotification } from "./contexts/NotificationContext";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { LoadingProvider } from "./contexts/LoadingContext";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 import { FinancialDashboard } from "./pages/FinancialDashboard";
 import { FinancialManagement } from "./pages/FinancialManagement";
 import { FinancialForecastingDashboard } from "./pages/FinancialForecastingDashboard";
@@ -839,6 +840,9 @@ function AppContent() {
           <BreadcrumbProvider>
             <TooltipProvider>
               <div className="min-h-screen flex flex-col bg-background">
+                {/* Offline Indicator */}
+                <OfflineIndicator />
+
                 {/* Top Navigation Bar */}
                 <nav className="border-b bg-background sticky top-0 z-40 shadow-sm">
                   <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">

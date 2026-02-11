@@ -4506,3 +4506,27 @@
 - [x] Test error boundary with intentional errors
 - [x] Test retry logic with network failures
 - [x] Test loading indicators with slow API responses
+
+
+## Toast Notifications for Errors (COMPLETED)
+- [x] Create ErrorToast component with retry button
+- [x] Integrate toast notifications into existing ToastContainer
+- [x] Add error toast to useRetry hook
+- [x] Add error toast to tRPC retry wrapper
+- [x] Test error toast display and interactions
+
+## Request Cancellation with AbortController (COMPLETED)
+- [x] Create useAbortController hook with lifecycle management
+- [x] Implement AbortController signal getter and abort methods
+- [x] Add request cancellation on component unmount
+- [x] Add fetchWithAbort utility function
+- [x] Test cancellation with slow requests
+
+## Offline Mode Detection (COMPLETED)
+- [x] Create useOnlineStatus hook with online/offline callbacks
+- [x] Create OfflineIndicator component with banner UI
+- [x] Implement offline banner with sync button
+- [x] Create RequestQueueManager for offline operations
+- [x] Implement automatic sync when online
+- [x] Add sync status indicator and messages
+- [x] Integrate OfflineIndicator into App.tsx
