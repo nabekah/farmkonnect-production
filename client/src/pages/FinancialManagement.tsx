@@ -158,6 +158,30 @@ export const FinancialManagement: React.FC = () => {
     { enabled: !!farmId }
   );
 
+  // Fetch veterinary expenses
+  const { data: vetExpenses, isLoading: vetExpensesLoading } = trpc.financialManagement.getVeterinaryExpenses.useQuery(
+    farmId ? { farmId, startDate, endDate } : undefined,
+    { enabled: !!farmId }
+  );
+
+  // Fetch insurance claims
+  const { data: insuranceClaims, isLoading: insuranceClaimsLoading } = trpc.financialManagement.getInsuranceClaims.useQuery(
+    farmId ? { farmId } : undefined,
+    { enabled: !!farmId }
+  );
+
+  // Fetch insurance summary
+  const { data: insuranceSummary, isLoading: insuranceSummaryLoading } = trpc.financialManagement.getInsuranceSummary.useQuery(
+    farmId ? { farmId } : undefined,
+    { enabled: !!farmId }
+  );
+
+  // Fetch veterinary summary
+  const { data: vetSummary, isLoading: vetSummaryLoading } = trpc.financialManagement.getVeterinarySummary.useQuery(
+    farmId ? { farmId } : undefined,
+    { enabled: !!farmId }
+  );
+
   // ============ MUTATIONS ============
 
   // Add expense mutation
@@ -999,7 +1023,259 @@ export const FinancialManagement: React.FC = () => {
         >
           Budget
         </Button>
+        <Button
+          variant={viewMode === "veterinary" ? "default" : "outline"}
+          onClick={() => setViewMode("veterinary")}
+        >
+          <Stethoscope className="w-4 h-4 mr-2" />
+          Veterinary
+        </Button>
+        <Button
+          variant={viewMode === "insurance" ? "default" : "outline"}
+          onClick={() => setViewMode("insurance")}
+        >
+          <Shield className="w-4 h-4 mr-2" />
+          Insurance
+        </Button>
       </div>
+
+      {/* Veterinary View */}
+      {viewMode === "veterinary" && (
+        <div className="space-y-6">
+          {/* Veterinary Summary Cards */}
+          {vetSummary && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Appointments</p>
+                    <p className="text-2xl font-bold">
+                      {vetSummary.appointmentStats?.reduce((sum, stat) => sum + (stat.count || 0), 0) || 0}
+                    </p>
+                  </div>
+                  <Stethoscope className="w-8 h-8 text-blue-500" />
+                </div>
+              </Card>
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Vet Costs</p>
+                    <p className="text-2xl font-bold">
+                      ₵{vetSummary.appointmentStats?.reduce((sum, stat) => sum + (Number(stat.totalCost) || 0), 0).toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-red-500" />
+                </div>
+              </Card>
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Active Prescriptions</p>
+                    <p className="text-2xl font-bold">{vetSummary.prescriptions?.count || 0}</p>
+                  </div>
+                  <Pill className="w-8 h-8 text-purple-500" />
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Veterinary Expenses List */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Veterinary Appointments</h3>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Appointment
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Record Veterinary Appointment</DialogTitle>
+                    <DialogDescription>Add a new veterinary appointment and expense</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Appointment Type</Label>
+                      <Select defaultValue="clinic_visit">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="clinic_visit">Clinic Visit</SelectItem>
+                          <SelectItem value="farm_visit">Farm Visit</SelectItem>
+                          <SelectItem value="telemedicine">Telemedicine</SelectItem>
+                          <SelectItem value="emergency">Emergency</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="vet-reason">Reason for Visit</Label>
+                      <Input id="vet-reason" placeholder="e.g., Cattle vaccination" />
+                    </div>
+                    <div>
+                      <Label htmlFor="vet-cost">Cost (₵)</Label>
+                      <Input id="vet-cost" type="number" placeholder="0.00" />
+                    </div>
+                    <div>
+                      <Label htmlFor="vet-date">Date</Label>
+                      <Input id="vet-date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                    <Button className="w-full">Record Appointment</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {vetExpenses && vetExpenses.length > 0 ? (
+              <div className="space-y-3">
+                {vetExpenses.map((expense) => (
+                  <div key={expense.id} className="flex items-center justify-between p-3 border rounded-lg bg-purple-50">
+                    <div>
+                      <p className="font-medium">{expense.reason}</p>
+                      <p className="text-sm text-gray-600">{expense.appointmentType} • {new Date(expense.appointmentDate).toLocaleDateString()}</p>
+                      {expense.diagnosis && <p className="text-xs text-gray-500 mt-1">Diagnosis: {expense.diagnosis}</p>}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-purple-600">₵{(Number(expense.cost) || 0).toLocaleString()}</p>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        expense.paymentStatus === "paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {expense.paymentStatus}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No veterinary appointments recorded</p>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Insurance View */}
+      {viewMode === "insurance" && (
+        <div className="space-y-6">
+          {/* Insurance Summary Cards */}
+          {insuranceSummary && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Premiums</p>
+                    <p className="text-2xl font-bold">₵{insuranceSummary.totalPremiums.toLocaleString()}</p>
+                  </div>
+                  <Shield className="w-8 h-8 text-blue-500" />
+                </div>
+              </Card>
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Claims</p>
+                    <p className="text-2xl font-bold">
+                      {insuranceSummary.claimStats?.reduce((sum, stat) => sum + (stat.count || 0), 0) || 0}
+                    </p>
+                  </div>
+                  <FileText className="w-8 h-8 text-orange-500" />
+                </div>
+              </Card>
+              <Card className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Claimed</p>
+                    <p className="text-2xl font-bold">
+                      ₵{insuranceSummary.claimStats?.reduce((sum, stat) => sum + (Number(stat.totalAmount) || 0), 0).toLocaleString() || 0}
+                    </p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-green-500" />
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Insurance Claims List */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Insurance Claims</h3>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Claim
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>File Insurance Claim</DialogTitle>
+                    <DialogDescription>Create a new insurance claim</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="insurance-provider">Insurance Provider</Label>
+                      <Input id="insurance-provider" placeholder="e.g., AgriFarm Insurance" />
+                    </div>
+                    <div>
+                      <Label htmlFor="policy-number">Policy Number</Label>
+                      <Input id="policy-number" placeholder="Policy #" />
+                    </div>
+                    <div>
+                      <Label>Claim Type</Label>
+                      <Select defaultValue="veterinary_service">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="veterinary_service">Veterinary Service</SelectItem>
+                          <SelectItem value="medication">Medication</SelectItem>
+                          <SelectItem value="emergency">Emergency</SelectItem>
+                          <SelectItem value="preventive">Preventive</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="claim-amount">Claim Amount (₵)</Label>
+                      <Input id="claim-amount" type="number" placeholder="0.00" />
+                    </div>
+                    <div>
+                      <Label htmlFor="claim-date">Claim Date</Label>
+                      <Input id="claim-date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                    <Button className="w-full">File Claim</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {insuranceClaims && insuranceClaims.length > 0 ? (
+              <div className="space-y-3">
+                {insuranceClaims.map((claim) => (
+                  <div key={claim.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div>
+                      <p className="font-medium">{claim.claimNumber}</p>
+                      <p className="text-sm text-gray-600">{claim.insuranceProvider} • {claim.claimType}</p>
+                      <p className="text-xs text-gray-500">Policy: {claim.policyNumber}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">₵{(Number(claim.claimAmount) || 0).toLocaleString()}</p>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        claim.status === "approved" ? "bg-green-100 text-green-800" :
+                        claim.status === "rejected" ? "bg-red-100 text-red-800" :
+                        claim.status === "paid" ? "bg-blue-100 text-blue-800" :
+                        "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {claim.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No insurance claims filed</p>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

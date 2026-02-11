@@ -7,7 +7,11 @@ import {
   revenue,
   budgets,
   invoices,
-  animals
+  animals,
+  vetAppointments,
+  insuranceClaims,
+  prescriptions,
+  animalHealthRecords
 } from "../../drizzle/schema";
 
 export const financialManagementRouter = router({
@@ -699,5 +703,167 @@ export const financialManagementRouter = router({
         data: reportData,
         message: `Financial report exported successfully as ${input.format.toUpperCase()}`,
       };
-    })
+    }),
+
+  getVeterinaryExpenses: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      let query = db.select({
+        id: vetAppointments.id,
+        appointmentDate: vetAppointments.appointmentDate,
+        appointmentType: vetAppointments.appointmentType,
+        cost: vetAppointments.cost,
+        paymentStatus: vetAppointments.paymentStatus,
+        diagnosis: vetAppointments.diagnosis,
+        treatment: vetAppointments.treatment,
+        reason: vetAppointments.reason,
+      }).from(vetAppointments).where(eq(vetAppointments.farmId, farmIdNum));
+      if (input.startDate && input.endDate) {
+        query = query.where(and(gte(vetAppointments.appointmentDate, input.startDate), lte(vetAppointments.appointmentDate, input.endDate)));
+      }
+      return await query.orderBy(sql`${vetAppointments.appointmentDate} DESC`);
+    }),
+
+  getInsuranceClaims: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      status: z.string().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      let query = db.select({
+        id: insuranceClaims.id,
+        claimNumber: insuranceClaims.claimNumber,
+        insuranceProvider: insuranceClaims.insuranceProvider,
+        policyNumber: insuranceClaims.policyNumber,
+        claimType: insuranceClaims.claimType,
+        claimAmount: insuranceClaims.claimAmount,
+        claimDate: insuranceClaims.claimDate,
+        status: insuranceClaims.status,
+        approvalAmount: insuranceClaims.approvalAmount,
+        paymentDate: insuranceClaims.paymentDate,
+        paymentAmount: insuranceClaims.paymentAmount,
+      }).from(insuranceClaims).where(eq(insuranceClaims.farmId, farmIdNum));
+      if (input.status) {
+        query = query.where(eq(insuranceClaims.status, input.status as any));
+      }
+      return await query.orderBy(sql`${insuranceClaims.claimDate} DESC`);
+    }),
+
+  getInsuranceSummary: protectedProcedure
+    .input(z.object({ farmId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const farmIdNum = parseInt(input.farmId);
+      const claimStats = await db.select({
+        status: insuranceClaims.status,
+        count: sql<number>`COUNT(*)`,
+        totalAmount: sql<string>`SUM(${insuranceClaims.claimAmount})`,
+        totalPaid: sql<string>`SUM(${insuranceClaims.paymentAmount})`,
+      }).from(insuranceClaims).where(eq(insuranceClaims.farmId, farmIdNum)).groupBy(insuranceClaims.status);
+      const premiumResult = await db.select({
+        totalPremium: sql<string>`SUM(${expenses.amount})`,
+      }).from(expenses).where(and(eq(expenses.farmId, farmIdNum), eq(expenses.expenseType, "insurance")));
+      return { claimStats, totalPremiums: Number(premiumResult[0]?.totalPremium || 0) };
+    }),
+
+  getVeterinarySummary: protectedProcedure
+    .input(z.object({ farmId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const farmIdNum = parseInt(input.farmId);
+      const appointmentStats = await db.select({
+        appointmentType: vetAppointments.appointmentType,
+        count: sql<number>`COUNT(*)`,
+        totalCost: sql<string>`SUM(${vetAppointments.cost})`,
+      }).from(vetAppointments).where(eq(vetAppointments.farmId, farmIdNum)).groupBy(vetAppointments.appointmentType);
+      const paymentStats = await db.select({
+        paymentStatus: vetAppointments.paymentStatus,
+        count: sql<number>`COUNT(*)`,
+        totalAmount: sql<string>`SUM(${vetAppointments.cost})`,
+      }).from(vetAppointments).where(eq(vetAppointments.farmId, farmIdNum)).groupBy(vetAppointments.paymentStatus);
+      const prescriptionCount = await db.select({
+        count: sql<number>`COUNT(*)`,
+        totalCost: sql<string>`SUM(${prescriptions.cost})`,
+      }).from(prescriptions).where(eq(prescriptions.farmId, farmIdNum));
+      return { appointmentStats, paymentStats, prescriptions: { count: prescriptionCount[0]?.count || 0, totalCost: Number(prescriptionCount[0]?.totalCost || 0) } };
+    }),
+
+  createVetAppointment: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      veterinarianId: z.number().optional(),
+      appointmentType: z.enum(["clinic_visit", "farm_visit", "telemedicine", "emergency"]),
+      appointmentDate: z.date().or(z.string()),
+      reason: z.string(),
+      cost: z.number().positive(),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const farmIdNum = parseInt(input.farmId);
+      const appointmentDateObj = input.appointmentDate instanceof Date ? input.appointmentDate : new Date(input.appointmentDate);
+      const [result] = await db.insert(vetAppointments).values({
+        farmId: farmIdNum,
+        veterinarianId: input.veterinarianId || 1,
+        appointmentType: input.appointmentType,
+        appointmentDate: appointmentDateObj,
+        reason: input.reason,
+        cost: input.cost,
+        notes: input.notes,
+        status: "completed",
+        paymentStatus: "pending",
+      });
+      await db.insert(expenses).values({
+        farmId: farmIdNum,
+        expenseType: "veterinary",
+        description: `Veterinary ${input.appointmentType}: ${input.reason}`,
+        amount: input.cost,
+        expenseDate: appointmentDateObj.toISOString().split('T')[0],
+        paymentStatus: "pending",
+      });
+      return result;
+    }),
+
+  createInsuranceClaim: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      insuranceProvider: z.string(),
+      policyNumber: z.string(),
+      claimType: z.enum(["veterinary_service", "medication", "emergency", "preventive", "other"]),
+      claimAmount: z.number().positive(),
+      claimDate: z.date().or(z.string()),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      const farmIdNum = parseInt(input.farmId);
+      const claimDateObj = input.claimDate instanceof Date ? input.claimDate : new Date(input.claimDate);
+      const claimNumber = `CLM-${farmIdNum}-${Date.now()}`;
+      const [result] = await db.insert(insuranceClaims).values({
+        farmId: farmIdNum,
+        claimNumber,
+        insuranceProvider: input.insuranceProvider,
+        policyNumber: input.policyNumber,
+        claimType: input.claimType,
+        claimAmount: input.claimAmount,
+        claimDate: claimDateObj,
+        status: "draft",
+        notes: input.notes,
+      });
+      return result;
+    }),
 });
