@@ -88,14 +88,14 @@ export const FinancialManagement: React.FC = () => {
   // Fetch user's farms
   const { data: farms = [], isLoading: farmsLoading } = trpc.farms.list.useQuery();
 
-  // Set default farm on load
+  // Set default farm on load - only when farms load, not on every selectedFarmId change
   React.useEffect(() => {
     if (farms.length > 0 && !selectedFarmId) {
       setSelectedFarmId(farms[0].id.toString());
     }
-  }, [farms, selectedFarmId]);
+  }, [farms]); // Only depend on farms, not selectedFarmId
 
-  // Prepare farmId for queries
+  // Prepare farmId for queries - use selectedFarmId if set, otherwise use first farm
   const farmId = selectedFarmId || (farms.length > 0 ? farms[0].id.toString() : "");
 
   // Fetch financial summary
@@ -235,14 +235,17 @@ export const FinancialManagement: React.FC = () => {
       <div className="flex gap-4">
         <div className="flex-1">
           <label className="text-sm font-medium mb-2 block">Select Farm</label>
-          <Select value={selectedFarmId} onValueChange={setSelectedFarmId}>
+          <Select value={selectedFarmId || ""} onValueChange={setSelectedFarmId}>
             <SelectTrigger>
-              <SelectValue placeholder="Choose a farm" />
+              <SelectValue placeholder={farmsLoading ? "Loading farms..." : "Choose a farm"} />
             </SelectTrigger>
             <SelectContent>
+              {farms.length === 0 && !farmsLoading && (
+                <div className="p-2 text-gray-500 text-sm">No farms available</div>
+              )}
               {farms.map((farm) => (
                 <SelectItem key={farm.id} value={farm.id.toString()}>
-                  {farm.name}
+                  {farm.farmName || farm.name || "Unnamed Farm"}
                 </SelectItem>
               ))}
             </SelectContent>
