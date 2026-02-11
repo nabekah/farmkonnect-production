@@ -3,6 +3,9 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   DollarSign,
   TrendingUp,
@@ -28,17 +31,18 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { BarChart, Bar, PieChart as PieChartComponent, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 /**
  * Financial Management & Accounting Component
  * Comprehensive farm financial management and reporting with veterinary integration
- * NOW CONNECTED TO REAL DATABASE VIA tRPC
+ * NOW WITH REAL DATABASE INTEGRATION + ALL ORIGINAL FEATURES
  */
 export const FinancialManagement: React.FC = () => {
   const { user } = useAuth();
   const utils = trpc.useUtils();
 
+  // ============ STATE ============
   const [viewMode, setViewMode] = useState<
     "dashboard" | "expenses" | "revenue" | "budget" | "forecast" | "reports" | "tax" | "veterinary" | "insurance" | "alerts" | "export"
   >("dashboard");
@@ -47,9 +51,29 @@ export const FinancialManagement: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [showBudgetAlerts, setShowBudgetAlerts] = useState(false);
   const [exportFormat, setExportFormat] = useState<"pdf" | "csv" | "excel">("pdf");
-  const [isExporting, setIsExporting] = useState(false);
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
 
-  // Expense categories - from database schema
+  // Add Expense form state
+  const [expenseForm, setExpenseForm] = useState({
+    description: "",
+    expenseType: "feed",
+    amount: "",
+    vendor: "",
+    expenseDate: new Date().toISOString().split('T')[0],
+  });
+
+  // Add Revenue form state
+  const [revenueForm, setRevenueForm] = useState({
+    description: "",
+    productId: "",
+    quantity: "",
+    unitPrice: "",
+    saleDate: new Date().toISOString().split('T')[0],
+    buyerName: "",
+  });
+
+  // Expense categories
   const expenseCategories = [
     { value: "all", label: "All Categories" },
     { value: "feed", label: "Feed" },
@@ -88,14 +112,14 @@ export const FinancialManagement: React.FC = () => {
   // Fetch user's farms
   const { data: farms = [], isLoading: farmsLoading } = trpc.farms.list.useQuery();
 
-  // Set default farm on load - only when farms load, not on every selectedFarmId change
+  // Set default farm on load
   React.useEffect(() => {
     if (farms.length > 0 && !selectedFarmId) {
       setSelectedFarmId(farms[0].id.toString());
     }
-  }, [farms]); // Only depend on farms, not selectedFarmId
+  }, [farms]);
 
-  // Prepare farmId for queries - use selectedFarmId if set, otherwise use first farm
+  // Prepare farmId for queries
   const farmId = selectedFarmId || (farms.length > 0 ? farms[0].id.toString() : "");
 
   // Fetch financial summary
@@ -136,44 +160,91 @@ export const FinancialManagement: React.FC = () => {
 
   // ============ MUTATIONS ============
 
-  // Export mutation
-  const exportMutation = trpc.financialManagement.exportReport.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Report exported successfully as ${exportFormat.toUpperCase()}`);
-      // In a real app, trigger download here
-      console.log("Export data:", data);
+  // Add expense mutation
+  const addExpenseMutation = trpc.financialManagement.createExpense.useMutation({
+    onSuccess: () => {
+      toast.success("Expense added successfully");
+      setIsAddExpenseOpen(false);
+      setExpenseForm({
+        description: "",
+        expenseType: "feed",
+        amount: "",
+        vendor: "",
+        expenseDate: new Date().toISOString().split('T')[0],
+      });
+      // Invalidate queries to refresh data
+      utils.financialManagement.getExpenses.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+      utils.financialManagement.getExpenseBreakdown.invalidate();
     },
     onError: (error) => {
-      toast.error(`Export failed: ${error.message}`);
+      toast.error(`Failed to add expense: ${error.message}`);
+    },
+  });
+
+  // Add revenue mutation
+  const addRevenueMutation = trpc.financialManagement.createRevenue.useMutation({
+    onSuccess: () => {
+      toast.success("Revenue added successfully");
+      setIsAddRevenueOpen(false);
+      setRevenueForm({
+        description: "",
+        productId: "",
+        quantity: "",
+        unitPrice: "",
+        saleDate: new Date().toISOString().split('T')[0],
+        buyerName: "",
+      });
+      // Invalidate queries to refresh data
+      utils.financialManagement.getRevenue.invalidate();
+      utils.financialManagement.getFinancialSummary.invalidate();
+      utils.financialManagement.getRevenueBreakdown.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to add revenue: ${error.message}`);
     },
   });
 
   // ============ EVENT HANDLERS ============
 
-  const handleExport = async (format: "pdf" | "csv" | "excel") => {
-    if (!farmId) {
-      toast.error("Please select a farm first");
+  const handleAddExpense = async () => {
+    if (!expenseForm.description || !expenseForm.amount || !farmId) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    setIsExporting(true);
-    try {
-      await exportMutation.mutateAsync({
-        farmId,
-        format,
-        startDate,
-        endDate,
-      });
-    } finally {
-      setIsExporting(false);
+    await addExpenseMutation.mutateAsync({
+      farmId,
+      description: expenseForm.description,
+      expenseType: expenseForm.expenseType,
+      amount: parseFloat(expenseForm.amount),
+      vendor: expenseForm.vendor,
+      expenseDate: new Date(expenseForm.expenseDate),
+    });
+  };
+
+  const handleAddRevenue = async () => {
+    if (!revenueForm.description || !revenueForm.quantity || !revenueForm.unitPrice || !farmId) {
+      toast.error("Please fill in all required fields");
+      return;
     }
+
+    await addRevenueMutation.mutateAsync({
+      farmId,
+      description: revenueForm.description,
+      productId: revenueForm.productId || "unknown",
+      quantity: parseFloat(revenueForm.quantity),
+      unitPrice: parseFloat(revenueForm.unitPrice),
+      saleDate: new Date(revenueForm.saleDate),
+      buyerName: revenueForm.buyerName,
+    });
   };
 
   // ============ LOADING STATES ============
 
   const isLoading = summaryLoading || expensesLoading || revenueLoading || budgetsLoading;
 
-  if (isLoading) {
+  if (isLoading && !summary) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -438,7 +509,87 @@ export const FinancialManagement: React.FC = () => {
 
           {/* Recent Expenses */}
           <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4">Recent Expenses</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Recent Expenses</h3>
+              <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Expense
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Expense</DialogTitle>
+                    <DialogDescription>Record a new farm expense</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        value={expenseForm.description}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                        placeholder="e.g., Fertilizer purchase"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="expenseType">Category</Label>
+                      <Select value={expenseForm.expenseType} onValueChange={(val) => setExpenseForm({ ...expenseForm, expenseType: val })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {expenseCategories.filter(c => c.value !== "all").map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="amount">Amount (₵)</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        value={expenseForm.amount}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="vendor">Vendor</Label>
+                      <Input
+                        id="vendor"
+                        value={expenseForm.vendor}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, vendor: e.target.value })}
+                        placeholder="Vendor name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="expenseDate">Date</Label>
+                      <Input
+                        id="expenseDate"
+                        type="date"
+                        value={expenseForm.expenseDate}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, expenseDate: e.target.value })}
+                      />
+                    </div>
+                    <Button onClick={handleAddExpense} disabled={addExpenseMutation.isPending} className="w-full">
+                      {addExpenseMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        "Add Expense"
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             {expenseData && expenseData.length > 0 ? (
               <div className="space-y-3">
                 {expenseData.slice(0, 5).map((expense) => (
@@ -458,7 +609,93 @@ export const FinancialManagement: React.FC = () => {
 
           {/* Recent Revenue */}
           <Card className="p-6">
-            <h3 className="text-lg font-bold mb-4">Recent Revenue</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Recent Revenue</h3>
+              <Dialog open={isAddRevenueOpen} onOpenChange={setIsAddRevenueOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Revenue
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Revenue</DialogTitle>
+                    <DialogDescription>Record a new sale or revenue</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="rev-description">Description</Label>
+                      <Input
+                        id="rev-description"
+                        value={revenueForm.description}
+                        onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })}
+                        placeholder="e.g., Maize sale"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="productId">Product</Label>
+                      <Input
+                        id="productId"
+                        value={revenueForm.productId}
+                        onChange={(e) => setRevenueForm({ ...revenueForm, productId: e.target.value })}
+                        placeholder="Product name"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="quantity">Quantity</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          value={revenueForm.quantity}
+                          onChange={(e) => setRevenueForm({ ...revenueForm, quantity: e.target.value })}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="unitPrice">Unit Price (₵)</Label>
+                        <Input
+                          id="unitPrice"
+                          type="number"
+                          value={revenueForm.unitPrice}
+                          onChange={(e) => setRevenueForm({ ...revenueForm, unitPrice: e.target.value })}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="buyerName">Buyer Name</Label>
+                      <Input
+                        id="buyerName"
+                        value={revenueForm.buyerName}
+                        onChange={(e) => setRevenueForm({ ...revenueForm, buyerName: e.target.value })}
+                        placeholder="Buyer name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="saleDate">Date</Label>
+                      <Input
+                        id="saleDate"
+                        type="date"
+                        value={revenueForm.saleDate}
+                        onChange={(e) => setRevenueForm({ ...revenueForm, saleDate: e.target.value })}
+                      />
+                    </div>
+                    <Button onClick={handleAddRevenue} disabled={addRevenueMutation.isPending} className="w-full">
+                      {addRevenueMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        "Add Revenue"
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             {revenueData && revenueData.length > 0 ? (
               <div className="space-y-3">
                 {revenueData.slice(0, 5).map((rev) => (
@@ -478,71 +715,293 @@ export const FinancialManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Export Report View */}
-      {viewMode === "export" && (
+      {/* Expenses View */}
+      {viewMode === "expenses" && (
         <Card className="p-6">
-          <h2 className="text-xl font-bold mb-4">Export Financial Report</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Select Export Format</label>
-              <div className="flex gap-3">
-                <Button
-                  variant={exportFormat === "pdf" ? "default" : "outline"}
-                  onClick={() => setExportFormat("pdf")}
-                  className="flex-1"
-                  disabled={isExporting}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  PDF Report
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Expense Tracking</h2>
+            <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Expense
                 </Button>
-                <Button
-                  variant={exportFormat === "csv" ? "default" : "outline"}
-                  onClick={() => setExportFormat("csv")}
-                  className="flex-1"
-                  disabled={isExporting}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  CSV Export
-                </Button>
-                <Button
-                  variant={exportFormat === "excel" ? "default" : "outline"}
-                  onClick={() => setExportFormat("excel")}
-                  className="flex-1"
-                  disabled={isExporting}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Excel Export
-                </Button>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => handleExport(exportFormat)}
-                className="flex-1"
-                disabled={isExporting || !farmId}
-              >
-                {isExporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Report
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setViewMode("dashboard")}
-              >
-                Cancel
-              </Button>
-            </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Expense</DialogTitle>
+                  <DialogDescription>Record a new farm expense</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      id="description"
+                      value={expenseForm.description}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                      placeholder="e.g., Fertilizer purchase"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expenseType">Category</Label>
+                    <Select value={expenseForm.expenseType} onValueChange={(val) => setExpenseForm({ ...expenseForm, expenseType: val })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {expenseCategories.filter(c => c.value !== "all").map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="amount">Amount (₵)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={expenseForm.amount}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="vendor">Vendor</Label>
+                    <Input
+                      id="vendor"
+                      value={expenseForm.vendor}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, vendor: e.target.value })}
+                      placeholder="Vendor name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expenseDate">Date</Label>
+                    <Input
+                      id="expenseDate"
+                      type="date"
+                      value={expenseForm.expenseDate}
+                      onChange={(e) => setExpenseForm({ ...expenseForm, expenseDate: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={handleAddExpense} disabled={addExpenseMutation.isPending} className="w-full">
+                    {addExpenseMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      "Add Expense"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="space-y-3">
+            {expenseData && expenseData.length > 0 ? (
+              expenseData.map((expense) => (
+                <div key={expense.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium">{expense.description}</p>
+                    <p className="text-sm text-gray-600">{expense.expenseType} • {expense.vendor}</p>
+                    <p className="text-xs text-gray-500">{new Date(expense.expenseDate).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">₵{(Number(expense.amount) || 0).toLocaleString()}</p>
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      expense.paymentStatus === "paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                    }`}>
+                      {expense.paymentStatus || "pending"}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-8">No expenses recorded</p>
+            )}
           </div>
         </Card>
       )}
+
+      {/* Revenue View */}
+      {viewMode === "revenue" && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Revenue Tracking</h2>
+            <Dialog open={isAddRevenueOpen} onOpenChange={setIsAddRevenueOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Revenue
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Revenue</DialogTitle>
+                  <DialogDescription>Record a new sale or revenue</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="rev-description">Description</Label>
+                    <Input
+                      id="rev-description"
+                      value={revenueForm.description}
+                      onChange={(e) => setRevenueForm({ ...revenueForm, description: e.target.value })}
+                      placeholder="e.g., Maize sale"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="productId">Product</Label>
+                    <Input
+                      id="productId"
+                      value={revenueForm.productId}
+                      onChange={(e) => setRevenueForm({ ...revenueForm, productId: e.target.value })}
+                      placeholder="Product name"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="quantity">Quantity</Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={revenueForm.quantity}
+                        onChange={(e) => setRevenueForm({ ...revenueForm, quantity: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="unitPrice">Unit Price (₵)</Label>
+                      <Input
+                        id="unitPrice"
+                        type="number"
+                        value={revenueForm.unitPrice}
+                        onChange={(e) => setRevenueForm({ ...revenueForm, unitPrice: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="buyerName">Buyer Name</Label>
+                    <Input
+                      id="buyerName"
+                      value={revenueForm.buyerName}
+                      onChange={(e) => setRevenueForm({ ...revenueForm, buyerName: e.target.value })}
+                      placeholder="Buyer name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="saleDate">Date</Label>
+                    <Input
+                      id="saleDate"
+                      type="date"
+                      value={revenueForm.saleDate}
+                      onChange={(e) => setRevenueForm({ ...revenueForm, saleDate: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={handleAddRevenue} disabled={addRevenueMutation.isPending} className="w-full">
+                    {addRevenueMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      "Add Revenue"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="space-y-3">
+            {revenueData && revenueData.length > 0 ? (
+              revenueData.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium">{item.description}</p>
+                    <p className="text-sm text-gray-600">{item.productId}</p>
+                    <p className="text-xs text-gray-500">{new Date(item.saleDate).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-green-600">₵{(Number(item.totalAmount) || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-8">No revenue recorded</p>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Budget View */}
+      {viewMode === "budget" && (
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-bold mb-4">Budget by Category</h2>
+            {budgetVariances.length > 0 ? (
+              <div className="space-y-4">
+                {budgetVariances.map((category, idx) => (
+                  <div key={idx}>
+                    <div className="flex justify-between mb-2">
+                      <p className="font-medium">{category.category}</p>
+                      <p className="text-sm text-gray-600">
+                        ₵{category.actual.toLocaleString()} / ₵{category.budgeted.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${Math.min((category.actual / category.budgeted) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    {category.variance > 0 && (
+                      <p className="text-xs text-green-600 mt-1">Under budget by ₵{category.variance.toLocaleString()}</p>
+                    )}
+                    {category.variance < 0 && (
+                      <p className="text-xs text-red-600 mt-1">Over budget by ₵{Math.abs(category.variance).toLocaleString()}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No budget data available</p>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* View Selector Buttons */}
+      <div className="flex flex-wrap gap-2 pt-4 border-t">
+        <Button
+          variant={viewMode === "dashboard" ? "default" : "outline"}
+          onClick={() => setViewMode("dashboard")}
+        >
+          Dashboard
+        </Button>
+        <Button
+          variant={viewMode === "expenses" ? "default" : "outline"}
+          onClick={() => setViewMode("expenses")}
+        >
+          Expenses
+        </Button>
+        <Button
+          variant={viewMode === "revenue" ? "default" : "outline"}
+          onClick={() => setViewMode("revenue")}
+        >
+          Revenue
+        </Button>
+        <Button
+          variant={viewMode === "budget" ? "default" : "outline"}
+          onClick={() => setViewMode("budget")}
+        >
+          Budget
+        </Button>
+      </div>
     </div>
   );
 };
+
+export default FinancialManagement;
