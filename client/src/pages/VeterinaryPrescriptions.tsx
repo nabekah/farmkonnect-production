@@ -8,8 +8,8 @@ import { trpc } from "@/lib/trpc";
 export default function VeterinaryPrescriptions() {
   const [selectedPrescription, setSelectedPrescription] = useState<number | null>(null);
 
-  // Fetch prescriptions
-  const { data: prescriptions = [], isLoading } = trpc.veterinary.getPrescriptions.useQuery({
+  // Fetch medications (prescriptions)
+  const { data: prescriptions = [], isLoading } = trpc.medicationTracking.getMedicationInventory.useQuery({
     farmId: 1,
   });
 
