@@ -267,14 +267,23 @@ class WebSocketService {
 }
 
 // Create singleton instance
-const wsUrl = process.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
+const wsUrl = import.meta.env.VITE_WS_URL || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
 export const wsService = new WebSocketService(wsUrl);
 
-// Auto-connect on module load
-if (typeof window !== "undefined") {
-  wsService.connect().catch(error => {
-    console.warn("WebSocket connection failed on startup:", error);
-  });
+// Auto-connect on module load (only in browser)
+if (typeof window !== "undefined" && typeof document !== "undefined") {
+  // Delay connection to ensure DOM is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      wsService.connect().catch(error => {
+        console.warn("WebSocket connection failed on startup:", error);
+      });
+    });
+  } else {
+    wsService.connect().catch(error => {
+      console.warn("WebSocket connection failed on startup:", error);
+    });
+  }
 }
 
 export default wsService;

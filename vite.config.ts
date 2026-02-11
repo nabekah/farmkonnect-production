@@ -152,6 +152,15 @@ function vitePluginManusDebugCollector(): Plugin {
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
 
+// Get the public URL from environment or use default
+const getPublicHost = () => {
+  if (process.env.VITE_PUBLIC_URL) {
+    return process.env.VITE_PUBLIC_URL.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  }
+  // Default for Manus environment
+  return '3000-i08zezokrxmckhhg8hm77-f9f14256.us1.manus.computer';
+};
+
 export default defineConfig({
   plugins,
   resolve: {
@@ -185,6 +194,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
+    middlewareMode: false,
     allowedHosts: [
       ".manuspre.computer",
       ".manus.computer",
@@ -193,11 +203,12 @@ export default defineConfig({
       ".manusvm.computer",
       "localhost",
       "127.0.0.1",
+      "3000-i08zezokrxmckhhg8hm77-f9f14256.us1.manus.computer",
     ],
     hmr: {
       overlay: false,
       protocol: "wss",
-      host: undefined, // Let browser determine host from current URL
+      host: "3000-i08zezokrxmckhhg8hm77-f9f14256.us1.manus.computer", // Use the actual public host
       port: 443, // Use 443 for wss
       timeout: 60000, // Increase timeout to 60 seconds
     },
@@ -205,6 +216,7 @@ export default defineConfig({
       strict: false,
       allow: ["."],
     },
+    cors: true,
   },
   optimizeDeps: {
     include: [
@@ -216,5 +228,8 @@ export default defineConfig({
       'react-chartjs-2',
       'date-fns',
     ],
+  },
+  define: {
+    'process.env': JSON.stringify(process.env),
   },
 });
