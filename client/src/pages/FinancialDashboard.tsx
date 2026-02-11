@@ -22,6 +22,8 @@ import { ForecastingDashboard } from "@/components/ForecastingDashboard";
 import { ReceiptUploadGallery } from "@/components/ReceiptUploadGallery";
 import { MobileFinancialDashboard } from "@/components/MobileFinancialDashboard";
 import { FinancialReportExporter } from "@/components/FinancialReportExporter";
+import { AdvancedAnalyticsDashboard } from "@/components/AdvancedAnalyticsDashboard";
+import { BatchOperationsUI } from "@/components/BatchOperationsUI";
 import { generateExpensePDF, generateRevenuePDF, downloadTextFile } from "@/lib/exportPdf";
 
 export const FinancialDashboard: React.FC = () => {
@@ -535,11 +537,13 @@ export const FinancialDashboard: React.FC = () => {
 
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="forecasting">Forecasting</TabsTrigger>
           <TabsTrigger value="receipts">Receipts</TabsTrigger>
           <TabsTrigger value="profitability">Profitability</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="batch">Batch Ops</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -715,6 +719,44 @@ export const FinancialDashboard: React.FC = () => {
             <h2 className="text-2xl font-bold">Animal Profitability Analysis</h2>
             <p className="text-gray-600">Analyze profitability by animal type to optimize farm operations.</p>
           </div>
+        </TabsContent>
+
+        {/* Advanced Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          {selectedFarmId && selectedFarmId !== "all" ? (
+            <AdvancedAnalyticsDashboard
+              farmId={selectedFarmId}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-gray-600 text-center py-8">
+                  📊 Please select a specific farm to view advanced analytics
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Batch Operations Tab */}
+        <TabsContent value="batch" className="space-y-6">
+          <BatchOperationsUI
+            items={[
+              ...expenseHistory.map((exp: any) => ({
+                id: exp.id?.toString() || `exp-${Math.random()}`,
+                date: new Date(exp.date).toLocaleDateString(),
+                category: exp.expenseType,
+                amount: exp.amount,
+                description: exp.description || exp.expenseType,
+              })),
+            ]}
+            onItemsChange={(items) => {
+              console.log("Batch operation on items:", items);
+            }}
+            itemType="expenses"
+          />
         </TabsContent>
       </Tabs>
       </div>
