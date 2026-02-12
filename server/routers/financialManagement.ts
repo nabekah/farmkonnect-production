@@ -283,6 +283,81 @@ export const financialManagementRouter = router({
     }),
 
   /**
+   * Backward compatibility alias for getFinancialSummary
+   * @deprecated Use getFinancialSummary instead
+   */
+  getSummary: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional()
+    }))
+    .query(async ({ input, ctx }) => {
+      // Delegate to getFinancialSummary
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const farmIds = input.farmId.split(",").map(id => parseInt(id.trim()));
+      const expenseConditions = [farmIds.length > 1 ? inArray(expenses.farmId, farmIds) : eq(expenses.farmId, farmIds[0])];
+      const revenueConditions = [farmIds.length > 1 ? inArray(revenue.farmId, farmIds) : eq(revenue.farmId, farmIds[0])];
+
+      if (input.startDate) {
+        const startDateStr = input.startDate instanceof Date 
+          ? input.startDate.toISOString().split('T')[0]
+          : input.startDate.toString();
+        expenseConditions.push(gte(expenses.expenseDate, startDateStr));
+        revenueConditions.push(gte(revenue.revenueDate, startDateStr));
+      }
+      if (input.endDate) {
+        const endDateStr = input.endDate instanceof Date 
+          ? input.endDate.toISOString().split('T')[0]
+          : input.endDate.toString();
+        expenseConditions.push(lte(expenses.expenseDate, endDateStr));
+        revenueConditions.push(lte(revenue.revenueDate, endDateStr));
+      }
+
+      const expenseResult = await db
+        .select({ total: sum(expenses.amount) })
+        .from(expenses)
+        .where(and(...expenseConditions));
+
+      const revenueResult = await db
+        .select({ total: sum(revenue.amount) })
+        .from(revenue)
+        .where(and(...revenueConditions));
+
+      let totalExpenses = 0;
+      if (expenseResult[0]?.total !== null && expenseResult[0]?.total !== undefined) {
+        const expenseValue = expenseResult[0].total;
+        totalExpenses = typeof expenseValue === 'string' 
+          ? parseFloat(expenseValue) 
+          : typeof expenseValue === 'number'
+          ? expenseValue
+          : parseFloat(String(expenseValue));
+      }
+      
+      let totalRevenue = 0;
+      if (revenueResult[0]?.total !== null && revenueResult[0]?.total !== undefined) {
+        const revenueValue = revenueResult[0].total;
+        totalRevenue = typeof revenueValue === 'string'
+          ? parseFloat(revenueValue)
+          : typeof revenueValue === 'number'
+          ? revenueValue
+          : parseFloat(String(revenueValue));
+      }
+      
+      const profit = totalRevenue - totalExpenses;
+      const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+
+      return {
+        totalRevenue,
+        totalExpenses,
+        profit,
+        profitMargin
+      };
+    }),
+
+  /**
    * Calculate cost per animal
    */
   calculateCostPerAnimal: protectedProcedure

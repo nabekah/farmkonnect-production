@@ -4611,6 +4611,13 @@
 - [x] Add confidence intervals to forecasts
 - [x] Create forecast alerts for budget overruns
 
+## API Endpoint Naming Consistency (COMPLETED)
+- [x] Identify getSummary vs getFinancialSummary inconsistency
+- [x] Add backward compatibility alias for getSummary
+- [x] Update E2E test to use correct endpoint names
+- [x] Verify all tests pass (100% success rate)
+- [x] Document naming convention and migration guide
+
 ## Budget Comparison Reports (COMPLETED)
 - [x] Create year-over-year comparison view
 - [x] Add period-over-period comparison

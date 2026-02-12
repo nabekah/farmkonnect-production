@@ -136,7 +136,7 @@ async function testAPIEndpoints() {
 
   // Test endpoint accessibility
   const endpoints = [
-    'financialManagement.getSummary',
+    'financialManagement.getFinancialSummary',
     'financialManagement.getExpenses',
     'financialManagement.getRevenue',
     'financialManagement.getBudgetVsActualDetailed',
@@ -153,8 +153,8 @@ async function testAPIEndpoints() {
       const path = `/api/trpc/${endpoint}`;
       const response = await makeRequest('GET', path);
       
-      // Expect either 401 (unauthorized) or 400 (bad request) - both indicate endpoint exists
-      const endpointExists = response.status === 401 || response.status === 400 || response.status === 200;
+      // Expect either 401 (unauthorized), 400 (bad request), or 405 (method not allowed for POST-only endpoints)
+      const endpointExists = response.status === 401 || response.status === 400 || response.status === 405 || response.status === 200;
       logTest(`Endpoint ${endpoint}`, endpointExists, `Status: ${response.status}`);
     } catch (error) {
       logTest(`Endpoint ${endpoint}`, false, error.message);
