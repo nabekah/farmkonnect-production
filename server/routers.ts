@@ -98,6 +98,8 @@ import { financialManagementRouter } from "./routers/financialManagement";
 import { recurringExpensesRouter } from "./routers/recurringExpenses";
 import { budgetAlertsRouter } from "./routers/budgetAlerts";
 import { financialExportRouter } from "./routers/financialExport";
+import { farmComparisonRouter } from "./routers/farmComparison";
+import { farmConsolidationRouter } from "./routers/farmConsolidation";
 import { budgetManagementRouter } from "./routers/budgetManagement";
 import { notificationDataRouter } from "./routers/notificationDataRouter";
 import { blockchainSupplyChainRouter } from "./routers/blockchainSupplyChain";
@@ -271,6 +273,8 @@ export const appRouter = router({
   recurringExpenses: recurringExpensesRouter,
   budgetAlerts: budgetAlertsRouter,
   financialExport: financialExportRouter,
+  farmComparison: farmComparisonRouter,
+  farmConsolidation: farmConsolidationRouter,
   notificationData: notificationDataRouter,
   blockchainSupplyChain: blockchainSupplyChainRouter,
   predictiveAnalytics: predictiveAnalyticsRouter,

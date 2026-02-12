@@ -123,6 +123,8 @@ import CropRecommendationPage from "./pages/CropRecommendationPage";
 import FarmerCommunityForum from "./pages/FarmerCommunityForum";
 import SupplyChainDashboard from "./pages/SupplyChainDashboard";
 import CooperativeDashboard from "./pages/CooperativeDashboard";
+import { FarmComparison } from "./components/FarmComparison";
+import { FarmConsolidationDashboard } from "./components/FarmConsolidationDashboard";
 
 function Router() {
   return (
@@ -174,6 +176,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ReportTemplateCustomization />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/farm-comparison">
+        {() => (
+          <DashboardLayout>
+            <FarmComparison />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/farm-consolidation">
+        {() => (
+          <DashboardLayout>
+            <FarmConsolidationDashboard />
           </DashboardLayout>
         )}
       </Route>
