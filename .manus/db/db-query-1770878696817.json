@@ -1,0 +1,14 @@
+{
+  "query": "SELECT \n  COUNT(*) as expense_count,\n  SUM(amount) as total_expenses\nFROM expenses \nWHERE farmId = 1 \nAND DATE(expenseDate) >= DATE_FORMAT(CURDATE(), '%Y-%m-01')\nAND DATE(expenseDate) <= CURDATE()",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT \n  COUNT(*) as expense_count,\n  SUM(amount) as total_expenses\nFROM expenses \nWHERE farmId = 1 \nAND DATE(expenseDate) >= DATE_FORMAT(CURDATE(), '%Y-%m-01')\nAND DATE(expenseDate) <= CURDATE()",
+  "rows": [
+    {
+      "expense_count": "13",
+      "total_expenses": "4648.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "expense_count\ttotal_expenses\n13\t4648.00\n",
+  "stderr": "",
+  "execution_time_ms": 350
+}

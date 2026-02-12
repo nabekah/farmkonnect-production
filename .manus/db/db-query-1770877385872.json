@@ -1,0 +1,14 @@
+{
+  "query": "SELECT id, farmName FROM farms WHERE farmName LIKE '%Green%' OR farmName LIKE '%green%' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT id, farmName FROM farms WHERE farmName LIKE '%Green%' OR farmName LIKE '%green%' LIMIT 5;",
+  "rows": [
+    {
+      "id": "2",
+      "farmName": "GreenFarm"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfarmName\n2\tGreenFarm\n",
+  "stderr": "",
+  "execution_time_ms": 407
+}

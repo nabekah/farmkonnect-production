@@ -241,12 +241,22 @@ export const financialManagementRouter = router({
         .from(revenue)
         .where(and(...revenueConditions));
 
+      console.log("DEBUG getFinancialSummary:", {
+        farmIds,
+        expenseResult,
+        revenueResult,
+        expenseConditions: expenseConditions.length,
+        revenueConditions: revenueConditions.length
+      });
+
       const totalExpenses = typeof expenseResult[0]?.total === 'string'
         ? parseFloat(expenseResult[0].total)
         : Number(expenseResult[0]?.total || 0);
       const totalRevenue = typeof revenueResult[0]?.total === 'string'
         ? parseFloat(revenueResult[0].total)
         : Number(revenueResult[0]?.total || 0);
+      
+      console.log("DEBUG totals:", { totalExpenses, totalRevenue });
       const profit = totalRevenue - totalExpenses;
       const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
 
@@ -775,6 +785,548 @@ export const financialManagementRouter = router({
         totalPremium: sql<string>`SUM(${expenses.amount})`,
       }).from(expenses).where(and(eq(expenses.farmId, farmIdNum), eq(expenses.expenseType, "insurance")));
       return { claimStats, totalPremiums: Number(premiumResult[0]?.totalPremium || 0) };
+    }),
+
+  /**
+   * Calculate cost-per-animal metrics
+   */
+  getCostPerAnimal: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get all animals and their associated expenses
+      const animalExpenses = await db
+        .select({
+          animalId: animals.id,
+          animalName: animals.animalName,
+          animalType: animals.animalType,
+          quantity: animals.quantity,
+          totalExpense: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(animals)
+        .leftJoin(expenses, and(
+          eq(expenses.farmId, farmIdNum),
+          eq(expenses.animalId, animals.id)
+        ))
+        .where(eq(animals.farmId, farmIdNum))
+        .groupBy(animals.id, animals.animalName, animals.animalType, animals.quantity);
+      
+      // Calculate cost per animal
+      return animalExpenses.map(item => ({
+        animalId: item.animalId,
+        animalName: item.animalName,
+        animalType: item.animalType,
+        quantity: item.quantity || 1,
+        totalExpense: Number(item.totalExpense) || 0,
+        costPerAnimal: ((Number(item.totalExpense) || 0) / (item.quantity || 1)).toFixed(2),
+      }));
+    }),
+
+  /**
+   * Get profitability analysis by animal
+   */
+  getProfitabilityByAnimal: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get animals with their revenue and expenses
+      const profitability = await db
+        .select({
+          animalId: animals.id,
+          animalName: animals.animalName,
+          animalType: animals.animalType,
+          totalRevenue: sql<number>`COALESCE(SUM(CAST(${revenue.totalAmount} AS DECIMAL(15,2))), 0)`,
+          totalExpense: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(animals)
+        .leftJoin(revenue, and(
+          eq(revenue.farmId, farmIdNum),
+          eq(revenue.animalId, animals.id)
+        ))
+        .leftJoin(expenses, and(
+          eq(expenses.farmId, farmIdNum),
+          eq(expenses.animalId, animals.id)
+        ))
+        .where(eq(animals.farmId, farmIdNum))
+        .groupBy(animals.id, animals.animalName, animals.animalType);
+      
+      // Calculate profitability metrics
+      return profitability.map(item => {
+        const totalRevenue = Number(item.totalRevenue) || 0;
+        const totalExpense = Number(item.totalExpense) || 0;
+        const profit = totalRevenue - totalExpense;
+        const profitMargin = totalRevenue > 0 ? ((profit / totalRevenue) * 100).toFixed(2) : "0.00";
+        
+        return {
+          animalId: item.animalId,
+          animalName: item.animalName,
+          animalType: item.animalType,
+          totalRevenue: totalRevenue.toFixed(2),
+          totalExpense: totalExpense.toFixed(2),
+          profit: profit.toFixed(2),
+          profitMargin: parseFloat(profitMargin),
+          roi: totalExpense > 0 ? ((profit / totalExpense) * 100).toFixed(2) : "0.00",
+        };
+      });
+    }),
+
+  /**
+   * Get tax reporting summary for a farm or consolidated across farms
+   */
+  getTaxReport: protectedProcedure
+    .input(z.object({
+      farmIds: z.string(), // comma-separated farm IDs or "all" for consolidated
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+      reportType: z.enum(["summary", "detailed", "quarterly"]),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      
+      // Parse farm IDs
+      const farmIds = input.farmIds === "all" 
+        ? [] // Will fetch all farms
+        : input.farmIds.split(",").map(id => parseInt(id));
+      
+      const startDate = input.startDate || new Date(new Date().getFullYear(), 0, 1);
+      const endDate = input.endDate || new Date();
+      
+      // Get expense breakdown by category (deductible items)
+      const expenseBreakdown = await db
+        .select({
+          category: expenses.expenseType,
+          totalAmount: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+          count: sql<number>`COUNT(*)`,
+        })
+        .from(expenses)
+        .where(and(
+          farmIds.length > 0 ? inArray(expenses.farmId, farmIds) : undefined,
+          gte(expenses.expenseDate, startDate),
+          lte(expenses.expenseDate, endDate)
+        ))
+        .groupBy(expenses.expenseType);
+      
+      // Get revenue breakdown
+      const revenueBreakdown = await db
+        .select({
+          productType: revenue.productType,
+          totalAmount: sql<number>`COALESCE(SUM(CAST(${revenue.totalAmount} AS DECIMAL(15,2))), 0)`,
+          count: sql<number>`COUNT(*)`,
+        })
+        .from(revenue)
+        .where(and(
+          farmIds.length > 0 ? inArray(revenue.farmId, farmIds) : undefined,
+          gte(revenue.saleDate, startDate),
+          lte(revenue.saleDate, endDate)
+        ))
+        .groupBy(revenue.productType);
+      
+      // Calculate totals
+      const totalExpenses = expenseBreakdown.reduce((sum, item) => sum + (Number(item.totalAmount) || 0), 0);
+      const totalRevenue = revenueBreakdown.reduce((sum, item) => sum + (Number(item.totalAmount) || 0), 0);
+      const taxableIncome = totalRevenue - totalExpenses;
+      const estimatedTax = (taxableIncome * 0.15).toFixed(2); // 15% tax rate (configurable)
+      
+      return {
+        period: {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+        },
+        summary: {
+          totalRevenue: totalRevenue.toFixed(2),
+          totalExpenses: totalExpenses.toFixed(2),
+          taxableIncome: taxableIncome.toFixed(2),
+          estimatedTax,
+        },
+        expenseBreakdown: expenseBreakdown.map(item => ({
+          category: item.category,
+          amount: (Number(item.totalAmount) || 0).toFixed(2),
+          count: item.count,
+        })),
+        revenueBreakdown: revenueBreakdown.map(item => ({
+          productType: item.productType,
+          amount: (Number(item.totalAmount) || 0).toFixed(2),
+          count: item.count,
+        })),
+      };
+    }),
+
+  /**
+   * Export consolidated financial report across multiple farms
+   */
+  exportConsolidatedReport: protectedProcedure
+    .input(z.object({
+      farmIds: z.string(), // comma-separated farm IDs or "all" for consolidated
+      format: z.enum(["pdf", "csv", "excel"]),
+      reportType: z.enum(["financial", "tax", "profitability", "complete"]),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      // Parse farm IDs
+      const farmIds = input.farmIds === "all" 
+        ? [] 
+        : input.farmIds.split(",").map(id => parseInt(id));
+      
+      const startDate = input.startDate || new Date(new Date().getFullYear(), 0, 1);
+      const endDate = input.endDate || new Date();
+      
+      // Fetch consolidated data
+      const expenseData = await db
+        .select({
+          totalExpenses: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(expenses)
+        .where(and(
+          farmIds.length > 0 ? inArray(expenses.farmId, farmIds) : undefined,
+          gte(expenses.expenseDate, startDate),
+          lte(expenses.expenseDate, endDate)
+        ));
+      
+      const revenueData = await db
+        .select({
+          totalRevenue: sql<number>`COALESCE(SUM(CAST(${revenue.totalAmount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(revenue)
+        .where(and(
+          farmIds.length > 0 ? inArray(revenue.farmId, farmIds) : undefined,
+          gte(revenue.saleDate, startDate),
+          lte(revenue.saleDate, endDate)
+        ));
+      
+      const totalExpenses = Number(expenseData[0]?.totalExpenses) || 0;
+      const totalRevenue = Number(revenueData[0]?.totalRevenue) || 0;
+      const netProfit = totalRevenue - totalExpenses;
+      const profitMargin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(2) : "0.00";
+      
+      const reportData = {
+        generatedAt: new Date().toISOString(),
+        isConsolidated: true,
+        farmCount: farmIds.length || "all",
+        period: {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+        },
+        summary: {
+          totalRevenue: totalRevenue.toFixed(2),
+          totalExpenses: totalExpenses.toFixed(2),
+          netProfit: netProfit.toFixed(2),
+          profitMargin,
+        },
+      };
+      
+      return {
+        success: true,
+        format: input.format,
+        reportType: input.reportType,
+        data: reportData,
+        message: `Consolidated financial report exported successfully as ${input.format.toUpperCase()}`,
+      };
+    }),
+
+  /**
+   * Get payment tracking summary
+   */
+  getPaymentTracking: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      status: z.enum(["pending", "paid", "partial", "overdue"]).optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get payment statistics
+      const paymentStats = await db
+        .select({
+          status: expenses.paymentStatus,
+          count: sql<number>`COUNT(*)`,
+          totalAmount: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(expenses)
+        .where(eq(expenses.farmId, farmIdNum))
+        .groupBy(expenses.paymentStatus);
+      
+      // Calculate totals
+      const totalPending = paymentStats
+        .filter(s => s.status === "pending")
+        .reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+      
+      const totalPaid = paymentStats
+        .filter(s => s.status === "paid")
+        .reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+      
+      const totalPartial = paymentStats
+        .filter(s => s.status === "partial")
+        .reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
+      
+      return {
+        paymentStats,
+        summary: {
+          totalPending: totalPending.toFixed(2),
+          totalPaid: totalPaid.toFixed(2),
+          totalPartial: totalPartial.toFixed(2),
+          totalOutstanding: (totalPending + totalPartial).toFixed(2),
+        },
+      };
+    }),
+
+  /**
+   * Update payment status for an expense
+   */
+  updatePaymentStatus: protectedProcedure
+    .input(z.object({
+      expenseId: z.string(),
+      paymentStatus: z.enum(["pending", "paid", "partial"]),
+      paymentDate: z.date().optional(),
+      paymentAmount: z.number().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const updateData: any = {
+        paymentStatus: input.paymentStatus,
+      };
+      
+      if (input.paymentDate) {
+        updateData.paymentDate = input.paymentDate;
+      }
+      
+      const result = await db
+        .update(expenses)
+        .set(updateData)
+        .where(eq(expenses.id, parseInt(input.expenseId)));
+      
+      return result;
+    }),
+
+  /**
+   * Create or update budget forecast
+   */
+  createBudgetForecast: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      category: z.string(),
+      forecastedAmount: z.number().positive(),
+      forecastPeriod: z.enum(["monthly", "quarterly", "yearly"]),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const result = await db.insert(budgets).values({
+        farmId: parseInt(input.farmId),
+        category: input.category,
+        allocatedAmount: input.forecastedAmount,
+        period: input.forecastPeriod,
+        notes: input.notes,
+      });
+      
+      return result;
+    }),
+
+  /**
+   * Get expense forecast based on historical data
+   */
+  getExpenseForecast: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      months: z.number().default(3),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get historical expenses by category for the last N months
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - input.months);
+      
+      const historicalExpenses = await db
+        .select({
+          category: expenses.expenseType,
+          totalAmount: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+          count: sql<number>`COUNT(*)`,
+        })
+        .from(expenses)
+        .where(and(
+          eq(expenses.farmId, farmIdNum),
+          gte(expenses.expenseDate, cutoffDate)
+        ))
+        .groupBy(expenses.expenseType);
+      
+      // Calculate average monthly expense and forecast for next month
+      return historicalExpenses.map(item => ({
+        category: item.category,
+        historicalTotal: Number(item.totalAmount) || 0,
+        averageMonthly: ((Number(item.totalAmount) || 0) / input.months).toFixed(2),
+        transactionCount: item.count,
+        forecastedNextMonth: ((Number(item.totalAmount) || 0) / input.months).toFixed(2),
+      }));
+    }),
+
+  /**
+   * Get revenue forecast based on historical data
+   */
+  getRevenueForecast: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      months: z.number().default(3),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get historical revenue by product for the last N months
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - input.months);
+      
+      const historicalRevenue = await db
+        .select({
+          productType: revenue.productType,
+          totalAmount: sql<number>`COALESCE(SUM(CAST(${revenue.totalAmount} AS DECIMAL(15,2))), 0)`,
+          unitsSold: sql<number>`COALESCE(SUM(${revenue.quantity}), 0)`,
+          transactionCount: sql<number>`COUNT(*)`,
+        })
+        .from(revenue)
+        .where(and(
+          eq(revenue.farmId, farmIdNum),
+          gte(revenue.saleDate, cutoffDate)
+        ))
+        .groupBy(revenue.productType);
+      
+      // Calculate average monthly revenue and forecast for next month
+      return historicalRevenue.map(item => ({
+        productType: item.productType,
+        historicalTotal: Number(item.totalAmount) || 0,
+        averageMonthly: ((Number(item.totalAmount) || 0) / input.months).toFixed(2),
+        unitsSold: item.unitsSold || 0,
+        transactionCount: item.transactionCount,
+        forecastedNextMonth: ((Number(item.totalAmount) || 0) / input.months).toFixed(2),
+      }));
+    }),
+
+  /**
+   * Get profitability analysis by product/revenue type
+   */
+  getProfitabilityByProduct: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get revenue by product with associated expenses
+      const productProfitability = await db
+        .select({
+          productId: revenue.productId,
+          productType: revenue.productType,
+          totalRevenue: sql<number>`COALESCE(SUM(CAST(${revenue.totalAmount} AS DECIMAL(15,2))), 0)`,
+          unitsSold: sql<number>`COALESCE(SUM(${revenue.quantity}), 0)`,
+          averagePrice: sql<number>`COALESCE(AVG(CAST(${revenue.unitPrice} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(revenue)
+        .where(and(
+          eq(revenue.farmId, farmIdNum),
+          input.startDate ? gte(revenue.saleDate, input.startDate) : undefined,
+          input.endDate ? lte(revenue.saleDate, input.endDate) : undefined
+        ))
+        .groupBy(revenue.productId, revenue.productType);
+      
+      // Estimate expenses for each product (allocate total expenses proportionally)
+      const totalExpenseResult = await db
+        .select({
+          totalExpense: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(expenses)
+        .where(eq(expenses.farmId, farmIdNum));
+      
+      const totalExpense = Number(totalExpenseResult[0]?.totalExpense) || 0;
+      const totalRevenue = productProfitability.reduce((sum, item) => sum + (Number(item.totalRevenue) || 0), 0);
+      
+      return productProfitability.map(item => {
+        const revenue_amount = Number(item.totalRevenue) || 0;
+        const allocatedExpense = totalRevenue > 0 ? (revenue_amount / totalRevenue) * totalExpense : 0;
+        const profit = revenue_amount - allocatedExpense;
+        const profitMargin = revenue_amount > 0 ? ((profit / revenue_amount) * 100).toFixed(2) : "0.00";
+        
+        return {
+          productId: item.productId,
+          productType: item.productType,
+          totalRevenue: revenue_amount.toFixed(2),
+          unitsSold: item.unitsSold || 0,
+          averagePrice: (Number(item.averagePrice) || 0).toFixed(2),
+          allocatedExpense: allocatedExpense.toFixed(2),
+          profit: profit.toFixed(2),
+          profitMargin: parseFloat(profitMargin),
+        };
+      });
+    }),
+
+  /**
+   * Calculate cost-per-hectare metrics
+   */
+  getCostPerHectare: protectedProcedure
+    .input(z.object({
+      farmId: z.string(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+    }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return null;
+      const farmIdNum = parseInt(input.farmId);
+      
+      // Get farm total hectares
+      const farmData = await db
+        .select({
+          totalHectares: sql<number>`COALESCE(SUM(CAST(${sql`1` } AS DECIMAL(15,2))), 0)`,
+        })
+        .from(animals)
+        .where(eq(animals.farmId, farmIdNum));
+      
+      // Get total expenses for the period
+      const expenseData = await db
+        .select({
+          totalExpense: sql<number>`COALESCE(SUM(CAST(${expenses.amount} AS DECIMAL(15,2))), 0)`,
+        })
+        .from(expenses)
+        .where(eq(expenses.farmId, farmIdNum));
+      
+      const totalExpense = Number(expenseData[0]?.totalExpense) || 0;
+      const totalHectares = 10; // Default to 10 hectares - can be updated from farm profile
+      
+      return {
+        totalHectares,
+        totalExpense,
+        costPerHectare: (totalExpense / totalHectares).toFixed(2),
+      };
     }),
 
   getVeterinarySummary: protectedProcedure

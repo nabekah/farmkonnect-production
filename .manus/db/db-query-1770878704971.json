@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total_expenses, SUM(amount) as total_amount FROM expenses WHERE farmId = 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT COUNT(*) as total_expenses, SUM(amount) as total_amount FROM expenses WHERE farmId = 1",
+  "rows": [
+    {
+      "total_expenses": "13",
+      "total_amount": "4648.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_expenses\ttotal_amount\n13\t4648.00\n",
+  "stderr": "",
+  "execution_time_ms": 345
+}
