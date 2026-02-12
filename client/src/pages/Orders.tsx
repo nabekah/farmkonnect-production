@@ -140,11 +140,11 @@ export default function Orders() {
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
           {role === "seller" && (
             <Link href="/seller-analytics" className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <BarChart3 className="h-4 w-4 mr-2" />
+              <div className="w-full sm:w-auto" role="button" tabIndex={0}>
+                <BarChart3 className="h-4 w-4 mr-2 inline" />
                 <span className="hidden sm:inline">View Analytics</span>
                 <span className="sm:hidden">Analytics</span>
-              </Button>
+              </div>
             </Link>
           )}
           <Select value={role} onValueChange={(v) => setRole(v as "buyer" | "seller")}>
@@ -223,11 +223,11 @@ export default function Orders() {
                       </Button>
                       {role === "buyer" && (status === "confirmed" || status === "shipped" || status === "delivered") && (
                         <Link href={`/track-order/${order.id}`} className="flex-1 sm:flex-none">
-                          <Button variant="outline" size="sm" className="w-full">
-                            <MapPin className="h-4 w-4 sm:mr-1" />
+                          <div className="w-full text-sm" role="button" tabIndex={0}>
+                            <MapPin className="h-4 w-4 sm:mr-1 inline" />
                             <span className="hidden sm:inline">Track</span>
                             <span className="sm:hidden">Track</span>
-                          </Button>
+                          </div>
                         </Link>
                       )}
                       {role === "buyer" && status === "pending" && (

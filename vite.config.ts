@@ -211,6 +211,23 @@ export default defineConfig({
       host: process.env.VITE_HMR_HOST || getPublicHost(),
       port: process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 443,
       timeout: 60000,
+      // Suppress HMR connection errors in development
+      logger: {
+        clearScreen: () => {},
+        error: (msg: string) => {
+          // Only log critical errors, suppress connection errors
+          if (!msg.includes('failed to connect') && !msg.includes('WebSocket')) {
+            console.error(msg);
+          }
+        },
+        warn: (msg: string) => {
+          // Suppress HMR warnings
+          if (!msg.includes('HMR') && !msg.includes('WebSocket')) {
+            console.warn(msg);
+          }
+        },
+        info: () => {},
+      },
     },
     fs: {
       strict: false,
