@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Card,
   CardContent,
