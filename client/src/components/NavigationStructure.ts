@@ -306,6 +306,8 @@ export const navigationStructure: MenuGroup[] = [
       { icon: FileText, label: "Financial Reports", path: "/financial-reports" },
       { icon: Calculator, label: "Tax Planning", path: "/tax-planning" },
       { icon: Shield, label: "Insurance Management", path: "/insurance-management" },
+      { icon: BarChart3, label: "Farm Comparison", path: "/farm-comparison" },
+      { icon: LineChart, label: "Farm Consolidation", path: "/farm-consolidation" },
     ],
   },
 ];
