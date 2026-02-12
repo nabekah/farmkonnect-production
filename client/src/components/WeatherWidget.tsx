@@ -14,33 +14,51 @@ interface WeatherWidgetProps {
 export function WeatherWidget({ farmId, latitude, longitude, showForecast = false }: WeatherWidgetProps) {
   const [selectedCrop, setSelectedCrop] = useState<string>("wheat");
 
-  // Queries
-  const { data: currentWeather, isLoading: weatherLoading } = trpc.weather.getCurrentWeather.useQuery({
-    latitude,
-    longitude,
-  });
+  // Check if coordinates are valid
+  const hasValidCoordinates = typeof latitude === 'number' && typeof longitude === 'number' && !isNaN(latitude) && !isNaN(longitude);
 
-  const { data: forecast } = trpc.weather.getForecast.useQuery(
+  // Queries - only fetch if coordinates are valid
+  const { data: currentWeather, isLoading: weatherLoading } = trpc.weather.getCurrentWeather.useQuery(
     {
-      latitude,
-      longitude,
-      days: 5,
+      latitude: latitude || 0,
+      longitude: longitude || 0,
     },
     {
-      enabled: showForecast,
+      enabled: hasValidCoordinates,
     }
   );
 
-  const { data: alerts } = trpc.weather.getWeatherAlerts.useQuery({
-    latitude,
-    longitude,
-  });
+  const { data: forecast } = trpc.weather.getForecast.useQuery(
+    {
+      latitude: latitude || 0,
+      longitude: longitude || 0,
+      days: 5,
+    },
+    {
+      enabled: showForecast && hasValidCoordinates,
+    }
+  );
 
-  const { data: cropRecommendations } = trpc.weather.getCropRecommendations.useQuery({
-    cropType: selectedCrop,
-    latitude,
-    longitude,
-  });
+  const { data: alerts } = trpc.weather.getWeatherAlerts.useQuery(
+    {
+      latitude: latitude || 0,
+      longitude: longitude || 0,
+    },
+    {
+      enabled: hasValidCoordinates,
+    }
+  );
+
+  const { data: cropRecommendations } = trpc.weather.getCropRecommendations.useQuery(
+    {
+      cropType: selectedCrop,
+      latitude: latitude || 0,
+      longitude: longitude || 0,
+    },
+    {
+      enabled: hasValidCoordinates,
+    }
+  );
 
   if (weatherLoading) {
     return (

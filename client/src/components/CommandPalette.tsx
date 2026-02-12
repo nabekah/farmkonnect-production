@@ -163,27 +163,22 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
                       return (
                         <div key={item.id}>
                           {item.href ? (
-                            <Link href={item.href}>
-                              <a
-                                className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${
+                            <Link href={item.href} className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${
                                   isSelected
                                     ? "bg-blue-50 text-blue-900"
                                     : "hover:bg-muted"
-                                }`}
-                                onClick={() => setIsOpen(false)}
-                              >
-                                <div>
-                                  <div className="font-medium">{item.title}</div>
-                                  {item.description && (
-                                    <div className="text-sm text-muted-foreground">
-                                      {item.description}
-                                    </div>
-                                  )}
-                                </div>
-                                <kbd className="text-xs font-semibold border border-muted-foreground/20 rounded px-2 py-1">
-                                  ↵
-                                </kbd>
-                              </a>
+                                }`} onClick={() => setIsOpen(false)}>
+                              <div>
+                                <div className="font-medium">{item.title}</div>
+                                {item.description && (
+                                  <div className="text-sm text-muted-foreground">
+                                    {item.description}
+                                  </div>
+                                )}
+                              </div>
+                              <kbd className="text-xs font-semibold border border-muted-foreground/20 rounded px-2 py-1">
+                                ↵
+                              </kbd>
                             </Link>
                           ) : (
                             <button

@@ -123,9 +123,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     };
 
     ws.onerror = (event) => {
-      // Log error details safely
-      const errorMsg = event instanceof Event ? `WebSocket error: ${event.type}` : String(event);
-      console.error('[WebSocket]', errorMsg);
+      // Suppress WebSocket connection errors - they're expected when server is unavailable
+      // Only log in debug mode
+      if (process.env.NODE_ENV === 'development') {
+        const errorMsg = event instanceof Event ? `WebSocket error: ${event.type}` : String(event);
+        console.debug('[WebSocket] Connection error (expected):', errorMsg);
+      }
     };
 
     wsRef.current = ws;

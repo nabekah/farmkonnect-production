@@ -53,8 +53,11 @@ class WebSocketService {
         };
 
         this.ws.onerror = (error) => {
-          console.error("WebSocket error:", error);
-          reject(error);
+          // Suppress WebSocket connection errors - they're expected when server is unavailable
+          if (process.env.NODE_ENV === 'development') {
+            console.debug("WebSocket connection error (expected):", error);
+          }
+          // Don't reject - allow reconnection attempts
         };
 
         this.ws.onclose = () => {
