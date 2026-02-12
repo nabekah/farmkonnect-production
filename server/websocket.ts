@@ -9,7 +9,7 @@ interface WebSocketClient {
 }
 
 interface NotificationMessage {
-  type: 'task_assigned' | 'activity_approved' | 'activity_rejected' | 'urgent_alert' | 'weather_alert' | 'equipment_alert' | 'connection_established' | 'activity_update' | 'location_update' | 'pong';
+  type: 'task_assigned' | 'activity_approved' | 'activity_rejected' | 'urgent_alert' | 'weather_alert' | 'equipment_alert' | 'connection_established' | 'activity_update' | 'location_update' | 'pong' | 'expense_created' | 'revenue_created' | 'expense_updated' | 'revenue_updated' | 'financial_data_refresh';
   data: Record<string, any>;
   timestamp: number;
 }
@@ -231,6 +231,46 @@ class FieldWorkerWebSocketServer {
     this.broadcastToFarm(farmId, {
       type: 'equipment_alert',
       data: alert,
+      timestamp: Date.now(),
+    });
+  }
+
+  public notifyExpenseCreated(farmId: number, expense: any) {
+    this.broadcastToFarm(farmId, {
+      type: 'expense_created',
+      data: { ...expense, eventType: 'expense_created' },
+      timestamp: Date.now(),
+    });
+  }
+
+  public notifyRevenueCreated(farmId: number, revenue: any) {
+    this.broadcastToFarm(farmId, {
+      type: 'revenue_created',
+      data: { ...revenue, eventType: 'revenue_created' },
+      timestamp: Date.now(),
+    });
+  }
+
+  public notifyExpenseUpdated(farmId: number, expenseId: number, expense: any) {
+    this.broadcastToFarm(farmId, {
+      type: 'expense_updated',
+      data: { expenseId, ...expense, eventType: 'expense_updated' },
+      timestamp: Date.now(),
+    });
+  }
+
+  public notifyRevenueUpdated(farmId: number, revenueId: number, revenue: any) {
+    this.broadcastToFarm(farmId, {
+      type: 'revenue_updated',
+      data: { revenueId, ...revenue, eventType: 'revenue_updated' },
+      timestamp: Date.now(),
+    });
+  }
+
+  public notifyFinancialDataRefresh(farmId: number, refreshData: any) {
+    this.broadcastToFarm(farmId, {
+      type: 'financial_data_refresh',
+      data: { ...refreshData, eventType: 'financial_data_refresh' },
       timestamp: Date.now(),
     });
   }

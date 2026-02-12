@@ -11,12 +11,17 @@ interface UseWebSocketOptions {
   onTaskUpdated?: (data: any) => void;
   onActivityCreated?: (data: any) => void;
   onActivityUpdated?: (data: any) => void;
+  onExpenseCreated?: (data: any) => void;
+  onRevenueCreated?: (data: any) => void;
+  onExpenseUpdated?: (data: any) => void;
+  onRevenueUpdated?: (data: any) => void;
+  onFinancialDataRefresh?: (data: any) => void;
   onMessage?: (message: WebSocketMessage) => void;
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { user } = useAuth();
-  const { onTaskCreated, onTaskUpdated, onActivityCreated, onActivityUpdated, onMessage } = options;
+  const { onTaskCreated, onTaskUpdated, onActivityCreated, onActivityUpdated, onExpenseCreated, onRevenueCreated, onExpenseUpdated, onRevenueUpdated, onFinancialDataRefresh, onMessage } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -71,6 +76,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           onActivityCreated(message.data);
         } else if (message.type === 'activity_updated' && onActivityUpdated) {
           onActivityUpdated(message.data);
+        } else if (message.type === 'expense_created' && onExpenseCreated) {
+          onExpenseCreated(message.data);
+        } else if (message.type === 'revenue_created' && onRevenueCreated) {
+          onRevenueCreated(message.data);
+        } else if (message.type === 'expense_updated' && onExpenseUpdated) {
+          onExpenseUpdated(message.data);
+        } else if (message.type === 'revenue_updated' && onRevenueUpdated) {
+          onRevenueUpdated(message.data);
+        } else if (message.type === 'financial_data_refresh' && onFinancialDataRefresh) {
+          onFinancialDataRefresh(message.data);
         }
       } catch (error) {
         console.error('[WebSocket] Error parsing message:', error);

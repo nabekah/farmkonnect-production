@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -224,6 +225,44 @@ export const FinancialManagement: React.FC = () => {
     selectedFarmId ? { farmId: selectedFarmId } : undefined,
     { enabled: !!selectedFarmId }
   );
+
+
+  // ============ WEBSOCKET HANDLERS ============
+  const handleExpenseCreated = () => {
+    utils.financialManagement.getExpenses.invalidate();
+    utils.financialManagement.getFinancialSummary.invalidate();
+    utils.financialManagement.getExpenseBreakdown.invalidate();
+    utils.financialManagement.getConsolidatedExpenses.invalidate();
+    toast.info("New expense added by another user", { duration: 2 });
+  };
+
+  const handleRevenueCreated = () => {
+    utils.financialManagement.getRevenue.invalidate();
+    utils.financialManagement.getFinancialSummary.invalidate();
+    utils.financialManagement.getRevenueBreakdown.invalidate();
+    utils.financialManagement.getConsolidatedRevenue.invalidate();
+    toast.info("New revenue recorded by another user", { duration: 2 });
+  };
+
+  const handleExpenseUpdated = () => {
+    utils.financialManagement.getExpenses.invalidate();
+    utils.financialManagement.getFinancialSummary.invalidate();
+    toast.info("Expense updated by another user", { duration: 2 });
+  };
+
+  const handleRevenueUpdated = () => {
+    utils.financialManagement.getRevenue.invalidate();
+    utils.financialManagement.getFinancialSummary.invalidate();
+    toast.info("Revenue updated by another user", { duration: 2 });
+  };
+
+  useWebSocket({
+    onExpenseCreated: handleExpenseCreated,
+    onRevenueCreated: handleRevenueCreated,
+    onExpenseUpdated: handleExpenseUpdated,
+    onRevenueUpdated: handleRevenueUpdated,
+  });
+
 
   // ============ MUTATIONS ============
 
