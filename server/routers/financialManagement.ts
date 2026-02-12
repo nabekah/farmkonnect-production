@@ -249,14 +249,27 @@ export const financialManagementRouter = router({
         revenueConditions: revenueConditions.length
       });
 
-      const totalExpenses = typeof expenseResult[0]?.total === 'string'
-        ? parseFloat(expenseResult[0].total)
-        : Number(expenseResult[0]?.total || 0);
-      const totalRevenue = typeof revenueResult[0]?.total === 'string'
-        ? parseFloat(revenueResult[0].total)
-        : Number(revenueResult[0]?.total || 0);
+      let totalExpenses = 0;
+      if (expenseResult[0]?.total !== null && expenseResult[0]?.total !== undefined) {
+        const expenseValue = expenseResult[0].total;
+        totalExpenses = typeof expenseValue === 'string' 
+          ? parseFloat(expenseValue) 
+          : typeof expenseValue === 'number'
+          ? expenseValue
+          : parseFloat(String(expenseValue));
+      }
       
-      console.log("DEBUG totals:", { totalExpenses, totalRevenue });
+      let totalRevenue = 0;
+      if (revenueResult[0]?.total !== null && revenueResult[0]?.total !== undefined) {
+        const revenueValue = revenueResult[0].total;
+        totalRevenue = typeof revenueValue === 'string'
+          ? parseFloat(revenueValue)
+          : typeof revenueValue === 'number'
+          ? revenueValue
+          : parseFloat(String(revenueValue));
+      }
+      
+      console.log("DEBUG totals after conversion:", { totalExpenses, totalRevenue, expenseResult, revenueResult });
       const profit = totalRevenue - totalExpenses;
       const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
 
@@ -303,9 +316,15 @@ export const financialManagementRouter = router({
         .from(expenses)
         .where(and(...conditions));
 
-      const totalExpenses = typeof expenseResult[0]?.total === 'string'
-        ? parseFloat(expenseResult[0].total)
-        : Number(expenseResult[0]?.total || 0);
+      let totalExpenses = 0;
+      if (expenseResult[0]?.total !== null && expenseResult[0]?.total !== undefined) {
+        const expenseValue = expenseResult[0].total;
+        totalExpenses = typeof expenseValue === 'string' 
+          ? parseFloat(expenseValue) 
+          : typeof expenseValue === 'number'
+          ? expenseValue
+          : parseFloat(String(expenseValue));
+      }
       
       // Get count of unique animals from the animals table
       const animalConditions = [farmIds.length > 1 ? inArray(animals.farmId, farmIds) : eq(animals.farmId, farmIds[0])];

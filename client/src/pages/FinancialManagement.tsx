@@ -61,8 +61,13 @@ export const FinancialManagement: React.FC = () => {
   // Fetch financial data for selected farm
   const isValidFarmId = selectedFarmId && selectedFarmId !== "";
 
+  // Calculate date range for current month
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const currentMonthEnd = new Date();
+
   const { data: summary, isLoading: summaryLoading } = trpc.financialManagement.getFinancialSummary.useQuery(
-    { farmId: selectedFarmId, startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1), endDate: new Date() },
+    { farmId: selectedFarmId, startDate: currentMonthStart, endDate: currentMonthEnd },
     { enabled: isValidFarmId }
   );
 
@@ -82,12 +87,12 @@ export const FinancialManagement: React.FC = () => {
   );
 
   const { data: expenseBreakdown = [] } = trpc.financialManagement.getExpenseBreakdown.useQuery(
-    { farmId: selectedFarmId, startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1), endDate: new Date() },
+    { farmId: selectedFarmId, startDate: currentMonthStart, endDate: currentMonthEnd },
     { enabled: isValidFarmId }
   );
 
   const { data: revenueBreakdown = [] } = trpc.financialManagement.getRevenueBreakdown.useQuery(
-    { farmId: selectedFarmId, startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1), endDate: new Date() },
+    { farmId: selectedFarmId, startDate: currentMonthStart, endDate: currentMonthEnd },
     { enabled: isValidFarmId }
   );
 
