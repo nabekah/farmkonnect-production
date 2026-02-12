@@ -4676,3 +4676,14 @@
 - [x] Verify financial reports
 - [x] Test export functionality
 - [x] Validate user permissions and access control
+
+
+## Database Connectivity & Sample Data (IN PROGRESS)
+- [ ] Verify database schema for financial tables
+- [ ] Test backend procedures connectivity
+- [ ] Create sample expenses (feed, medication, labor, equipment)
+- [ ] Create sample revenue (animal sales, milk production)
+- [ ] Create sample budgets with line items
+- [ ] Verify data displays in dashboard
+- [ ] End-to-end testing of all features
+- [ ] Test data accuracy and calculations
