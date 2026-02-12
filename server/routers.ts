@@ -28,6 +28,7 @@ import { assetRouter } from "./assetRouter";
 import { reportingRouter } from "./reportingRouter";
 import { analyticsRouter } from "./analyticsRouter";
 import { notificationSettingsRouter } from "./notificationSettingsRouter";
+import { financialAnalysisRouter } from "./routers/financialAnalysis";
 import { rbacRouter } from "./routers/rbac";
 import { invitationsRouter } from "./routers/invitations";
 import { auditLogsRouter } from "./routers/auditLogs";
@@ -212,6 +213,7 @@ export const appRouter = router({
   incidentPlaybooks: incidentPlaybooksRouter,
   upload: uploadRouter,
   financial: financialRouter,
+  financialAnalysis: financialAnalysisRouter,
   livestock: livestockRouter,
   workforce: workforceRouter,
   fishFarming: fishFarmingRouter,

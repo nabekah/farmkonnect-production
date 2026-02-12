@@ -39,6 +39,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import DataManagement from "./pages/DataManagement";
 import { FarmFinance } from "./pages/FarmFinance";
+import { FinancialManagementPage } from "./pages/FinancialManagementPage";
 import LivestockManagement from "./pages/LivestockManagement";
 import WorkforceManagement from "./pages/WorkforceManagement";
 import FishFarming from "./pages/FishFarming";
@@ -241,6 +242,9 @@ function Router() {
             <FarmManagement />
           </DashboardLayout>
         )}
+      </Route>
+      <Route path="/financial-management">
+        {() => <FinancialManagementPage />}
       </Route>
       <Route path="/crops">
         {() => (
