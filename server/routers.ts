@@ -50,7 +50,8 @@ import { reportAnalyticsRouter } from "./routers/reportAnalytics";
 import { recipientManagementRouter } from "./routers/recipientManagement";
 import { reportExportRouter } from "./routers/reportExport";
 import { adminAnalyticsRouter } from "./routers/adminAnalytics";
-import { predictiveAnalyticsRouter } from "./routers/predictiveAnalyticsRouter";
+import { predictiveAnalyticsRouter as predictiveAnalyticsRouterOld } from "./routers/predictiveAnalyticsRouter";
+import { predictiveAnalyticsRouter } from "./routers/predictiveAnalytics";
 import { veterinaryClinicDirectoryRouter } from "./routers/veterinaryClinicDirectoryClean";
 import { prescriptionRefillAutomationRouter } from "./routers/prescriptionRefillAutomationClean";
 import { notificationServicesRouter } from "./routers/notificationServicesClean";
@@ -97,6 +98,7 @@ import { ghanaExtensionServicesRouter } from "./routers/ghanaExtensionServices";
 import { financialManagementRouter } from "./routers/financialManagement";
 import { recurringExpensesRouter } from "./routers/recurringExpenses";
 import { budgetAlertsRouter } from "./routers/budgetAlerts";
+import { expenseRevenueEntryRouter } from "./routers/expenseRevenueEntry";
 import { financialExportRouter } from "./routers/financialExport";
 import { farmComparisonRouter } from "./routers/farmComparison";
 import { farmConsolidationRouter } from "./routers/farmConsolidation";
@@ -272,12 +274,13 @@ export const appRouter = router({
   // financialManagement: financialManagementRouter,
   recurringExpenses: recurringExpensesRouter,
   budgetAlerts: budgetAlertsRouter,
+  expenseRevenueEntry: expenseRevenueEntryRouter,
   financialExport: financialExportRouter,
   farmComparison: farmComparisonRouter,
   farmConsolidation: farmConsolidationRouter,
+  predictiveAnalytics: predictiveAnalyticsRouter,
   notificationData: notificationDataRouter,
   blockchainSupplyChain: blockchainSupplyChainRouter,
-  predictiveAnalytics: predictiveAnalyticsRouter,
   cropRecommendations: cropRecommendationRouter,
   forum: forumRouter,
   reputation: reputationRouter,

@@ -32,7 +32,10 @@ import {
   PieChart as PieChartIcon,
   BarChart3,
   LineChart as LineChartIcon,
+  Plus,
 } from "lucide-react";
+import { AddExpenseModal } from "./AddExpenseModal";
+import { AddRevenueModal } from "./AddRevenueModal";
 
 interface FinancialManagementModuleProps {
   farmId: string;
@@ -46,6 +49,8 @@ export function FinancialManagementModule({
     "month"
   );
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
 
   // Fetch financial data
   const { data: overview } = trpc.financialAnalysis.getFinancialOverview.useQuery(
@@ -168,6 +173,25 @@ export function FinancialManagementModule({
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-6">
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setIsAddExpenseOpen(true)}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Expense
+            </Button>
+            <Button
+              onClick={() => setIsAddRevenueOpen(true)}
+              className="gap-2"
+              variant="outline"
+            >
+              <Plus className="w-4 h-4" />
+              Add Revenue
+            </Button>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Income vs Expense Trend */}
             <Card>
@@ -429,6 +453,26 @@ export function FinancialManagementModule({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <AddExpenseModal
+        isOpen={isAddExpenseOpen}
+        onClose={() => setIsAddExpenseOpen(false)}
+        farmId={parseInt(farmId)}
+        onExpenseAdded={() => {
+          // Refresh data after adding expense
+          // The queries will automatically refetch due to cache invalidation
+        }}
+      />
+      <AddRevenueModal
+        isOpen={isAddRevenueOpen}
+        onClose={() => setIsAddRevenueOpen(false)}
+        farmId={parseInt(farmId)}
+        onRevenueAdded={() => {
+          // Refresh data after adding revenue
+          // The queries will automatically refetch due to cache invalidation
+        }}
+      />
     </div>
   );
 }
