@@ -3294,3 +3294,81 @@ export const animalProfitability = mysqlTable("animalProfitability", {
 
 export type AnimalProfitability = typeof animalProfitability.$inferSelect;
 export type InsertAnimalProfitability = typeof animalProfitability.$inferInsert;
+
+
+// ============================================================================
+// RECURRING TRANSACTIONS
+// ============================================================================
+
+/**
+ * Recurring transactions for automatic expense/revenue generation
+ */
+export const recurringTransactions = mysqlTable("recurringTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  farmId: int("farmId").notNull(),
+  transactionType: mysqlEnum("transactionType", ["expense", "revenue"]).notNull(),
+  expenseType: varchar("expenseType", { length: 100 }), // For expenses
+  revenueType: varchar("revenueType", { length: 100 }), // For revenue
+  description: varchar("description", { length: 500 }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  frequency: mysqlEnum("frequency", ["daily", "weekly", "biweekly", "monthly", "quarterly", "yearly"]).notNull(),
+  dayOfWeek: int("dayOfWeek"), // 0-6 for weekly (0=Sunday)
+  dayOfMonth: int("dayOfMonth"), // 1-31 for monthly
+  month: int("month"), // 1-12 for yearly
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate"), // NULL means ongoing
+  isActive: boolean("isActive").default(true).notNull(),
+  lastGeneratedDate: date("lastGeneratedDate"),
+  nextGenerationDate: date("nextGenerationDate").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RecurringTransaction = typeof recurringTransactions.$inferSelect;
+export type InsertRecurringTransaction = typeof recurringTransactions.$inferInsert;
+
+// ============================================================================
+// BUDGET ALERTS
+// ============================================================================
+
+/**
+ * Budget alerts for tracking spending against budgets
+ */
+export const budgetAlerts = mysqlTable("budgetAlerts", {
+  id: int("id").autoincrement().primaryKey(),
+  budgetId: int("budgetId").notNull(),
+  farmId: int("farmId").notNull(),
+  expenseType: varchar("expenseType", { length: 100 }).notNull(),
+  budgetedAmount: decimal("budgetedAmount", { precision: 12, scale: 2 }).notNull(),
+  actualAmount: decimal("actualAmount", { precision: 12, scale: 2 }).default(0),
+  thresholdPercentage: decimal("thresholdPercentage", { precision: 5, scale: 2 }).default(80), // Alert when 80% spent
+  alertTriggered: boolean("alertTriggered").default(false).notNull(),
+  alertTriggeredAt: timestamp("alertTriggeredAt"),
+  alertRead: boolean("alertRead").default(false).notNull(),
+  alertReadAt: timestamp("alertReadAt"),
+  alertMessage: text("alertMessage"),
+  currency: varchar("currency", { length: 3 }).default("GHS").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BudgetAlert = typeof budgetAlerts.$inferSelect;
+export type InsertBudgetAlert = typeof budgetAlerts.$inferInsert;
+
+/**
+ * Budget alert history for tracking when alerts were sent
+ */
+export const budgetAlertHistory = mysqlTable("budgetAlertHistory", {
+  id: int("id").autoincrement().primaryKey(),
+  budgetAlertId: int("budgetAlertId").notNull(),
+  alertLevel: mysqlEnum("alertLevel", ["warning", "critical"]).notNull(), // warning at 80%, critical at 95%
+  percentageUsed: decimal("percentageUsed", { precision: 5, scale: 2 }).notNull(),
+  amountUsed: decimal("amountUsed", { precision: 12, scale: 2 }).notNull(),
+  notificationSent: boolean("notificationSent").default(false).notNull(),
+  notificationMethod: varchar("notificationMethod", { length: 50 }), // email, sms, push, in-app
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BudgetAlertHistory = typeof budgetAlertHistory.$inferSelect;
+export type InsertBudgetAlertHistory = typeof budgetAlertHistory.$inferInsert;

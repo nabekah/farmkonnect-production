@@ -4802,3 +4802,28 @@
 - [x] Implement Bulk CSV Import for Expenses and Revenue
 - [x] Create comprehensive tests for all three features
 - [x] Deploy and verify all features working end-to-end
+
+
+## Farm Identification and Shared Expenses/Revenue (Completed)
+- [x] Created FarmSelector component for dashboard
+- [x] Support selecting specific farm or All Farms view
+- [x] Display farm info (name, location, size, type)
+- [x] Updated queries to use selected farm
+- [x] Show consolidated view for all farms
+
+## Recurring Transactions Feature (Completed)
+- [x] Created recurringTransactions table with frequency options
+- [x] Created RecurringTransactionsManager component
+- [x] Added UI to create/edit/delete recurring transactions
+- [x] Support daily, weekly, biweekly, monthly, quarterly, yearly
+- [x] Added start/end date support
+- [x] Integrated into Financial Management Dashboard
+
+## Budget Alerts Feature (Completed)
+- [x] Created budgetAlerts and budgetAlertHistory tables
+- [x] Created BudgetAlertsPanel component
+- [x] Display budget vs actual with progress bars
+- [x] Show warning (80%) and critical (95%) alert levels
+- [x] Support marking alerts as read
+- [x] Filter alerts by level (all, warning, critical)
+- [x] Integrated into Financial Management Dashboard

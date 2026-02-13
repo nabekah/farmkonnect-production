@@ -38,6 +38,9 @@ import { AddExpenseModal } from "./AddExpenseModal";
 import { AddRevenueModal } from "./AddRevenueModal";
 import { ExpenseRevenueFilter } from "./ExpenseRevenueFilter";
 import { BulkCSVImport } from "./BulkCSVImport";
+import { FarmSelector } from "./FarmSelector";
+import { RecurringTransactionsManager } from "./RecurringTransactionsManager";
+import { BudgetAlertsPanel } from "./BudgetAlertsPanel";
 
 interface FinancialManagementModuleProps {
   farmId: string;
@@ -56,6 +59,10 @@ export function FinancialManagementModule({
   const [isAddRevenueOpen, setIsAddRevenueOpen] = useState(false);
   const [expenseFilters, setExpenseFilters] = useState<any>(null);
   const [revenueFilters, setRevenueFilters] = useState<any>(null);
+  const [selectedFarmId, setSelectedFarmId] = useState<string | null>(farmId);
+
+  // Use selectedFarmId for queries, or farmId for all farms
+  const queryFarmId = selectedFarmId || farmId;
 
   const handleDataRefresh = async () => {
     await utils.financialAnalysis.getFinancialOverview.invalidate();
@@ -65,40 +72,40 @@ export function FinancialManagementModule({
 
   // Fetch financial data
   const { data: overview } = trpc.financialAnalysis.getFinancialOverview.useQuery(
-    { farmId, period },
-    { enabled: !!farmId }
+    { farmId: queryFarmId, period },
+    { enabled: !!queryFarmId }
   );
 
   const { data: kpis } = trpc.financialAnalysis.getFinancialKPIs.useQuery(
-    { farmId },
-    { enabled: !!farmId }
+    { farmId: queryFarmId },
+    { enabled: !!queryFarmId }
   );
 
   const { data: expenseBreakdown } =
     trpc.financialAnalysis.getExpenseBreakdown.useQuery(
-      { farmId },
-      { enabled: !!farmId }
+      { farmId: queryFarmId },
+      { enabled: !!queryFarmId }
     );
 
   const { data: revenueBreakdown } =
     trpc.financialAnalysis.getRevenueBreakdown.useQuery(
-      { farmId },
-      { enabled: !!farmId }
+      { farmId: queryFarmId },
+      { enabled: !!queryFarmId }
     );
 
   const { data: trend } = trpc.financialAnalysis.getIncomeVsExpenseTrend.useQuery(
-    { farmId, period },
-    { enabled: !!farmId }
+    { farmId: queryFarmId, period },
+    { enabled: !!queryFarmId }
   );
 
   const { data: expenses } = trpc.financialAnalysis.getExpenses.useQuery(
-    { farmId },
-    { enabled: !!farmId }
+    { farmId: queryFarmId },
+    { enabled: !!queryFarmId }
   );
 
   const { data: revenue } = trpc.financialAnalysis.getRevenue.useQuery(
-    { farmId },
-    { enabled: !!farmId }
+    { farmId: queryFarmId },
+    { enabled: !!queryFarmId }
   );
 
   const formatCurrency = (value: number) => {
@@ -133,6 +140,15 @@ export function FinancialManagementModule({
             </Button>
           ))}
         </div>
+      </div>
+
+      {/* Farm Selector */}
+      <div className="max-w-md">
+        <FarmSelector
+          selectedFarmId={selectedFarmId}
+          onFarmSelect={setSelectedFarmId}
+          showAllFarmsOption={true}
+        />
       </div>
 
       {/* KPI Cards */}
@@ -174,11 +190,13 @@ export function FinancialManagementModule({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
           <TabsTrigger value="analysis">Analysis</TabsTrigger>
+          <TabsTrigger value="recurring">Recurring</TabsTrigger>
+          <TabsTrigger value="alerts">Alerts</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
@@ -434,6 +452,16 @@ export function FinancialManagementModule({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Recurring Transactions Tab */}
+        <TabsContent value="recurring" className="space-y-6">
+          <RecurringTransactionsManager farmId={queryFarmId} />
+        </TabsContent>
+
+        {/* Budget Alerts Tab */}
+        <TabsContent value="alerts" className="space-y-6">
+          <BudgetAlertsPanel farmId={queryFarmId} />
         </TabsContent>
 
         {/* Reports Tab */}
