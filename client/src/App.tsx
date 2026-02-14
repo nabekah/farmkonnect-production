@@ -140,6 +140,8 @@ import { FarmDetailedAnalytics } from "./components/FarmDetailedAnalytics";
 import { TaskAssignmentUI } from "./components/TaskAssignmentUI";
 import { TaskCompletionTracking } from "./components/TaskCompletionTracking";
 import { TaskTemplatesUI } from "./components/TaskTemplatesUI";
+import { AlertDashboard } from "./components/AlertDashboard";
+import { WorkerAvailabilityCalendar } from "./components/WorkerAvailabilityCalendar";
 
 function Router() {
   return (
@@ -324,6 +326,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <TaskTemplatesUI />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/alert-dashboard">
+        {() => (
+          <DashboardLayout>
+            <AlertDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/worker-availability">
+        {() => (
+          <DashboardLayout>
+            <WorkerAvailabilityCalendar />
           </DashboardLayout>
         )}
       </Route>
