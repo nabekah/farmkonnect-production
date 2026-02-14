@@ -1,13 +1,45 @@
-import React, { useState } from 'react';
-import { Users, TrendingUp, AlertCircle, Settings, BarChart3, MessageSquare, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, TrendingUp, AlertCircle, Settings, BarChart3, MessageSquare, Lock, Activity, Zap, HardDrive } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { trpc } from '@/lib/trpc';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+interface SystemMetrics {
+  cpuUsage: number;
+  memoryUsage: number;
+  diskUsage: number;
+  requestsPerSecond: number;
+  averageResponseTime: number;
+  errorRate: number;
+}
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'transactions' | 'disputes' | 'reports' | 'analytics' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'transactions' | 'disputes' | 'reports' | 'analytics' | 'settings' | 'monitoring'>('overview');
   const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
+    cpuUsage: 45,
+    memoryUsage: 62,
+    diskUsage: 78,
+    requestsPerSecond: 1250,
+    averageResponseTime: 145,
+    errorRate: 0.2,
+  });
+
+  // Simulate real-time metrics
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSystemMetrics((prev) => ({
+        ...prev,
+        cpuUsage: Math.max(20, Math.min(90, prev.cpuUsage + (Math.random() - 0.5) * 10)),
+        memoryUsage: Math.max(40, Math.min(85, prev.memoryUsage + (Math.random() - 0.5) * 5)),
+        requestsPerSecond: Math.max(800, Math.min(2000, prev.requestsPerSecond + (Math.random() - 0.5) * 200)),
+        averageResponseTime: Math.max(100, Math.min(500, prev.averageResponseTime + (Math.random() - 0.5) * 50)),
+      }));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch admin data
   const { data: overviewData } = trpc.admin.getDashboardOverview.useQuery();
@@ -59,6 +91,7 @@ export default function AdminDashboard() {
               { id: 'disputes', label: 'Disputes', icon: '⚖️' },
               { id: 'reports', label: 'Reports', icon: '🚩' },
               { id: 'analytics', label: 'Analytics', icon: '📈' },
+              { id: 'monitoring', label: 'Monitoring', icon: '📡' },
               { id: 'settings', label: 'Settings', icon: '⚙️' },
             ].map((tab) => (
               <button
@@ -310,6 +343,94 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Monitoring Tab */}
+        {activeTab === 'monitoring' && (
+          <div className="space-y-6">
+            {/* System Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                    <Zap className="w-4 h-4" /> CPU Usage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-2xl font-bold">{systemMetrics.cpuUsage.toFixed(1)}%</div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${systemMetrics.cpuUsage}%` }}></div>
+                    </div>
+                    <Badge variant={systemMetrics.cpuUsage > 80 ? 'destructive' : 'secondary'}>
+                      {systemMetrics.cpuUsage > 80 ? 'High' : 'Normal'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                    <Activity className="w-4 h-4" /> Memory Usage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-2xl font-bold">{systemMetrics.memoryUsage.toFixed(1)}%</div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-600 h-2 rounded-full" style={{ width: `${systemMetrics.memoryUsage}%` }}></div>
+                    </div>
+                    <Badge variant={systemMetrics.memoryUsage > 80 ? 'destructive' : 'secondary'}>
+                      {systemMetrics.memoryUsage > 80 ? 'High' : 'Normal'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                    <HardDrive className="w-4 h-4" /> Disk Usage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="text-2xl font-bold">{systemMetrics.diskUsage.toFixed(1)}%</div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${systemMetrics.diskUsage}%` }}></div>
+                    </div>
+                    <Badge variant={systemMetrics.diskUsage > 85 ? 'destructive' : 'secondary'}>
+                      {systemMetrics.diskUsage > 85 ? 'Critical' : 'Normal'}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Performance Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Requests Per Second</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-blue-600">{systemMetrics.requestsPerSecond.toFixed(0)}</div>
+                  <p className="text-sm text-gray-600 mt-2">Current request rate</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Avg Response Time</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">{systemMetrics.averageResponseTime.toFixed(0)}ms</div>
+                  <p className="text-sm text-gray-600 mt-2">Average API response time</p>
                 </CardContent>
               </Card>
             </div>
