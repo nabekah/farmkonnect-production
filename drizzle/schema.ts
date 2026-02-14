@@ -3623,3 +3623,176 @@ export const workerPerformanceMetrics = mysqlTable("workerPerformanceMetrics", {
 
 export type WorkerPerformanceMetrics = typeof workerPerformanceMetrics.$inferSelect;
 export type InsertWorkerPerformanceMetrics = typeof workerPerformanceMetrics.$inferInsert;
+
+
+// ============================================================================
+// FIELD MANAGEMENT MODULE
+// ============================================================================
+/**
+ * Fields - Physical field/plot areas within a farm
+ */
+export const fields = mysqlTable("fields", {
+  id: int("id").autoincrement().primaryKey(),
+  fieldId: varchar("fieldId", { length: 64 }).notNull().unique(), // UUID
+  farmId: int("farmId").notNull(),
+  fieldName: varchar("fieldName", { length: 255 }).notNull(),
+  fieldCode: varchar("fieldCode", { length: 50 }).notNull(), // e.g., F1, F2, etc.
+  description: text("description"),
+  areaHectares: decimal("areaHectares", { precision: 10, scale: 2 }).notNull(),
+  gpsLatitude: decimal("gpsLatitude", { precision: 10, scale: 8 }),
+  gpsLongitude: decimal("gpsLongitude", { precision: 11, scale: 8 }),
+  soilType: varchar("soilType", { length: 100 }), // loam, clay, sandy, etc.
+  soilPH: decimal("soilPH", { precision: 3, scale: 1 }), // 0-14 scale
+  waterSource: varchar("waterSource", { length: 100 }), // irrigation, rainfall, etc.
+  fieldStatus: mysqlEnum("fieldStatus", ["active", "fallow", "preparation", "harvested", "archived"]).default("active"),
+  cropId: int("cropId"), // Current crop in field
+  currentCropCycleId: int("currentCropCycleId"), // Current crop cycle
+  lastHarvestDate: date("lastHarvestDate"),
+  nextPlantingDate: date("nextPlantingDate"),
+  photoUrl: varchar("photoUrl", { length: 500 }),
+  metadata: text("metadata"), // JSON: equipment, history, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Field = typeof fields.$inferSelect;
+export type InsertField = typeof fields.$inferInsert;
+
+/**
+ * Field Segments - Subdivisions of fields for targeted management
+ */
+export const fieldSegments = mysqlTable("fieldSegments", {
+  id: int("id").autoincrement().primaryKey(),
+  segmentId: varchar("segmentId", { length: 64 }).notNull().unique(), // UUID
+  fieldId: int("fieldId").notNull(),
+  farmId: int("farmId").notNull(),
+  segmentName: varchar("segmentName", { length: 255 }).notNull(),
+  segmentCode: varchar("segmentCode", { length: 50 }).notNull(), // e.g., F1-S1, F1-S2
+  description: text("description"),
+  areaHectares: decimal("areaHectares", { precision: 10, scale: 2 }).notNull(),
+  gpsLatitude: decimal("gpsLatitude", { precision: 10, scale: 8 }),
+  gpsLongitude: decimal("gpsLongitude", { precision: 11, scale: 8 }),
+  segmentationType: mysqlEnum("segmentationType", ["geographic", "soil_type", "irrigation", "crop_variety", "management_zone"]).default("geographic"),
+  soilType: varchar("soilType", { length: 100 }),
+  soilPH: decimal("soilPH", { precision: 3, scale: 1 }),
+  moistureLevel: decimal("moistureLevel", { precision: 5, scale: 2 }), // percentage
+  nitrogenLevel: decimal("nitrogenLevel", { precision: 5, scale: 2 }), // ppm
+  phosphorusLevel: decimal("phosphorusLevel", { precision: 5, scale: 2 }), // ppm
+  potassiumLevel: decimal("potassiumLevel", { precision: 5, scale: 2 }), // ppm
+  segmentStatus: mysqlEnum("segmentStatus", ["active", "inactive", "treatment", "monitoring"]).default("active"),
+  riskLevel: mysqlEnum("riskLevel", ["low", "medium", "high", "critical"]).default("low"),
+  lastAssessmentDate: date("lastAssessmentDate"),
+  nextAssessmentDate: date("nextAssessmentDate"),
+  photoUrl: varchar("photoUrl", { length: 500 }),
+  metadata: text("metadata"), // JSON: treatment history, yield data, etc.
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldSegment = typeof fieldSegments.$inferSelect;
+export type InsertFieldSegment = typeof fieldSegments.$inferInsert;
+
+/**
+ * Field Segment Tasks - Tasks assigned to specific field segments
+ */
+export const fieldSegmentTasks = mysqlTable("fieldSegmentTasks", {
+  id: int("id").autoincrement().primaryKey(),
+  taskId: varchar("taskId", { length: 64 }).notNull().unique(), // UUID
+  segmentId: int("segmentId").notNull(),
+  farmId: int("farmId").notNull(),
+  taskType: varchar("taskType", { length: 100 }).notNull(), // irrigation, spraying, fertilizing, weeding, etc.
+  taskName: varchar("taskName", { length: 255 }).notNull(),
+  description: text("description"),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium"),
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "cancelled", "on_hold"]).default("pending"),
+  assignedWorkerId: int("assignedWorkerId"),
+  estimatedHours: decimal("estimatedHours", { precision: 10, scale: 2 }),
+  actualHours: decimal("actualHours", { precision: 10, scale: 2 }),
+  scheduledDate: date("scheduledDate"),
+  completionDate: date("completionDate"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldSegmentTask = typeof fieldSegmentTasks.$inferSelect;
+export type InsertFieldSegmentTask = typeof fieldSegmentTasks.$inferInsert;
+
+/**
+ * Field Health Records - Health monitoring for field segments
+ */
+export const fieldHealthRecords = mysqlTable("fieldHealthRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  recordId: varchar("recordId", { length: 64 }).notNull().unique(), // UUID
+  segmentId: int("segmentId").notNull(),
+  farmId: int("farmId").notNull(),
+  recordDate: date("recordDate").notNull(),
+  healthScore: decimal("healthScore", { precision: 5, scale: 2 }), // 0-100
+  diseasePresence: varchar("diseasePresence", { length: 255 }), // comma-separated disease names
+  pestPresence: varchar("pestPresence", { length: 255 }), // comma-separated pest names
+  weedDensity: varchar("weedDensity", { length: 50 }), // low, medium, high
+  cropCondition: mysqlEnum("cropCondition", ["excellent", "good", "fair", "poor", "critical"]).default("good"),
+  irrigationStatus: varchar("irrigationStatus", { length: 100 }), // adequate, insufficient, excessive
+  nutrientDeficiency: varchar("nutrientDeficiency", { length: 255 }), // comma-separated nutrients
+  photoUrl: varchar("photoUrl", { length: 500 }),
+  notes: text("notes"),
+  recordedBy: int("recordedBy"), // User ID
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldHealthRecord = typeof fieldHealthRecords.$inferSelect;
+export type InsertFieldHealthRecord = typeof fieldHealthRecords.$inferInsert;
+
+/**
+ * Field Yield Records - Yield tracking by segment
+ */
+export const fieldYieldRecords = mysqlTable("fieldYieldRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  yieldId: varchar("yieldId", { length: 64 }).notNull().unique(), // UUID
+  segmentId: int("segmentId").notNull(),
+  fieldId: int("fieldId").notNull(),
+  farmId: int("farmId").notNull(),
+  harvestDate: date("harvestDate").notNull(),
+  cropId: int("cropId").notNull(),
+  cropCycleId: int("cropCycleId"),
+  quantityHarvested: decimal("quantityHarvested", { precision: 10, scale: 2 }).notNull(), // in kg
+  unit: varchar("unit", { length: 50 }).default("kg"), // kg, tons, bags, etc.
+  yieldPerHectare: decimal("yieldPerHectare", { precision: 10, scale: 2 }), // calculated
+  quality: mysqlEnum("quality", ["premium", "grade_a", "grade_b", "grade_c", "rejected"]).default("grade_a"),
+  marketPrice: decimal("marketPrice", { precision: 10, scale: 2 }), // price per unit
+  totalValue: decimal("totalValue", { precision: 15, scale: 2 }), // calculated
+  notes: text("notes"),
+  recordedBy: int("recordedBy"), // User ID
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldYieldRecord = typeof fieldYieldRecords.$inferSelect;
+export type InsertFieldYieldRecord = typeof fieldYieldRecords.$inferInsert;
+
+/**
+ * Field Management Plans - Strategic plans for field segments
+ */
+export const fieldManagementPlans = mysqlTable("fieldManagementPlans", {
+  id: int("id").autoincrement().primaryKey(),
+  planId: varchar("planId", { length: 64 }).notNull().unique(), // UUID
+  segmentId: int("segmentId").notNull(),
+  fieldId: int("fieldId").notNull(),
+  farmId: int("farmId").notNull(),
+  planName: varchar("planName", { length: 255 }).notNull(),
+  description: text("description"),
+  planType: mysqlEnum("planType", ["crop_rotation", "soil_improvement", "pest_management", "irrigation", "fertilization"]).notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate"),
+  objectives: text("objectives"), // JSON array
+  activities: text("activities"), // JSON array with timeline
+  budget: decimal("budget", { precision: 15, scale: 2 }),
+  status: mysqlEnum("status", ["draft", "active", "completed", "cancelled"]).default("draft"),
+  createdBy: int("createdBy"), // User ID
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldManagementPlan = typeof fieldManagementPlans.$inferSelect;
+export type InsertFieldManagementPlan = typeof fieldManagementPlans.$inferInsert;
