@@ -144,6 +144,13 @@ import { AlertDashboard } from "./components/AlertDashboard";
 import { WorkerAvailabilityCalendar } from "./components/WorkerAvailabilityCalendar";
 import { WorkerPerformanceTrends } from "./components/WorkerPerformanceTrends";
 import { ShiftManagement } from "./components/ShiftManagement";
+import { FieldManagement } from "./components/FieldManagement";
+import { FieldSegmentation } from "./components/FieldSegmentation";
+import { FieldMapIntegration } from "./components/FieldMapIntegration";
+import { CropRecommendationEngine } from "./components/CropRecommendationEngine";
+import { HistoricalFieldData } from "./components/HistoricalFieldData";
+import { CropRotationAlgorithms } from "./components/CropRotationAlgorithms";
+import { FieldSpecificAnalytics } from "./components/FieldSpecificAnalytics";
 
 function Router() {
   return (
@@ -356,6 +363,55 @@ function Router() {
         {() => (
           <DashboardLayout>
             <ShiftManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-management">
+        {() => (
+          <DashboardLayout>
+            <FieldManagement />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-segmentation">
+        {() => (
+          <DashboardLayout>
+            <FieldSegmentation />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-map">
+        {() => (
+          <DashboardLayout>
+            <FieldMapIntegration />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/crop-recommendations">
+        {() => (
+          <DashboardLayout>
+            <CropRecommendationEngine />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/historical-field-data">
+        {() => (
+          <DashboardLayout>
+            <HistoricalFieldData />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/crop-rotation">
+        {() => (
+          <DashboardLayout>
+            <CropRotationAlgorithms />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/field-analytics">
+        {() => (
+          <DashboardLayout>
+            <FieldSpecificAnalytics />
           </DashboardLayout>
         )}
       </Route>
