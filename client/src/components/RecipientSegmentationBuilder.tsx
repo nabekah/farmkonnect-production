@@ -1,1 +1,278 @@
-import React, { useState, useCallback } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Card } from '@/components/ui/card';\nimport { Input } from '@/components/ui/input';\nimport { Plus, Trash2, Copy, Save } from 'lucide-react';\n\nexport type OperatorType = 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'between' | 'in_list' | 'is_empty' | 'is_not_empty';\nexport type LogicOperator = 'AND' | 'OR';\n\nexport interface SegmentCondition {\n  id: string;\n  attribute: string;\n  operator: OperatorType;\n  value: string | number | string[];\n}\n\nexport interface SegmentGroup {\n  id: string;\n  logic: LogicOperator;\n  conditions: SegmentCondition[];\n  groups?: SegmentGroup[];\n}\n\nexport interface RecipientSegment {\n  id: string;\n  name: string;\n  description: string;\n  rootGroup: SegmentGroup;\n  recipientCount: number;\n  createdAt: number;\n  updatedAt: number;\n}\n\nconst ATTRIBUTES = [\n  { value: 'email', label: 'Email' },\n  { value: 'name', label: 'Name' },\n  { value: 'engagement_score', label: 'Engagement Score' },\n  { value: 'churn_risk', label: 'Churn Risk' },\n  { value: 'total_opens', label: 'Total Opens' },\n  { value: 'total_clicks', label: 'Total Clicks' },\n  { value: 'total_conversions', label: 'Total Conversions' },\n  { value: 'last_open_date', label: 'Last Open Date' },\n  { value: 'subscription_status', label: 'Subscription Status' },\n  { value: 'segment_tag', label: 'Segment Tag' },\n];\n\nconst OPERATORS: Record<string, OperatorType[]> = {\n  email: ['equals', 'contains', 'in_list'],\n  name: ['equals', 'contains'],\n  engagement_score: ['equals', 'greater_than', 'less_than', 'between'],\n  churn_risk: ['equals', 'greater_than', 'less_than', 'between'],\n  total_opens: ['equals', 'greater_than', 'less_than', 'between'],\n  total_clicks: ['equals', 'greater_than', 'less_than', 'between'],\n  total_conversions: ['equals', 'greater_than', 'less_than', 'between'],\n  last_open_date: ['equals', 'greater_than', 'less_than', 'between'],\n  subscription_status: ['equals', 'in_list'],\n  segment_tag: ['equals', 'in_list'],\n};\n\nconst OperatorLabel: Record<OperatorType, string> = {\n  equals: 'Equals',\n  not_equals: 'Not Equals',\n  contains: 'Contains',\n  greater_than: 'Greater Than',\n  less_than: 'Less Than',\n  between: 'Between',\n  in_list: 'In List',\n  is_empty: 'Is Empty',\n  is_not_empty: 'Is Not Empty',\n};\n\ninterface ConditionRowProps {\n  condition: SegmentCondition;\n  onUpdate: (condition: SegmentCondition) => void;\n  onDelete: () => void;\n}\n\nconst ConditionRow: React.FC<ConditionRowProps> = ({ condition, onUpdate, onDelete }) => {\n  const availableOperators = OPERATORS[condition.attribute] || ['equals'];\n\n  return (\n    <div className=\"flex gap-2 items-end p-3 bg-gray-50 rounded border border-gray-200\">\n      <div className=\"flex-1\">\n        <label className=\"text-xs font-medium text-gray-600\">Attribute</label>\n        <select\n          value={condition.attribute}\n          onChange={(e) => onUpdate({ ...condition, attribute: e.target.value })}\n          className=\"w-full px-3 py-2 border border-gray-300 rounded text-sm\"\n        >\n          {ATTRIBUTES.map((attr) => (\n            <option key={attr.value} value={attr.value}>\n              {attr.label}\n            </option>\n          ))}\n        </select>\n      </div>\n\n      <div className=\"flex-1\">\n        <label className=\"text-xs font-medium text-gray-600\">Operator</label>\n        <select\n          value={condition.operator}\n          onChange={(e) => onUpdate({ ...condition, operator: e.target.value as OperatorType })}\n          className=\"w-full px-3 py-2 border border-gray-300 rounded text-sm\"\n        >\n          {availableOperators.map((op) => (\n            <option key={op} value={op}>\n              {OperatorLabel[op]}\n            </option>\n          ))}\n        </select>\n      </div>\n\n      {!['is_empty', 'is_not_empty'].includes(condition.operator) && (\n        <div className=\"flex-1\">\n          <label className=\"text-xs font-medium text-gray-600\">Value</label>\n          <Input\n            value={Array.isArray(condition.value) ? condition.value.join(',') : condition.value}\n            onChange={(e) => onUpdate({ ...condition, value: e.target.value })}\n            placeholder=\"Enter value\"\n            className=\"text-sm\"\n          />\n        </div>\n      )}\n\n      <Button\n        variant=\"ghost\"\n        size=\"sm\"\n        onClick={onDelete}\n        className=\"text-red-600 hover:text-red-700\"\n      >\n        <Trash2 className=\"w-4 h-4\" />\n      </Button>\n    </div>\n  );\n};\n\ninterface SegmentGroupEditorProps {\n  group: SegmentGroup;\n  onUpdate: (group: SegmentGroup) => void;\n  onDelete: () => void;\n  level?: number;\n}\n\nconst SegmentGroupEditor: React.FC<SegmentGroupEditorProps> = ({\n  group,\n  onUpdate,\n  onDelete,\n  level = 0,\n}) => {\n  const addCondition = () => {\n    const newCondition: SegmentCondition = {\n      id: `cond-${Date.now()}`,\n      attribute: 'email',\n      operator: 'equals',\n      value: '',\n    };\n    onUpdate({\n      ...group,\n      conditions: [...group.conditions, newCondition],\n    });\n  };\n\n  const updateCondition = (index: number, condition: SegmentCondition) => {\n    const newConditions = [...group.conditions];\n    newConditions[index] = condition;\n    onUpdate({ ...group, conditions: newConditions });\n  };\n\n  const deleteCondition = (index: number) => {\n    const newConditions = group.conditions.filter((_, i) => i !== index);\n    onUpdate({ ...group, conditions: newConditions });\n  };\n\n  return (\n    <Card className={`p-4 ${level > 0 ? 'border-blue-200 bg-blue-50' : ''}`}>\n      <div className=\"flex items-center justify-between mb-4\">\n        <div className=\"flex items-center gap-2\">\n          <span className=\"font-semibold text-sm\">Logic:</span>\n          <select\n            value={group.logic}\n            onChange={(e) => onUpdate({ ...group, logic: e.target.value as LogicOperator })}\n            className=\"px-3 py-1 border border-gray-300 rounded text-sm font-medium\"\n          >\n            <option value=\"AND\">AND</option>\n            <option value=\"OR\">OR</option>\n          </select>\n        </div>\n        {level > 0 && (\n          <Button variant=\"ghost\" size=\"sm\" onClick={onDelete} className=\"text-red-600\">\n            <Trash2 className=\"w-4 h-4\" />\n          </Button>\n        )}\n      </div>\n\n      <div className=\"space-y-3 mb-4\">\n        {group.conditions.map((condition, index) => (\n          <ConditionRow\n            key={condition.id}\n            condition={condition}\n            onUpdate={(updated) => updateCondition(index, updated)}\n            onDelete={() => deleteCondition(index)}\n          />\n        ))}\n      </div>\n\n      <Button\n        variant=\"outline\"\n        size=\"sm\"\n        onClick={addCondition}\n        className=\"w-full mb-4\"\n      >\n        <Plus className=\"w-4 h-4 mr-2\" />\n        Add Condition\n      </Button>\n    </Card>\n  );\n};\n\nexport interface RecipientSegmentationBuilderProps {\n  onSave?: (segment: RecipientSegment) => void;\n  onCancel?: () => void;\n  initialSegment?: RecipientSegment;\n}\n\nexport const RecipientSegmentationBuilder: React.FC<RecipientSegmentationBuilderProps> = ({\n  onSave,\n  onCancel,\n  initialSegment,\n}) => {\n  const [name, setName] = useState(initialSegment?.name || '');\n  const [description, setDescription] = useState(initialSegment?.description || '');\n  const [rootGroup, setRootGroup] = useState<SegmentGroup>(\n    initialSegment?.rootGroup || {\n      id: `group-${Date.now()}`,\n      logic: 'AND',\n      conditions: [\n        {\n          id: `cond-${Date.now()}`,\n          attribute: 'email',\n          operator: 'equals',\n          value: '',\n        },\n      ],\n    }\n  );\n  const [recipientCount, setRecipientCount] = useState(initialSegment?.recipientCount || 0);\n\n  const handleSave = useCallback(() => {\n    if (!name.trim()) {\n      alert('Please enter a segment name');\n      return;\n    }\n\n    const segment: RecipientSegment = {\n      id: initialSegment?.id || `seg-${Date.now()}`,\n      name,\n      description,\n      rootGroup,\n      recipientCount,\n      createdAt: initialSegment?.createdAt || Date.now(),\n      updatedAt: Date.now(),\n    };\n\n    onSave?.(segment);\n  }, [name, description, rootGroup, recipientCount, initialSegment, onSave]);\n\n  const handleDuplicate = useCallback(() => {\n    const duplicated: RecipientSegment = {\n      id: `seg-${Date.now()}`,\n      name: `${name} (Copy)`,\n      description,\n      rootGroup: JSON.parse(JSON.stringify(rootGroup)),\n      recipientCount,\n      createdAt: Date.now(),\n      updatedAt: Date.now(),\n    };\n\n    onSave?.(duplicated);\n  }, [name, description, rootGroup, recipientCount, onSave]);\n\n  return (\n    <div className=\"space-y-6 max-w-4xl mx-auto\">\n      <div>\n        <h2 className=\"text-2xl font-bold mb-4\">\n          {initialSegment ? 'Edit Segment' : 'Create Segment'}\n        </h2>\n      </div>\n\n      <Card className=\"p-6\">\n        <div className=\"space-y-4\">\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 mb-2\">\n              Segment Name\n            </label>\n            <Input\n              value={name}\n              onChange={(e) => setName(e.target.value)}\n              placeholder=\"e.g., High Engagement Users\"\n              className=\"text-base\"\n            />\n          </div>\n\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 mb-2\">\n              Description\n            </label>\n            <textarea\n              value={description}\n              onChange={(e) => setDescription(e.target.value)}\n              placeholder=\"Describe this segment...\"\n              className=\"w-full px-3 py-2 border border-gray-300 rounded text-sm\"\n              rows={3}\n            />\n          </div>\n        </div>\n      </Card>\n\n      <div>\n        <h3 className=\"text-lg font-semibold mb-4\">Segment Rules</h3>\n        <SegmentGroupEditor group={rootGroup} onUpdate={setRootGroup} onDelete={() => {}} />\n      </div>\n\n      <Card className=\"p-4 bg-blue-50 border-blue-200\">\n        <div className=\"text-sm\">\n          <p className=\"font-semibold text-blue-900 mb-2\">Estimated Recipients</p>\n          <p className=\"text-2xl font-bold text-blue-600\">{recipientCount.toLocaleString()}</p>\n          <p className=\"text-xs text-blue-700 mt-2\">\n            This count updates in real-time as you modify the rules\n          </p>\n        </div>\n      </Card>\n\n      <div className=\"flex gap-3 justify-end\">\n        {onCancel && (\n          <Button variant=\"outline\" onClick={onCancel}>\n            Cancel\n          </Button>\n        )}\n        {initialSegment && (\n          <Button variant=\"outline\" onClick={handleDuplicate}>\n            <Copy className=\"w-4 h-4 mr-2\" />\n            Duplicate\n          </Button>\n        )}\n        <Button onClick={handleSave} className=\"bg-blue-600 hover:bg-blue-700\">\n          <Save className=\"w-4 h-4 mr-2\" />\n          {initialSegment ? 'Update' : 'Create'} Segment\n        </Button>\n      </div>\n    </div>\n  );\n};\n\nexport default RecipientSegmentationBuilder;\n
+'use client';
+
+import React, { useState, useCallback } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Copy, Save, Plus, Trash2 } from 'lucide-react';
+
+interface Condition {
+  id: string;
+  attribute: string;
+  operator: 'equals' | 'contains' | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than';
+  value: string;
+}
+
+interface SegmentGroup {
+  id: string;
+  logic: 'AND' | 'OR';
+  conditions: Condition[];
+}
+
+interface RecipientSegment {
+  id: string;
+  name: string;
+  description: string;
+  rootGroup: SegmentGroup;
+  recipientCount: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface ConditionRowProps {
+  condition: Condition;
+  onUpdate: (updated: Condition) => void;
+  onDelete: () => void;
+}
+
+const ConditionRow: React.FC<ConditionRowProps> = ({ condition, onUpdate, onDelete }) => {
+  return (
+    <div className="flex gap-2 items-end">
+      <Input
+        placeholder="Attribute"
+        value={condition.attribute}
+        onChange={(e) => onUpdate({ ...condition, attribute: e.target.value })}
+        className="flex-1"
+      />
+      <select
+        value={condition.operator}
+        onChange={(e) => onUpdate({ ...condition, operator: e.target.value as any })}
+        className="px-3 py-2 border border-gray-300 rounded text-sm"
+      >
+        <option value="equals">Equals</option>
+        <option value="contains">Contains</option>
+        <option value="starts_with">Starts With</option>
+        <option value="ends_with">Ends With</option>
+        <option value="greater_than">Greater Than</option>
+        <option value="less_than">Less Than</option>
+      </select>
+      <Input
+        placeholder="Value"
+        value={condition.value}
+        onChange={(e) => onUpdate({ ...condition, value: e.target.value })}
+        className="flex-1"
+      />
+      <Button
+        onClick={onDelete}
+        variant="ghost"
+        size="sm"
+        className="text-red-600 hover:text-red-700"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+};
+
+interface SegmentGroupEditorProps {
+  group: SegmentGroup;
+  onUpdate: (updated: SegmentGroup) => void;
+  onDelete: () => void;
+}
+
+const SegmentGroupEditor: React.FC<SegmentGroupEditorProps> = ({ group, onUpdate, onDelete }) => {
+  const updateCondition = (index: number, updated: Condition) => {
+    const newConditions = [...group.conditions];
+    newConditions[index] = updated;
+    onUpdate({ ...group, conditions: newConditions });
+  };
+
+  const deleteCondition = (index: number) => {
+    const newConditions = group.conditions.filter((_, i) => i !== index);
+    onUpdate({ ...group, conditions: newConditions });
+  };
+
+  const addCondition = () => {
+    const newCondition: Condition = {
+      id: `cond-${Date.now()}`,
+      attribute: '',
+      operator: 'equals',
+      value: '',
+    };
+    onUpdate({ ...group, conditions: [...group.conditions, newCondition] });
+  };
+
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <select
+          value={group.logic}
+          onChange={(e) => onUpdate({ ...group, logic: e.target.value as 'AND' | 'OR' })}
+          className="px-3 py-2 border border-gray-300 rounded text-sm"
+        >
+          <option value="AND">AND</option>
+          <option value="OR">OR</option>
+        </select>
+        <span className="text-sm text-gray-600">logic</span>
+      </div>
+
+      <div className="space-y-3 mb-4">
+        {group.conditions.map((condition, index) => (
+          <ConditionRow
+            key={condition.id}
+            condition={condition}
+            onUpdate={(updated) => updateCondition(index, updated)}
+            onDelete={() => deleteCondition(index)}
+          />
+        ))}
+      </div>
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={addCondition}
+        className="w-full mb-4"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Add Condition
+      </Button>
+    </Card>
+  );
+};
+
+export interface RecipientSegmentationBuilderProps {
+  onSave?: (segment: RecipientSegment) => void;
+  onCancel?: () => void;
+  initialSegment?: RecipientSegment;
+}
+
+export const RecipientSegmentationBuilder: React.FC<RecipientSegmentationBuilderProps> = ({
+  onSave,
+  onCancel,
+  initialSegment,
+}) => {
+  const [name, setName] = useState(initialSegment?.name || '');
+  const [description, setDescription] = useState(initialSegment?.description || '');
+  const [rootGroup, setRootGroup] = useState<SegmentGroup>(
+    initialSegment?.rootGroup || {
+      id: `group-${Date.now()}`,
+      logic: 'AND',
+      conditions: [
+        {
+          id: `cond-${Date.now()}`,
+          attribute: 'email',
+          operator: 'equals',
+          value: '',
+        },
+      ],
+    }
+  );
+  const [recipientCount, setRecipientCount] = useState(initialSegment?.recipientCount || 0);
+
+  const handleSave = useCallback(() => {
+    if (!name.trim()) {
+      alert('Please enter a segment name');
+      return;
+    }
+
+    const segment: RecipientSegment = {
+      id: initialSegment?.id || `seg-${Date.now()}`,
+      name,
+      description,
+      rootGroup,
+      recipientCount,
+      createdAt: initialSegment?.createdAt || Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    onSave?.(segment);
+  }, [name, description, rootGroup, recipientCount, initialSegment, onSave]);
+
+  const handleDuplicate = useCallback(() => {
+    const duplicated: RecipientSegment = {
+      id: `seg-${Date.now()}`,
+      name: `${name} (Copy)`,
+      description,
+      rootGroup: JSON.parse(JSON.stringify(rootGroup)),
+      recipientCount,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    onSave?.(duplicated);
+  }, [name, description, rootGroup, recipientCount, onSave]);
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div>
+        <h2 className="text-2xl font-bold mb-4">
+          {initialSegment ? 'Edit Segment' : 'Create Segment'}
+        </h2>
+      </div>
+
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Segment Name
+            </label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., High Engagement Users"
+              className="text-base"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe this segment..."
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+              rows={3}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Segment Rules</h3>
+        <SegmentGroupEditor group={rootGroup} onUpdate={setRootGroup} onDelete={() => {}} />
+      </div>
+
+      <Card className="p-4 bg-blue-50 border-blue-200">
+        <div className="text-sm">
+          <p className="font-semibold text-blue-900 mb-2">Estimated Recipients</p>
+          <p className="text-2xl font-bold text-blue-600">{recipientCount.toLocaleString()}</p>
+          <p className="text-xs text-blue-700 mt-2">
+            This count updates in real-time as you modify the rules
+          </p>
+        </div>
+      </Card>
+
+      <div className="flex gap-3 justify-end">
+        {onCancel && (
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        {initialSegment && (
+          <Button variant="outline" onClick={handleDuplicate}>
+            <Copy className="w-4 h-4 mr-2" />
+            Duplicate
+          </Button>
+        )}
+        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+          <Save className="w-4 h-4 mr-2" />
+          {initialSegment ? 'Update' : 'Create'} Segment
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default RecipientSegmentationBuilder;
