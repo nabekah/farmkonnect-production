@@ -67,6 +67,7 @@ import { FertilizerCostDashboard } from "./pages/FertilizerCostDashboard";
 import { IrrigationCostAnalysisUI } from "./components/IrrigationCostAnalysisUI";
 import { CampaignSchedulerUI } from "./components/CampaignSchedulerUI";
 import { CampaignMonitorUI } from "./components/CampaignMonitorUI";
+import { PestDiseaseManagementUI } from "./components/PestDiseaseManagementUI";
 import { FloatingElements } from "./components/FloatingElements";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { CommandPalette } from "./components/CommandPalette";
@@ -243,6 +244,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <CampaignMonitorUI />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/pest-disease-management">
+        {() => (
+          <DashboardLayout>
+            <PestDiseaseManagementUI />
           </DashboardLayout>
         )}
       </Route>
