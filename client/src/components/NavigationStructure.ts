@@ -48,6 +48,7 @@ import {
   Filter,
   Send,
   Library,
+  Copy,
 } from "lucide-react";
 
 export interface MenuItem {
