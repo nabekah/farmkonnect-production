@@ -64,6 +64,7 @@ import ReportTemplateCustomization from "./pages/ReportTemplateCustomization";
 import { InventoryManagement } from "./pages/InventoryManagement";
 import { SoilHealthRecommendations } from "./pages/SoilHealthRecommendations";
 import { FertilizerCostDashboard } from "./pages/FertilizerCostDashboard";
+import { IrrigationCostAnalysisUI } from "./components/IrrigationCostAnalysisUI";
 import { FloatingElements } from "./components/FloatingElements";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { CommandPalette } from "./components/CommandPalette";
@@ -219,6 +220,13 @@ function Router() {
         {() => (
           <DashboardLayout>
             <FertilizerCostDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/irrigation-cost-analysis">
+        {() => (
+          <DashboardLayout>
+            <IrrigationCostAnalysisUI />
           </DashboardLayout>
         )}
       </Route>

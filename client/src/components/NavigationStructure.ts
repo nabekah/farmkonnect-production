@@ -135,6 +135,19 @@ export const navigationStructure: MenuGroup[] = [
   },
 
   {
+    title: "Irrigation Management",
+    description: "Water management and irrigation optimization",
+    collapsible: true,
+    defaultExpanded: true,
+    items: [
+      { icon: Droplets, label: "Irrigation Scheduling", path: "/irrigation-scheduling" },
+      { icon: Zap, label: "Cost Analysis", path: "/irrigation-cost-analysis" },
+      { icon: TrendingUp, label: "Efficiency Metrics", path: "/irrigation-efficiency" },
+      { icon: Calculator, label: "Water Requirements", path: "/water-requirements" },
+    ],
+  },
+
+  {
     title: "Reporting & Analytics",
     description: "Reports, analytics, and insights",
     collapsible: true,
