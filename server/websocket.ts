@@ -173,7 +173,7 @@ class FieldWorkerWebSocketServer {
     }
   }
 
-  private sendToUser(userId: number, message: NotificationMessage) {
+  public sendToUser(userId: number, message: NotificationMessage) {
     const connectionIds = this.userSessions.get(userId) || [];
     connectionIds.forEach((connectionId) => this.sendToClient(connectionId, message));
   }
@@ -281,6 +281,80 @@ class FieldWorkerWebSocketServer {
 
   public getConnectedUserIds(): number[] {
     return Array.from(new Set(this.clients.values().map((c) => c.userId)));
+  }
+}
+
+/**
+ * Extended WebSocket Manager for room-based communication
+ */
+export class WebSocketRoomManager {
+  private wsServer: FieldWorkerWebSocketServer;
+  private rooms: Map<string, Set<number>> = new Map(); // room -> userIds
+  private messageHandlers: Map<string, (msg: any, userId: number, farmId: number) => void> = new Map();
+
+  constructor(wsServer: FieldWorkerWebSocketServer) {
+    this.wsServer = wsServer;
+  }
+
+  /**
+   * Join room
+   */
+  joinRoom(roomId: string, userId: number): void {
+    if (!this.rooms.has(roomId)) {
+      this.rooms.set(roomId, new Set());
+    }
+    this.rooms.get(roomId)!.add(userId);
+  }
+
+  /**
+   * Leave room
+   */
+  leaveRoom(roomId: string, userId: number): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.delete(userId);
+      if (room.size === 0) {
+        this.rooms.delete(roomId);
+      }
+    }
+  }
+
+  /**
+   * Broadcast to room
+   */
+  broadcastToRoom(roomId: string, message: NotificationMessage): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.forEach((userId) => {
+        this.wsServer.sendToUser(userId, message);
+      });
+    }
+  }
+
+  /**
+   * Register message handler
+   */
+  registerHandler(type: string, handler: (msg: any, userId: number, farmId: number) => void): void {
+    this.messageHandlers.set(type, handler);
+  }
+
+  /**
+   * Get room info
+   */
+  getRoomInfo(roomId: string): { room: string; members: number } | null {
+    const room = this.rooms.get(roomId);
+    if (!room) return null;
+    return { room: roomId, members: room.size };
+  }
+
+  /**
+   * Get all rooms
+   */
+  getAllRooms(): Array<{ room: string; members: number }> {
+    return Array.from(this.rooms.entries()).map(([room, members]) => ({
+      room,
+      members: members.size,
+    }));
   }
 }
 
