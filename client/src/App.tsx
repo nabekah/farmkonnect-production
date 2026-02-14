@@ -73,6 +73,8 @@ import { ResistanceMonitoringDashboard } from "./components/ResistanceMonitoring
 import { ChemicalInventoryUI } from "./components/ChemicalInventoryUI";
 import { WeatherIntegrationUI } from "./components/WeatherIntegrationUI";
 import { FinancialAnalyticsDashboard } from "./components/FinancialAnalyticsDashboard";
+import { LaborManagementUI } from "./components/LaborManagementUI";
+import { BudgetVsActualDashboard } from "./components/BudgetVsActualDashboard";
 import { FloatingElements } from "./components/FloatingElements";
 import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 import { CommandPalette } from "./components/CommandPalette";
@@ -291,6 +293,20 @@ function Router() {
         {() => (
           <DashboardLayout>
             <FinancialAnalyticsDashboard />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/labor-management">
+        {() => (
+          <DashboardLayout>
+            <LaborManagementUI />
+          </DashboardLayout>
+        )}
+      </Route>
+      <Route path="/budget-vs-actual">
+        {() => (
+          <DashboardLayout>
+            <BudgetVsActualDashboard />
           </DashboardLayout>
         )}
       </Route>
