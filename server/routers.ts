@@ -30,6 +30,7 @@ import { analyticsRouter } from "./analyticsRouter";
 import { notificationSettingsRouter } from "./notificationSettingsRouter";
 import { shiftAssignmentWithNotificationsRouter } from "./routers/shiftAssignmentWithNotifications";
 import { taskAssignmentWithNotificationsRouter } from "./routers/taskAssignmentWithNotifications";
+import { shiftTaskNotificationTriggersRouter } from "./routers/shiftTaskNotificationTriggers";
 import { financialAnalysisRouter } from "./routers/financialAnalysis";
 import { rbacRouter } from "./routers/rbac";
 import { invitationsRouter } from "./routers/invitations";
@@ -368,6 +369,7 @@ export const appRouter = router({
   telemedicine: telemedicineRouter,
   veterinaryClinicDirectory: veterinaryClinicDirectoryRouter,
   prescriptionRefillAutomation: prescriptionRefillAutomationRouter,
+  shiftTaskNotificationTriggers: shiftTaskNotificationTriggersRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
