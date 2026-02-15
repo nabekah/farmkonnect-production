@@ -96,12 +96,11 @@ export function ManagerTaskAssignment() {
     fieldId: undefined,
   });
 
-  // Mock field workers - TODO: Fetch from API
-  const fieldWorkers = [
-    { id: 1, name: 'John Doe' },
-    { id: 2, name: 'Jane Smith' },
-    { id: 3, name: 'Mike Johnson' },
-  ];
+  // Fetch field workers from database
+  const { data: fieldWorkers = [] } = trpc.workforce.workers.list.useQuery(
+    { farmId: farmId || 1, status: 'active' },
+    { enabled: !!farmId }
+  );
 
   // Mock tasks - TODO: Fetch from API
   const allTasks = [
