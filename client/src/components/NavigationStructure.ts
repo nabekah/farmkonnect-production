@@ -212,16 +212,24 @@ export const navigationStructure: MenuGroup[] = [
 
   {
     title: "Labor Management",
-    description: "Workforce scheduling, compliance, and analytics",
+    description: "Workforce scheduling, task assignment, compliance, and analytics",
     collapsible: true,
-    defaultExpanded: false,
+    defaultExpanded: true,
     items: [
       { icon: Users, label: "Workforce", path: "/workforce-management" },
-      { icon: Calendar, label: "Shift Management", path: "/labor/shift-management" },
+      { icon: Users, label: "Worker Directory", path: "/labor-management" },
+      { icon: ListTodo, label: "Task Assignment", path: "/task-assignment" },
+      { icon: CheckCircle, label: "Task Completion", path: "/task-completion-tracking" },
+      { icon: FileText, label: "Task Templates", path: "/task-templates" },
+      { icon: AlertCircle, label: "Alert Dashboard", path: "/alert-dashboard" },
+      { icon: Calendar, label: "Worker Availability", path: "/worker-availability" },
+      { icon: TrendingUp, label: "Performance Trends", path: "/performance-trends" },
+      { icon: Calendar, label: "Shift Management", path: "/shift-management" },
+      { icon: Layers, label: "Bulk Shift Assignment", path: "/bulk-shift-assignment" },
+      { icon: Bell, label: "Notification Preferences", path: "/notification-preferences" },
+      { icon: BarChart3, label: "Notification Analytics", path: "/notification-analytics" },
       { icon: Shield, label: "Compliance Dashboard", path: "/labor/compliance-dashboard" },
-      { icon: BarChart3, label: "Advanced Analytics", path: "/labor/advanced-analytics" },
       { icon: Brain, label: "AI Scheduling", path: "/labor/ai-scheduling" },
-      { icon: TrendingUp, label: "Worker Performance", path: "/labor/worker-performance" },
     ],
   },
 
@@ -306,104 +314,29 @@ export const navigationStructure: MenuGroup[] = [
       { icon: CheckCircle, label: "Seller Verification", path: "/admin-verification", adminOnly: true },
       { icon: Settings, label: "Settings", path: "/settings" },
       { icon: Upload, label: "Bulk Operations", path: "/bulk-operations" },
-      { icon: History, label: "Operation History", path: "/operation-history" },
-    ],
-  },
-
-  {
-    title: "Analytics & Insights",
-    description: "Dashboards and analytics",
-    collapsible: true,
-    defaultExpanded: false,
-    items: [
-      { icon: BarChart3, label: "Farmer Dashboard", path: "/farmer-dashboard" },
-      { icon: TrendingUp, label: "Blockchain Supply Chain", path: "/blockchain-supply-chain" },
-      { icon: Brain, label: "Prediction Dashboard", path: "/prediction-dashboard" },
-      { icon: History, label: "Prediction History", path: "/prediction-history" },
-      { icon: CheckCircle, label: "Record Outcomes", path: "/outcome-recording" },
-    ],
-  },
-
-  {
-    title: "Community & Recommendations",
-    description: "Farmer community and AI recommendations",
-    collapsible: true,
-    defaultExpanded: false,
-    items: [
-      { icon: Brain, label: "Crop Recommendations", path: "/crop-recommendations" },
-      { icon: Users, label: "Community Forum", path: "/community-forum" },
-      { icon: TrendingUp, label: "Supply Chain", path: "/supply-chain" },
-      { icon: Users, label: "Cooperative", path: "/cooperative" },
-    ],
-  },
-
-  {
-    title: "Labor Management",
-    description: "Worker management, task assignment, and performance tracking",
-    collapsible: true,
-    defaultExpanded: true,
-    items: [
-      { icon: Users, label: "Worker Directory", path: "/labor-management" },
-      { icon: ListTodo, label: "Task Assignment", path: "/task-assignment" },
-      { icon: CheckCircle, label: "Task Completion", path: "/task-completion-tracking" },
-      { icon: Copy, label: "Task Templates", path: "/task-templates" },
-      { icon: AlertCircle, label: "Alert Dashboard", path: "/alert-dashboard" },
-      { icon: Calendar, label: "Worker Availability", path: "/worker-availability" },
-      { icon: TrendingUp, label: "Performance Trends", path: "/performance-trends" },
-      { icon: Clock, label: "Shift Management", path: "/shift-management" },
-      { icon: BarChart3, label: "Performance Analytics", path: "/worker-performance" },
-      { icon: Zap, label: "Bulk Shift Assignment", path: "/bulk-shift-assignment" },
-      { icon: Bell, label: "Notification Preferences", path: "/notification-preferences" },
-      { icon: BarChart3, label: "Notification Analytics", path: "/notification-analytics" },
-    ],
-  },
-
-  {
-    title: "Financial Management",
-    description: "Income, expenses, budgets, and financial planning",
-    collapsible: true,
-    defaultExpanded: true,
-    items: [
-      { icon: BarChart3, label: "Cost & Profitability Analysis", path: "/financial-management" },
-      { icon: TrendingUp, label: "Financial Forecasting", path: "/financial-forecasting" },
-      { icon: BarChart3, label: "Budget Planning", path: "/budget-planning" },
-      { icon: TrendingUp, label: "Loan Management", path: "/loan-management" },
-      { icon: History, label: "Payment History", path: "/payment-history" },
-      { icon: FileText, label: "Financial Reports", path: "/financial-reports" },
-      { icon: Calculator, label: "Tax Planning", path: "/tax-planning" },
-      { icon: Shield, label: "Insurance Management", path: "/insurance-management" },
-      { icon: BarChart3, label: "Farm Comparison", path: "/farm-comparison" },
-      { icon: LineChart, label: "Farm Consolidation", path: "/farm-consolidation" },
     ],
   },
 ];
 
+
+// Helper function to get all menu items flattened
 export function getAllMenuItems(): MenuItem[] {
-  return navigationStructure.reduce((acc: MenuItem[], group) => [...acc, ...group.items], []);
-}
-
-export function getMenuGroupItems(groupTitle: string): MenuItem[] {
-  const group = navigationStructure.find((g) => g.title === groupTitle);
-  return group?.items ?? [];
-}
-
-export function filterMenuItemsByRole(
-  items: MenuItem[],
-  isAdmin: boolean
-): MenuItem[] {
-  return items.filter((item) => {
-    if (item.adminOnly && !isAdmin) {
-      return false;
-    }
-    return true;
+  const allItems: MenuItem[] = [];
+  navigationStructure.forEach((group) => {
+    allItems.push(...group.items);
   });
+  return allItems;
 }
 
-export function filterNavigationByRole(
-  isAdmin: boolean
-): MenuGroup[] {
+// Helper function to filter navigation by user role
+export function filterNavigationByRole(role?: string): MenuGroup[] {
   return navigationStructure.map((group) => ({
     ...group,
-    items: filterMenuItemsByRole(group.items, isAdmin),
+    items: group.items.filter((item) => {
+      if (item.adminOnly && role !== "admin") {
+        return false;
+      }
+      return true;
+    }),
   })).filter((group) => group.items.length > 0);
 }
