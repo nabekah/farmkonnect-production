@@ -105,3 +105,10 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Test cache and optimization
+.vitest/
+.turbo/
+.manus-logs/
+screenshots/
+uploads/

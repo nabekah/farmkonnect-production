@@ -15,5 +15,24 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["server/**/*.test.ts", "server/**/*.spec.ts"],
+    // Performance optimizations
+    threads: true,
+    maxThreads: 4,
+    minThreads: 1,
+    isolate: true,
+    globals: true,
+    // Parallel test execution
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    // Coverage optimization
+    coverage: {
+      enabled: false,
+    },
+    // Disable reporters for faster execution
+    reporters: ["default"],
+    // Cache test results
+    cache: {
+      dir: ".vitest",
+    },
   },
 });

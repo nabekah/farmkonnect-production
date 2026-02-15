@@ -10,6 +10,9 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:fast": "vitest run --threads --maxThreads=4 --minThreads=1 --no-coverage",
+    "test:parallel": "vitest run --threads --maxThreads=8 --minThreads=2 --no-coverage --reporter=default",
+    "test:watch": "vitest --threads --maxThreads=4",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
