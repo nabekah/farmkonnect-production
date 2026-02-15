@@ -50,6 +50,8 @@ import { reportAnalyticsRouter } from "./routers/reportAnalytics";
 import { recipientManagementRouter } from "./routers/recipientManagement";
 // import { laborManagementRouter } from "./routers/laborManagement"; // Temporarily disabled
 import { reportExportRouter } from "./routers/reportExport";
+import { aiShiftSchedulingRouter } from "./routers/aiShiftScheduling";
+import { advancedAnalyticsRouter } from "./routers/advancedAnalytics";
 import { adminAnalyticsRouter } from "./routers/adminAnalytics";
 import { predictiveAnalyticsRouter as predictiveAnalyticsRouterOld } from "./routers/predictiveAnalyticsRouter";
 import { predictiveAnalyticsRouter } from "./routers/predictiveAnalytics";
@@ -243,6 +245,8 @@ export const appRouter = router({
   fieldWorker: fieldWorkerRouter,
   admin: adminRouter,
   // laborManagement: laborManagementRouter, // Temporarily disabled
+  aiShiftScheduling: aiShiftSchedulingRouter,
+  advancedAnalytics: advancedAnalyticsRouter,
   animalBulkRegistration: animalBulkRegistrationRouter,
   animalBulkEditing: animalBulkEditingRouter,
   animalGenealogy: animalGenealogyRouter,
