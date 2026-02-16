@@ -98,6 +98,9 @@ import { FarmerDashboard } from "./pages/FarmerDashboard";
 import { ActivityHistory } from "./pages/ActivityHistory";
 import { ActivityApprovalManager } from "./pages/ActivityApprovalManager";
 import { TimeTrackerReporting } from "./pages/TimeTrackerReporting";
+import FieldWorkerHome from "./pages/FieldWorkerHome";
+import FieldWorkerTaskDetail from "./pages/FieldWorkerTaskDetail";
+import FieldWorkerTaskList from "./pages/FieldWorkerTaskList";
 import WorkerPerformanceDashboard from "./pages/WorkerPerformanceDashboard";
 import WorkerStatusDashboard from "./pages/WorkerStatusDashboard";
 import { TaskDetail } from "./pages/TaskDetail";
@@ -804,6 +807,11 @@ function Router() {
           </DashboardLayout>
         )}
       </Route>
+      <Route path="/field-worker">
+        {() => (
+          <FieldWorkerHome />
+        )}
+      </Route>
       <Route path="/field-worker/dashboard">
         {() => (
           <DashboardLayout>
@@ -820,16 +828,12 @@ function Router() {
       </Route>
       <Route path="/field-worker/tasks/:id">
         {() => (
-          <DashboardLayout>
-            <TaskDetail />
-          </DashboardLayout>
+          <FieldWorkerTaskDetail />
         )}
       </Route>
       <Route path="/field-worker/tasks">
         {() => (
-          <DashboardLayout>
-            <ViewAllTasks />
-          </DashboardLayout>
+          <FieldWorkerTaskList />
         )}
       </Route>
       <Route path="/field-worker/activities">
