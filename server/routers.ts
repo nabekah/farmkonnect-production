@@ -186,6 +186,7 @@ import { chatbotRouter } from "./routers/chatbotRouter";
 import { weatherAlertsRouter } from "./routers/weatherAlertsRouter";
 import { pushNotificationIntegrationRouter } from "./routers/pushNotificationIntegration";
 import { notificationEventHandlersRouter } from "./routers/notificationEventHandlers";
+import { notificationRouter as advancedNotificationRouter } from "./routers/notificationRouter";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
@@ -297,7 +298,6 @@ export const appRouter = router({
   forum: forumRouter,
   reputation: reputationRouter,
   mobileApp: mobileAppRouter,
-  advancedAnalytics: advancedAnalyticsRouter,
   supplyChain: supplyChainRouter,
   cooperative: cooperativeRouter,
   advancedSearch: advancedSearchRouter,
@@ -311,6 +311,7 @@ export const appRouter = router({
   weatherAlerts: weatherAlertsRouter,
   pushNotificationIntegration: pushNotificationIntegrationRouter,
   notificationEventHandlers: notificationEventHandlersRouter,
+  advancedNotifications: advancedNotificationRouter,
   // accountingExport: accountingExportRouter,
   // expenseNotifications: expenseNotifications,
   // farmAnalytics: farmAnalytics,
