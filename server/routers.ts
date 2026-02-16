@@ -95,6 +95,7 @@ import { healthTrendsAnalyticsRouter } from "./routers/healthTrendsAnalytics";
 import { pushNotificationsRouter } from "./routers/pushNotificationsRouter";
 import { taskAssignmentDatabaseRouter } from "./routers/taskAssignmentDatabase";
 import { taskMigrationRouter } from "./routers/taskMigration";
+import { workerRouter } from "./routers/workerRouter";
 // import { searchRouter } from "./routers/search";
 // import { searchEnhancementsRouter } from "./routers/searchEnhancements";
 // import { multiSpeciesRouter } from "./routers/multiSpecies";
@@ -1053,6 +1054,7 @@ export const appRouter = router({
   taskAssignmentWithNotifications: taskAssignmentWithNotificationsRouter,
   taskAssignmentDatabase: taskAssignmentDatabaseRouter,
   taskMigration: taskMigrationRouter,
+  workers: workerRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit2, Trash2, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import { trpc } from '@/lib/trpc';
+import { useAuth } from '@/_core/hooks/useAuth';
 
 interface Task {
   id: string;
@@ -21,46 +23,8 @@ interface Task {
 }
 
 export const TaskAssignmentUI = () => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: 'task_1',
-      title: 'Prepare Field A for Planting',
-      description: 'Clear weeds and level soil in Field A',
-      workerId: 'worker_1',
-      workerName: 'John Smith',
-      taskType: 'planting',
-      priority: 'high',
-      status: 'in_progress',
-      dueDate: '2026-02-20',
-      estimatedHours: 8,
-      actualHours: 6
-    },
-    {
-      id: 'task_2',
-      title: 'Irrigation System Check',
-      description: 'Inspect and repair irrigation lines in Field B',
-      workerId: 'worker_2',
-      workerName: 'Maria Garcia',
-      taskType: 'irrigation',
-      priority: 'medium',
-      status: 'pending',
-      dueDate: '2026-02-22',
-      estimatedHours: 4
-    },
-    {
-      id: 'task_3',
-      title: 'Pest Control Spraying',
-      description: 'Apply pesticide to corn crop',
-      workerId: 'worker_3',
-      workerName: 'Ahmed Hassan',
-      taskType: 'spraying',
-      priority: 'urgent',
-      status: 'pending',
-      dueDate: '2026-02-18',
-      estimatedHours: 6
-    }
-  ]);
-
+  const authData = useAuth();
+  const user = authData?.user || { farmId: 1 };
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -70,34 +34,131 @@ export const TaskAssignmentUI = () => {
     taskType: 'planting',
     priority: 'medium' as const,
     dueDate: '',
-    estimatedHours: 4
+    estimatedHours: 4,
+    workerName: ''
   });
 
-  const handleAddTask = () => {
-    if (formData.title && formData.workerId && formData.dueDate) {
-      const newTask: Task = {
-        id: `task_${Date.now()}`,
-        ...formData,
-        workerName: 'Worker Name',
-        status: 'pending',
-        actualHours: undefined
-      };
-      setTasks([...tasks, newTask]);
-      setFormData({ title: '', description: '', workerId: '', taskType: 'planting', priority: 'medium', dueDate: '', estimatedHours: 4 });
+  // Fetch tasks from database
+  const { data: tasks = [], isLoading, refetch } = trpc.taskAssignmentDatabase.getAllTasks.useQuery(
+    { farmId: user?.farmId || 1 },
+    { enabled: !!user?.farmId }
+  );
+
+  // Fetch workers from database
+  const { data: workers = [], isLoading: workersLoading } = trpc.workers.getAllWorkers.useQuery(
+    { farmId: user?.farmId || 1 },
+    { enabled: !!user?.farmId }
+  );
+
+  // Mutations
+  const createTaskMutation = trpc.taskAssignmentDatabase.createTask.useMutation({
+    onSuccess: () => {
+      refetch();
       setShowForm(false);
+      setFormData({
+        title: '',
+        description: '',
+        workerId: '',
+        taskType: 'planting',
+        priority: 'medium',
+        dueDate: '',
+        estimatedHours: 4,
+        workerName: ''
+      });
+    }
+  });
+
+  const updateTaskMutation = trpc.taskAssignmentDatabase.updateTask.useMutation({
+    onSuccess: () => {
+      refetch();
+      setEditingId(null);
+      setShowForm(false);
+    }
+  });
+
+  const deleteTaskMutation = trpc.taskAssignmentDatabase.deleteTask.useMutation({
+    onSuccess: () => {
+      refetch();
+    }
+  });
+
+  const updateStatusMutation = trpc.taskAssignmentDatabase.updateTaskStatus.useMutation({
+    onSuccess: () => {
+      refetch();
+    }
+  });
+
+  const handleSubmit = () => {
+    if (!formData.title || !formData.workerId) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    if (editingId) {
+      updateTaskMutation.mutate({
+        id: editingId,
+        title: formData.title,
+        description: formData.description,
+        workerId: formData.workerId,
+        workerName: formData.workerName,
+        taskType: formData.taskType,
+        priority: formData.priority,
+        dueDate: formData.dueDate,
+        estimatedHours: formData.estimatedHours,
+        farmId: user?.farmId || 1
+      });
+    } else {
+      createTaskMutation.mutate({
+        title: formData.title,
+        description: formData.description,
+        workerId: formData.workerId,
+        workerName: formData.workerName,
+        taskType: formData.taskType,
+        priority: formData.priority,
+        dueDate: formData.dueDate,
+        estimatedHours: formData.estimatedHours,
+        farmId: user?.farmId || 1
+      });
     }
   };
 
-  const handleCompleteTask = (taskId: string) => {
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, status: 'completed' } : t));
+  const handleEdit = (task: any) => {
+    setFormData({
+      title: task.title,
+      description: task.description,
+      workerId: task.workerId,
+      workerName: task.workerName,
+      taskType: task.taskType,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      estimatedHours: task.estimatedHours
+    });
+    setEditingId(task.id);
+    setShowForm(true);
   };
 
-  const handleStartTask = (taskId: string) => {
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, status: 'in_progress' } : t));
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      deleteTaskMutation.mutate({ id, farmId: user?.farmId || 1 });
+    }
   };
 
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
+  const handleStatusChange = (id: string, newStatus: string) => {
+    updateStatusMutation.mutate({
+      id,
+      status: newStatus as 'pending' | 'in_progress' | 'completed',
+      farmId: user?.farmId || 1
+    });
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -105,230 +166,263 @@ export const TaskAssignmentUI = () => {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'text-red-600';
-      case 'high': return 'text-orange-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'in_progress': return <Clock className="w-5 h-5 text-blue-600" />;
-      case 'pending': return <AlertCircle className="w-5 h-5 text-yellow-600" />;
-      default: return null;
-    }
-  };
-
-  const pendingTasks = tasks.filter(t => t.status === 'pending');
-  const inProgressTasks = tasks.filter(t => t.status === 'in_progress');
-  const completedTasks = tasks.filter(t => t.status === 'completed');
+  const pendingCount = tasks.filter((t: any) => t.status === 'pending').length;
+  const inProgressCount = tasks.filter((t: any) => t.status === 'in_progress').length;
+  const completedCount = tasks.filter((t: any) => t.status === 'completed').length;
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Task Assignment & Tracking</h1>
-        <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-          <Plus className="w-4 h-4" /> Assign New Task
+        <Button onClick={() => { setShowForm(!showForm); setEditingId(null); }} className="gap-2">
+          <Plus className="w-4 h-4" />
+          Assign New Task
         </Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-gray-600">Pending Tasks</p>
+              <p className="text-3xl font-bold">{pendingCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-gray-600">In Progress</p>
+              <p className="text-3xl font-bold text-blue-600">{inProgressCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-gray-600">Completed</p>
+              <p className="text-3xl font-bold text-green-600">{completedCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Form */}
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Assign New Task</CardTitle>
+            <CardTitle>{editingId ? 'Edit Task' : 'Create New Task'}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Task Title</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Prepare Field A"
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Worker</label>
-                <select
-                  value={formData.workerId}
-                  onChange={(e) => setFormData({ ...formData, workerId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="">Select Worker</option>
-                  <option value="worker_1">John Smith</option>
-                  <option value="worker_2">Maria Garcia</option>
-                  <option value="worker_3">Ahmed Hassan</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Task Type</label>
-                <select
-                  value={formData.taskType}
-                  onChange={(e) => setFormData({ ...formData, taskType: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="planting">Planting</option>
-                  <option value="weeding">Weeding</option>
-                  <option value="irrigation">Irrigation</option>
-                  <option value="harvesting">Harvesting</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="spraying">Spraying</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Priority</label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Due Date</label>
-                <input
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Estimated Hours</label>
-                <input
-                  type="number"
-                  value={formData.estimatedHours}
-                  onChange={(e) => setFormData({ ...formData, estimatedHours: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Task details..."
-                className="w-full px-3 py-2 border rounded-lg"
-                rows={3}
+              <input
+                type="text"
+                placeholder="e.g., Prepare Field A"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="px-3 py-2 border rounded-md"
+              />
+              <select
+                value={formData.workerId}
+                onChange={(e) => {
+                  const selectedWorker = workers.find(w => w.id.toString() === e.target.value);
+                  setFormData({
+                    ...formData,
+                    workerId: e.target.value,
+                    workerName: selectedWorker?.name || ''
+                  });
+                }}
+                className="px-3 py-2 border rounded-md"
+              >
+                <option value="">Select Worker</option>
+                {workers.map((worker: any) => (
+                  <option key={worker.id} value={worker.id}>
+                    {worker.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={formData.taskType}
+                onChange={(e) => setFormData({ ...formData, taskType: e.target.value })}
+                className="px-3 py-2 border rounded-md"
+              >
+                <option value="planting">Planting</option>
+                <option value="weeding">Weeding</option>
+                <option value="irrigation">Irrigation</option>
+                <option value="harvesting">Harvesting</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                className="px-3 py-2 border rounded-md"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="px-3 py-2 border rounded-md"
+              />
+              <input
+                type="number"
+                placeholder="Estimated Hours"
+                value={formData.estimatedHours}
+                onChange={(e) => setFormData({ ...formData, estimatedHours: parseInt(e.target.value) })}
+                className="px-3 py-2 border rounded-md"
               />
             </div>
+            <textarea
+              placeholder="Task details..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border rounded-md"
+              rows={4}
+            />
             <div className="flex gap-2">
-              <Button onClick={handleAddTask} className="bg-green-600 hover:bg-green-700">Assign Task</Button>
-              <Button onClick={() => setShowForm(false)} variant="outline">Cancel</Button>
+              <Button onClick={handleSubmit} className="bg-green-600 hover:bg-green-700">
+                {editingId ? 'Update Task' : 'Assign Task'}
+              </Button>
+              <Button onClick={() => { setShowForm(false); setEditingId(null); }} variant="outline">
+                Cancel
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Pending Tasks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-yellow-600">{pendingTasks.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-blue-600">{inProgressTasks.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600">{completedTasks.length}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Tasks List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tasks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All Tasks ({tasks.length})</TabsTrigger>
+              <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
+              <TabsTrigger value="progress">In Progress ({inProgressCount})</TabsTrigger>
+              <TabsTrigger value="completed">Completed ({completedCount})</TabsTrigger>
+            </TabsList>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">All Tasks ({tasks.length})</TabsTrigger>
-          <TabsTrigger value="pending">Pending ({pendingTasks.length})</TabsTrigger>
-          <TabsTrigger value="progress">In Progress ({inProgressTasks.length})</TabsTrigger>
-          <TabsTrigger value="completed">Completed ({completedTasks.length})</TabsTrigger>
-        </TabsList>
-
-        {['all', 'pending', 'progress', 'completed'].map(tab => (
-          <TabsContent key={tab} value={tab} className="space-y-3">
-            {(tab === 'all' ? tasks : tab === 'pending' ? pendingTasks : tab === 'progress' ? inProgressTasks : completedTasks).map(task => (
-              <Card key={task.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        {getStatusIcon(task.status)}
-                        <h3 className="text-lg font-semibold">{task.title}</h3>
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(task.status)}`}>
-                          {task.status}
-                        </span>
-                        <span className={`text-xs font-bold ${getPriorityColor(task.priority)}`}>
-                          {task.priority.toUpperCase()}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                      <div className="grid grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-500">Assigned To</p>
-                          <p className="font-semibold">{task.workerName}</p>
+            <TabsContent value="all" className="space-y-4 mt-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                </div>
+              ) : tasks.length === 0 ? (
+                <p className="text-gray-500">No tasks found</p>
+              ) : (
+                tasks.map((task: any) => (
+                  <Card key={task.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{task.title}</h3>
+                          <p className="text-gray-600">{task.description}</p>
+                          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                            <div><span className="font-semibold">Assigned To:</span> {task.workerName}</div>
+                            <div><span className="font-semibold">Due Date:</span> {task.dueDate}</div>
+                            <div><span className="font-semibold">Estimated Hours:</span> {task.estimatedHours}h</div>
+                            <div><span className="font-semibold">Type:</span> {task.taskType}</div>
+                          </div>
+                          <div className="mt-3 flex gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(task.status)}`}>
+                              {task.status}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getPriorityColor(task.priority)}`}>
+                              {task.priority}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-gray-500">Due Date</p>
-                          <p className="font-semibold">{new Date(task.dueDate).toLocaleDateString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Estimated Hours</p>
-                          <p className="font-semibold">{task.estimatedHours}h {task.actualHours ? `(${task.actualHours}h actual)` : ''}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500">Type</p>
-                          <p className="font-semibold capitalize">{task.taskType}</p>
+                        <div className="flex gap-2">
+                          {task.status === 'pending' && (
+                            <Button size="sm" onClick={() => handleStatusChange(task.id, 'in_progress')} className="bg-blue-600">
+                              Start
+                            </Button>
+                          )}
+                          {task.status === 'in_progress' && (
+                            <Button size="sm" onClick={() => handleStatusChange(task.id, 'completed')} className="bg-green-600">
+                              Complete
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(task)}>
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => handleDelete(task.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      {task.status === 'pending' && (
-                        <Button onClick={() => handleStartTask(task.id)} size="sm" className="bg-blue-600">Start</Button>
-                      )}
-                      {task.status === 'in_progress' && (
-                        <Button onClick={() => handleCompleteTask(task.id)} size="sm" className="bg-green-600">Complete</Button>
-                      )}
-                      <Button onClick={() => handleDeleteTask(task.id)} size="sm" variant="outline" className="text-red-600">
-                        <Trash2 className="w-4 h-4" />
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="pending" className="space-y-4 mt-4">
+              {tasks.filter((t: any) => t.status === 'pending').map((task: any) => (
+                <Card key={task.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold">{task.title}</h3>
+                        <p className="text-sm text-gray-600">Assigned to: {task.workerName}</p>
+                      </div>
+                      <Button size="sm" onClick={() => handleStatusChange(task.id, 'in_progress')} className="bg-blue-600">
+                        Start
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-        ))}
-      </Tabs>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="progress" className="space-y-4 mt-4">
+              {tasks.filter((t: any) => t.status === 'in_progress').map((task: any) => (
+                <Card key={task.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold">{task.title}</h3>
+                        <p className="text-sm text-gray-600">Assigned to: {task.workerName}</p>
+                      </div>
+                      <Button size="sm" onClick={() => handleStatusChange(task.id, 'completed')} className="bg-green-600">
+                        Complete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="completed" className="space-y-4 mt-4">
+              {tasks.filter((t: any) => t.status === 'completed').map((task: any) => (
+                <Card key={task.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
+                      <div>
+                        <h3 className="font-semibold">{task.title}</h3>
+                        <p className="text-sm text-gray-600">Completed by: {task.workerName}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
-
-export default TaskAssignmentUI;
