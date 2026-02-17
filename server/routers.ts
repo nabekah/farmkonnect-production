@@ -48,6 +48,9 @@ import { exportRouter } from "./exportRouter";
 import { alertHistoryRouter } from "./alertHistoryRouter";
 import { fertilizerRouter } from "./fertilizerRouter";
 import { reportSchedulingRouter } from "./routers/reportScheduling";
+import { bulkTaskAssignmentRouter } from "./routers/bulkTaskAssignment";
+import { taskDependenciesRouter } from "./routers/taskDependencies";
+import { taskTemplatesRouter } from "./routers/taskTemplates";
 import { reportTemplatesRouter } from "./routers/reportTemplates";
 import { reportAnalyticsRouter } from "./routers/reportAnalytics";
 import { recipientManagementRouter } from "./routers/recipientManagement";
@@ -1054,6 +1057,9 @@ export const appRouter = router({
   taskAssignmentWithNotifications: taskAssignmentWithNotificationsRouter,
   taskAssignmentDatabase: taskAssignmentDatabaseRouter,
   taskMigration: taskMigrationRouter,
+  bulkTaskAssignment: bulkTaskAssignmentRouter,
+  taskDependencies: taskDependenciesRouter,
+  taskTemplates: taskTemplatesRouter,
   workers: workerRouter,
 });
 
