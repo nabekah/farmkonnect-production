@@ -14,6 +14,7 @@ export async function savePushSubscription(
   userAgent?: string
 ) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     const existing = await db
@@ -63,6 +64,7 @@ export async function savePushSubscription(
  */
 export async function getUserSubscriptions(userId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     const subscriptions = await db
@@ -82,6 +84,7 @@ export async function getUserSubscriptions(userId: number) {
  */
 export async function removePushSubscription(endpoint: string) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     await db
@@ -101,6 +104,7 @@ export async function removePushSubscription(endpoint: string) {
  */
 export async function getFarmSubscriptions(farmId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     // This would need to join with farm members table
@@ -132,6 +136,7 @@ export async function logNotificationDelivery(
   actionUrl?: string
 ) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     const result = await db.insert(notificationDeliveryLog).values({
@@ -165,6 +170,7 @@ export async function updateNotificationStatus(
   error?: string
 ) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     await db
@@ -189,6 +195,7 @@ export async function updateNotificationStatus(
  */
 export async function getUserNotificationPreferences(userId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     const prefs = await db
@@ -249,6 +256,7 @@ export async function updateUserNotificationPreferences(
   preferences: Partial<typeof userNotificationPreferences.$inferInsert>
 ) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     await db
@@ -268,6 +276,7 @@ export async function updateUserNotificationPreferences(
  */
 export async function getPendingNotificationsForRetry(maxRetries: number = 3) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     const pending = await db
@@ -292,6 +301,7 @@ export async function getPendingNotificationsForRetry(maxRetries: number = 3) {
  */
 export async function markNotificationAsRead(logId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     await db
@@ -315,6 +325,7 @@ export async function markNotificationAsRead(logId: number) {
  */
 export async function getUnreadNotificationCount(userId: number) {
   const db = await getDb();
+  if (!db) throw new Error('Database connection failed');
   
   try {
     const result = await db
