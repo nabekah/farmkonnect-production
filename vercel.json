@@ -4,68 +4,6 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": "vite",
-  "env": {
-    "DATABASE_URL": {
-      "description": "Database connection string"
-    },
-    "JWT_SECRET": {
-      "description": "JWT signing secret"
-    },
-    "VITE_APP_ID": {
-      "description": "Manus OAuth app ID"
-    },
-    "OAUTH_SERVER_URL": {
-      "description": "Manus OAuth server URL"
-    },
-    "VITE_OAUTH_PORTAL_URL": {
-      "description": "Manus OAuth portal URL"
-    },
-    "OWNER_OPEN_ID": {
-      "description": "Owner's Manus open ID"
-    },
-    "OWNER_NAME": {
-      "description": "Owner's name"
-    },
-    "BUILT_IN_FORGE_API_URL": {
-      "description": "Manus built-in API URL"
-    },
-    "BUILT_IN_FORGE_API_KEY": {
-      "description": "Manus built-in API key"
-    },
-    "VITE_FRONTEND_FORGE_API_KEY": {
-      "description": "Frontend Manus API key"
-    },
-    "VITE_FRONTEND_FORGE_API_URL": {
-      "description": "Frontend Manus API URL"
-    },
-    "OPENWEATHER_API_KEY": {
-      "description": "OpenWeather API key"
-    },
-    "SENDGRID_API_KEY": {
-      "description": "SendGrid API key"
-    },
-    "TWILIO_ACCOUNT_SID": {
-      "description": "Twilio account SID"
-    },
-    "TWILIO_AUTH_TOKEN": {
-      "description": "Twilio auth token"
-    },
-    "TWILIO_PHONE_NUMBER": {
-      "description": "Twilio phone number"
-    },
-    "VAPID_PRIVATE_KEY": {
-      "description": "VAPID private key for push notifications"
-    },
-    "VITE_VAPID_PUBLIC_KEY": {
-      "description": "VAPID public key for push notifications"
-    },
-    "VITE_ANALYTICS_ENDPOINT": {
-      "description": "Analytics endpoint URL"
-    },
-    "VITE_ANALYTICS_WEBSITE_ID": {
-      "description": "Analytics website ID"
-    }
-  },
   "functions": {
     "server/_core/index.ts": {
       "maxDuration": 60,
