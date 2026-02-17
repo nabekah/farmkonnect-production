@@ -59,6 +59,11 @@ export const TaskAssignmentUI = () => {
     { enabled: true } // Always fetch workers
   );
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Workers data updated:', { workers, farmId, workersLoading, workersError });
+  }, [workers, farmId, workersLoading, workersError]);
+
   // Fetch tasks from database
   const { data: tasks = [], isLoading, refetch } = trpc.taskAssignmentDatabase.getAllTasks.useQuery(
     { farmId },
