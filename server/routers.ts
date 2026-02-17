@@ -99,6 +99,10 @@ import { pushNotificationsRouter } from "./routers/pushNotificationsRouter";
 import { taskAssignmentDatabaseRouter } from "./routers/taskAssignmentDatabase";
 import { taskMigrationRouter } from "./routers/taskMigration";
 import { workerRouter } from "./routers/workerRouter";
+import { farmTaskFilteringRouter } from "./routers/farmTaskFiltering";
+import { taskPriorityEscalationRouter } from "./routers/taskPriorityEscalation";
+import { taskReassignmentRouter } from "./routers/taskReassignment";
+import { taskCompletionVerificationRouter } from "./routers/taskCompletionVerification";
 // import { searchRouter } from "./routers/search";
 // import { searchEnhancementsRouter } from "./routers/searchEnhancements";
 // import { multiSpeciesRouter } from "./routers/multiSpecies";
@@ -1060,6 +1064,10 @@ export const appRouter = router({
   bulkTaskAssignment: bulkTaskAssignmentRouter,
   taskDependencies: taskDependenciesRouter,
   taskTemplates: taskTemplatesRouter,
+  farmTaskFiltering: farmTaskFilteringRouter,
+  taskPriorityEscalation: taskPriorityEscalationRouter,
+  taskReassignment: taskReassignmentRouter,
+  taskCompletionVerification: taskCompletionVerificationRouter,
   workers: workerRouter,
 });
 

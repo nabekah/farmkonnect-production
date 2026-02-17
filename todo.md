@@ -5169,3 +5169,44 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Create template instantiation (create tasks from template)
 - [x] Add template management UI (list, edit, delete)
 - [x] Test template functionality
+
+
+## Phase 24: Farm Selection & Task Filtering
+- [ ] Add farm selector dropdown to task assignment page
+- [ ] Implement "All Farms" option to view tasks across all farms
+- [ ] Create farm-specific task queries in tRPC
+- [ ] Add farm filter to task list UI
+- [ ] Implement farm context in task operations
+- [ ] Add farm selection persistence (localStorage/session)
+- [ ] Create farm statistics by task status
+- [ ] Test farm filtering functionality
+
+## Phase 25: Task Priority Escalation
+- [ ] Create priority escalation router with tRPC procedures
+- [ ] Implement automatic priority escalation based on due date
+- [ ] Add escalation rules (e.g., escalate to HIGH if due in 24 hours)
+- [ ] Create escalation notification system
+- [ ] Add escalation history tracking
+- [ ] Create escalation UI component
+- [ ] Implement manual escalation option
+- [ ] Test escalation functionality
+
+## Phase 26: Task Reassignment Workflow
+- [ ] Create reassignment router with tRPC procedures
+- [ ] Implement reassignment validation (check worker availability)
+- [ ] Add reassignment notifications to both workers
+- [ ] Create reassignment history tracking
+- [ ] Add reassignment reason/notes field
+- [ ] Create reassignment UI component
+- [ ] Implement bulk reassignment capability
+- [ ] Test reassignment workflow
+
+## Phase 27: Task Completion Verification
+- [ ] Create completion verification router with tRPC procedures
+- [ ] Implement photo evidence requirement for task completion
+- [ ] Add supervisor approval workflow for critical tasks
+- [ ] Create completion notes/comments field
+- [ ] Add completion timestamp and location verification
+- [ ] Create completion verification UI component
+- [ ] Implement completion rejection with feedback
+- [ ] Test completion verification workflow
