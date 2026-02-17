@@ -41,14 +41,20 @@ export const TaskAssignmentUI = () => {
 
   // Fetch tasks from database
   const { data: tasks = [], isLoading, refetch } = trpc.taskAssignmentDatabase.getAllTasks.useQuery(
-    { farmId: typeof selectedFarmId === 'number' ? selectedFarmId : (user?.farmId || 1) },
+    { farmId: selectedFarmId === 'all' ? (user?.farmId || 1) : (typeof selectedFarmId === 'number' ? selectedFarmId : (user?.farmId || 1)) },
     { enabled: true }
   );
 
   // Fetch workers from database
-  const { data: workers = [], isLoading: workersLoading } = trpc.workers.getAllWorkers.useQuery(
-    { farmId: user?.farmId || 1 },
-    { enabled: !!user?.farmId }
+  const { data: workers = [], isLoading: workersLoading, error: workersError } = trpc.workers.getAllWorkers.useQuery(
+    { farmId: typeof selectedFarmId === 'number' ? selectedFarmId : (user?.farmId || 1) },
+    { enabled: true }
+  );
+
+  // Fetch farms from database
+  const { data: farms = [], isLoading: farmsLoading } = trpc.farmTaskFiltering.getUserFarms.useQuery(
+    {},
+    { enabled: true }
   );
 
   // Mutations
@@ -183,11 +189,20 @@ export const TaskAssignmentUI = () => {
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Farm:</label>
             <select
-              value={selectedFarmId}
-              onChange={(e) => setSelectedFarmId(parseInt(e.target.value))}
+              value={selectedFarmId.toString()}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedFarmId(value === 'all' ? 'all' : parseInt(value));
+              }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+              disabled={farmsLoading || farms.length === 0}
             >
-              <option value={user?.farmId || 1}>{user?.farmName || 'Current Farm'}</option>
+              <option value="all">All Farms</option>
+              {Array.isArray(farms) && farms.map((farm: any) => (
+                <option key={farm.id} value={farm.id}>
+                  {farm.name || 'Farm ' + farm.id}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -251,13 +266,18 @@ export const TaskAssignmentUI = () => {
                   });
                 }}
                 className="px-3 py-2 border rounded-md"
+                disabled={workersLoading || workers.length === 0}
               >
-                <option value="">Select Worker</option>
-                {workers.map((worker: any) => (
-                  <option key={worker.id} value={worker.id}>
-                    {worker.name}
-                  </option>
-                ))}
+                <option value="">{workersLoading ? 'Loading workers...' : 'Select Worker'}</option>
+                {Array.isArray(workers) && workers.length > 0 ? (
+                  workers.map((worker: any) => (
+                    <option key={worker.id} value={worker.id}>
+                      {worker.name || 'Worker ' + worker.id}
+                    </option>
+                  ))
+                ) : (
+                  !workersLoading && <option disabled>No workers available</option>
+                )}
               </select>
               <select
                 value={formData.taskType}
