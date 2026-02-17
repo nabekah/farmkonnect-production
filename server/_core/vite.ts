@@ -1,4 +1,4 @@
-import express, { type Express } from "express";
+import express from "express";
 import fs from "fs";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
@@ -6,7 +6,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
-export async function setupVite(app: Express, server: Server) {
+export async function setupVite(app: express.Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -47,49 +47,103 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
-export function serveStatic(app: Express) {
-  // Use process.cwd() for reliable path resolution in production
-  const distPath = path.join(process.cwd(), "dist", "public");
-  
-  // Check if the directory exists, if not try alternative paths
-  let finalDistPath = distPath;
-  if (!fs.existsSync(finalDistPath)) {
-    // Try relative to the current file location
-    const altPath = path.resolve(import.meta.dirname, "../../dist/public");
-    if (fs.existsSync(altPath)) {
-      finalDistPath = altPath;
+export function serveStatic(app: express.Express) {
+  // Try multiple possible paths for the static files
+  const possiblePaths = [
+    // Vercel production path
+    path.join(process.cwd(), "dist", "public"),
+    // Relative to this file
+    path.resolve(import.meta.dirname, "../../dist/public"),
+    // Alternative: just dist
+    path.join(process.cwd(), "dist"),
+  ];
+
+  let finalDistPath: string | null = null;
+  let debugInfo: string[] = [];
+
+  debugInfo.push(`[Static] Current working directory: ${process.cwd()}`);
+  debugInfo.push(`[Static] Script directory: ${import.meta.dirname}`);
+
+  // Find the first existing path
+  for (const possiblePath of possiblePaths) {
+    debugInfo.push(`[Static] Checking path: ${possiblePath}`);
+    if (fs.existsSync(possiblePath)) {
+      debugInfo.push(`[Static] ✓ Found: ${possiblePath}`);
+      finalDistPath = possiblePath;
+      break;
     } else {
-      console.error(
-        `Could not find the build directory at ${distPath} or ${altPath}. Available paths: ${process.cwd()}`
-      );
-      // Create a fallback that serves a simple HTML page
-      app.use("*", (_req, res) => {
-        res.status(200).set({ "Content-Type": "text/html" }).send(`
-          <!DOCTYPE html>
-          <html>
-            <head><title>FarmKonnect</title></head>
-            <body>
-              <h1>Build directory not found</h1>
-              <p>Expected: ${distPath}</p>
-              <p>Current working directory: ${process.cwd()}</p>
-            </body>
-          </html>
-        `);
-      });
-      return;
+      debugInfo.push(`[Static] ✗ Not found: ${possiblePath}`);
     }
   }
 
-  console.log(`[Static] Serving files from: ${finalDistPath}`);
-  app.use(express.static(finalDistPath));
+  // Log debug info
+  debugInfo.forEach(msg => console.log(msg));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    const indexPath = path.resolve(finalDistPath, "index.html");
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      res.status(404).send("index.html not found");
+  if (!finalDistPath) {
+    console.error("[Static] ERROR: Could not find dist/public directory!");
+    console.error("[Static] Available directories:");
+    try {
+      const cwdContents = fs.readdirSync(process.cwd());
+      console.error(`[Static] ${process.cwd()}: ${cwdContents.join(", ")}`);
+    } catch (e) {
+      console.error(`[Static] Could not read ${process.cwd()}`);
     }
+
+    // Serve a debug page
+    app.use("*", (_req, res) => {
+      res.status(200).set({ "Content-Type": "text/html" }).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>FarmKonnect - Build Error</title>
+            <style>
+              body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+              .error { background: #fee; border: 1px solid #f00; padding: 10px; border-radius: 5px; }
+              pre { background: #fff; padding: 10px; overflow-x: auto; }
+            </style>
+          </head>
+          <body>
+            <h1>FarmKonnect - Build Configuration Error</h1>
+            <div class="error">
+              <h2>Static files not found</h2>
+              <p>The application could not locate the built static files.</p>
+              <h3>Debug Information:</h3>
+              <pre>${debugInfo.join("\n")}</pre>
+              <p><strong>This is a build/deployment configuration issue, not an application error.</strong></p>
+            </div>
+          </body>
+        </html>
+      `);
+    });
+    return;
+  }
+
+  console.log(`[Static] ✓ Serving static files from: ${finalDistPath}`);
+
+  // Serve static files with proper cache headers
+  app.use(express.static(finalDistPath, {
+    maxAge: "1d",
+    etag: false,
+  }));
+
+  // Serve index.html for all routes that don't match a file
+  app.use("*", (req, res) => {
+    const indexPath = path.resolve(finalDistPath, "index.html");
+    
+    if (!fs.existsSync(indexPath)) {
+      console.error(`[Static] index.html not found at: ${indexPath}`);
+      res.status(404).send("index.html not found");
+      return;
+    }
+
+    // Set proper headers for index.html
+    res.set({
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+    });
+
+    res.sendFile(indexPath);
   });
 }
