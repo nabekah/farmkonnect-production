@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `users` ADD COLUMN `googleId` varchar(255) NULL; ALTER TABLE `users` ADD COLUMN `totpSecret` varchar(255) NULL; ALTER TABLE `users` ADD COLUMN `mfaEnabled` boolean DEFAULT false; ALTER TABLE `users` ADD COLUMN `mfaSecret` varchar(255) NULL; ALTER TABLE `users` ADD COLUMN `mfaBackupCodes` json NULL; ALTER TABLE `users` ADD COLUMN `failedLoginAttempts` int DEFAULT 0; ALTER TABLE `users` ADD COLUMN `lastFailedLoginAt` timestamp NULL; ALTER TABLE `users` ADD COLUMN `accountLockedUntil` timestamp NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute ALTER TABLE `users` ADD COLUMN `googleId` varchar(255) NULL; ALTER TABLE `users` ADD COLUMN `totpSecret` varchar(255) NULL; ALTER TABLE `users` ADD COLUMN `mfaEnabled` boolean DEFAULT false; ALTER TABLE `users` ADD COLUMN `mfaSecret` varchar(255) NULL; ALTER TABLE `users` ADD COLUMN `mfaBackupCodes` json NULL; ALTER TABLE `users` ADD COLUMN `failedLoginAttempts` int DEFAULT 0; ALTER TABLE `users` ADD COLUMN `lastFailedLoginAt` timestamp NULL; ALTER TABLE `users` ADD COLUMN `accountLockedUntil` timestamp NULL;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'mfaEnabled'"
+  ]
+}
