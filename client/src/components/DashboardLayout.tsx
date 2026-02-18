@@ -264,25 +264,6 @@ function DashboardLayoutContent({
 
       <SidebarInset>
         <ConnectionStatusIndicator />
-        {isMobile && (
-          <div className="flex border-b border-gray-200 h-14 items-center justify-between bg-white px-2 sticky top-0 z-40 shadow-sm">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <TimeTrackerWidget />
-                <CartButton />
-                <NotificationCenter />
-              </div>
-            </div>
-          </div>
-        )}
         <main className="flex-1 p-4 flex flex-col">
           {children}
         </main>
