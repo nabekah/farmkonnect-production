@@ -23,6 +23,10 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
+  // Don't redirect on root page or landing page - allow unauthenticated access
+  const currentPath = window.location.pathname;
+  if (currentPath === "/" || currentPath === "") return;
+
   window.location.href = getLoginUrl();
 };
 
