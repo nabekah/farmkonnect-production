@@ -10,24 +10,10 @@
       "memory": 1024
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "^/api(?:/(.*))$",
-      "dest": "/api/[[...path]]?path=$1",
-      "check": true
-    },
-    {
-      "src": "^/assets/(.*)$",
-      "dest": "/public/assets/$1",
-      "check": false
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "^/(.*)$",
-      "dest": "/api/[[...path]]",
-      "check": true
+      "source": "/api/:path*",
+      "destination": "/api/[[...path]]"
     }
   ],
   "headers": [
