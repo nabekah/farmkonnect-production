@@ -1106,13 +1106,6 @@ function AppContent() {
                   </div>
                 </nav>
 
-                {/* Breadcrumb Navigation */}
-                <div className="border-b bg-muted/30">
-                  <div className="container mx-auto px-4 py-2">
-                    <Breadcrumb />
-                  </div>
-                </div>
-
                 {/* Main Content */}
                 <div className="flex-1 overflow-auto">
                   <Toaster />

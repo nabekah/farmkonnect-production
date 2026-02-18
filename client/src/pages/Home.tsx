@@ -77,10 +77,7 @@ export default function Home() {
 
   if (isAuthenticated && user) {
     return (
-      <>
-        <Navbar />
-        <AuthenticatedHome user={user} setLocation={setLocation} />
-      </>
+      <AuthenticatedHome user={user} setLocation={setLocation} />
     );
   }
 
