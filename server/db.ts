@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, InsertUserAuthProvider, users, userAuthProviders } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -19,8 +19,8 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
+  if (!user.openId && !user.googleId) {
+    throw new Error("User must have either openId or googleId");
   }
 
   const db = await getDb();
@@ -30,10 +30,15 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
+    const values: InsertUser = {};
     const updateSet: Record<string, unknown> = {};
+
+    if (user.openId) {
+      values.openId = user.openId;
+    }
+    if (user.googleId) {
+      values.googleId = user.googleId;
+    }
 
     const textFields = ["name", "email", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
@@ -87,6 +92,61 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByGoogleId(googleId: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.googleId, googleId)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function addAuthProvider(userId: number, provider: InsertUserAuthProvider) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add auth provider: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(userAuthProviders).values({
+      userId,
+      provider: provider.provider,
+      providerId: provider.providerId,
+    });
+  } catch (error) {
+    console.error("[Database] Failed to add auth provider:", error);
+    throw error;
+  }
+}
+
+export async function getUserAuthProviders(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get auth providers: database not available");
+    return [];
+  }
+
+  const result = await db.select().from(userAuthProviders).where(eq(userAuthProviders.userId, userId));
+
+  return result;
 }
 
 // TODO: add feature queries here as your schema grows.

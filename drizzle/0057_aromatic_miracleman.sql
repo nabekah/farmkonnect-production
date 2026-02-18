@@ -1,0 +1,2 @@
+-- Placeholder migration file for schema consistency
+-- This migration file was auto-generated to maintain migration sequence

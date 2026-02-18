@@ -1,6 +1,6 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// Generate login URL at runtime so redirect URI reflects the current origin.
+// Generate Manus login URL at runtime so redirect URI reflects the current origin.
 export const getLoginUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;
@@ -14,4 +14,17 @@ export const getLoginUrl = () => {
   url.searchParams.set("type", "signIn");
 
   return url.toString();
+};
+
+// Generate Google OAuth login URL
+export const getGoogleLoginUrl = async () => {
+  try {
+    const redirectUri = `${window.location.origin}/api/oauth/google/callback`;
+    const response = await fetch(`/api/oauth/google/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`);
+    const data = await response.json();
+    return data.authUrl;
+  } catch (error) {
+    console.error("Failed to get Google auth URL:", error);
+    return null;
+  }
 };

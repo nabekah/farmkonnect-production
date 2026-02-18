@@ -13,7 +13,9 @@ export const users = mysqlTable("users", {
    */
   id: int("id").autoincrement().primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  openId: varchar("openId", { length: 64 }).unique(),
+  /** Google OAuth identifier (sub) for Google Sign-In users */
+  googleId: varchar("googleId", { length: 255 }).unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   phone: varchar("phone", { length: 20 }),
@@ -33,6 +35,18 @@ export const users = mysqlTable("users", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
+
+// Add a unique constraint to ensure at least one OAuth provider is set
+export const userAuthProviders = mysqlTable("userAuthProviders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  provider: mysqlEnum("provider", ["manus", "google"]).notNull(),
+  providerId: varchar("providerId", { length: 255 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UserAuthProvider = typeof userAuthProviders.$inferSelect;
+export type InsertUserAuthProvider = typeof userAuthProviders.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
