@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
@@ -1055,6 +1056,13 @@ function AppContent() {
   const { notifications, removeNotification } = useNotification();
   const { isConnected, isReconnecting } = useWebSocket();
   useZoomKeyboardShortcuts();
+
+  // Initialize theme on app load
+  useEffect(() => {
+    import('@/services/themeService').then(({ initializeTheme }) => {
+      initializeTheme();
+    });
+  }, []);
 
   return (
     <ErrorBoundary>

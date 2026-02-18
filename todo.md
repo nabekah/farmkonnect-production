@@ -5232,3 +5232,47 @@ All components are integrated into the Financial Management Dashboard and tested
 - [ ] Optimize for touch interactions and mobile UX
 - [ ] Test on various mobile devices and screen sizes
 - [ ] Add mobile route to App.tsx
+
+
+## Current Session - Zoom & Theme Enhancements (IN PROGRESS)
+
+### Phase 1: Zoom Profile Persistence
+- [ ] Create zoom profile API endpoints (save/load user zoom preference)
+- [ ] Integrate zoom persistence with user account
+- [ ] Auto-restore zoom on app load based on user profile
+
+### Phase 2: Accessibility Zoom Presets
+- [ ] Add WCAG AA preset (120% zoom)
+- [ ] Add WCAG AAA preset (150% zoom)
+- [ ] Update ZoomIndicator with accessibility presets section
+
+### Phase 3: Remove Dashboard Header & Add Profile to Main Navbar
+- [ ] Remove dashboard header/top bar from DashboardLayout
+- [ ] Move profile dropdown from sidebar to main navbar
+- [ ] Integrate profile menu into main header
+- [ ] Ensure responsive design for mobile
+
+### Phase 4: Fix Search Menu Sync
+- [ ] Audit current search implementation
+- [ ] Sync search results with sidebar navigation structure
+- [ ] Ensure search returns all menu items from navigationStructure
+- [ ] Test search functionality across all menu categories
+
+### Phase 5: Fix Theme Persistence & Sync
+- [x] Create theme persistence service (localStorage + user profile)
+- [ ] Fix ThemeProvider to sync with navbar theme selector
+- [ ] Ensure theme changes apply immediately across app
+- [x] Persist theme selection across sessions
+- [ ] Sync theme between navbar and settings page
+
+### Phase 6: Audit UI Elements for Theme Responsiveness
+- [ ] Audit header/navbar elements
+- [ ] Audit sidebar elements
+- [ ] Audit main content area
+- [ ] Audit cards and containers
+- [ ] Audit buttons and interactive elements
+- [ ] Audit text and typography
+- [ ] Audit form elements
+- [ ] Audit tables and data displays
+- [ ] Audit modals and dialogs
+- [ ] Fix all elements not responding to theme changes
