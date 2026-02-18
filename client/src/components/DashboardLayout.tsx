@@ -45,6 +45,7 @@ import { ToastContainer } from './ToastContainer';
 import { NotificationHistoryPanel } from './NotificationHistoryPanel';
 import { FieldWorkerNotificationCenter } from './FieldWorkerNotificationCenter';
 import { TimeTrackerWidget } from './TimeTrackerWidget';
+import { ZoomIndicator } from './ZoomIndicator';
 
 const menuItems = getAllMenuItems();
 
@@ -286,7 +287,8 @@ function DashboardLayoutContent({
         {!isMobile && (
           <div className="flex justify-between items-center mb-4 gap-2 pb-4 border-b border-gray-200">
             <TimeTrackerWidget />
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <ZoomIndicator />
               <CartButton />
               {user && <FieldWorkerNotificationCenter workerId={user.id} />}
               <NotificationCenter />

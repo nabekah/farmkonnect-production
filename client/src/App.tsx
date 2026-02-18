@@ -152,6 +152,8 @@ import { BulkShiftAssignment } from "./components/labor/BulkShiftAssignment";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
 import AdvancedAnalyticsDashboard from "./pages/AdvancedAnalyticsDashboard";
 import AISchedulingDashboard from "./pages/AISchedulingDashboard";
+import { ResponsiveZoomManager } from "./components/ResponsiveZoomManager";
+import { useZoomKeyboardShortcuts } from "./hooks/useZoomKeyboardShortcuts";
 
 function Router() {
   return (
@@ -1052,6 +1054,7 @@ function Router() {
 function AppContent() {
   const { notifications, removeNotification } = useNotification();
   const { isConnected, isReconnecting } = useWebSocket();
+  useZoomKeyboardShortcuts();
 
   return (
     <ErrorBoundary>
@@ -1062,6 +1065,7 @@ function AppContent() {
         >
           <BreadcrumbProvider>
             <TooltipProvider>
+              <ResponsiveZoomManager />
               <div className="min-h-screen flex flex-col bg-background">
                 {/* Offline Indicator */}
                 <OfflineIndicator />
