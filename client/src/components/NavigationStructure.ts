@@ -33,7 +33,7 @@ import {
   BarChart3,
   Database,
   Settings,
-  LucideIcon,
+  Key,
   Smartphone,
   MapPin,
   Clock,
@@ -50,6 +50,13 @@ import {
   Library,
   Copy,
   AlertTriangle,
+  Lock,
+  Shield as ShieldIcon,
+  KeyRound,
+  Smartphone as PhoneIcon,
+  Globe,
+  LogIn,
+  BarChart as ChartIcon,
 } from "lucide-react";
 
 export interface MenuItem {
@@ -314,6 +321,25 @@ export const navigationStructure: MenuGroup[] = [
       { icon: CheckCircle, label: "Seller Verification", path: "/admin-verification", adminOnly: true },
       { icon: Settings, label: "Settings", path: "/settings" },
       { icon: Upload, label: "Bulk Operations", path: "/bulk-operations" },
+    ],
+  },
+
+  {
+    title: "Security & Compliance",
+    description: "Account security, compliance, and enterprise features",
+    collapsible: true,
+    defaultExpanded: false,
+    items: [
+      { icon: Lock, label: "Two-Factor Authentication", path: "/security/2fa" },
+      { icon: KeyRound, label: "API Keys", path: "/security/api-keys" },
+      { icon: ShieldIcon, label: "Security Audit", path: "/security/audit" },
+      { icon: PhoneIcon, label: "Device Trust", path: "/security/devices" },
+      { icon: Lock, label: "Account Recovery", path: "/security/recovery" },
+      { icon: Globe, label: "IP Management", path: "/security/ip-management" },
+      { icon: LogIn, label: "Passwordless Auth", path: "/security/passwordless" },
+      { icon: ChartIcon, label: "Login Analytics", path: "/security/login-analytics" },
+      { icon: ShieldIcon, label: "Compliance Reports", path: "/compliance/reports" },
+      { icon: ShieldIcon, label: "SSO Management", path: "/security/sso" },
     ],
   },
 ];

@@ -43,6 +43,9 @@
 }
 
 :root {
+  /* 90% Zoom Level - Default Application Scaling */
+  --zoom-level: 0.9;
+  
   --primary: var(--color-green-700);
   --primary-foreground: var(--color-green-50);
   --sidebar-primary: var(--color-green-600);
@@ -119,6 +122,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Apply 90% zoom to entire application */
+    zoom: 90%;
+    transform-origin: top left;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
