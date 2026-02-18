@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import "dotenv/config";
 import express from "express";
 import compression from "compression";
+import path from "path";
+import fs from "fs";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "../server/_core/oauth";
 import { appRouter } from "../server/routers";
@@ -56,13 +58,41 @@ app.use(
 );
 
 // ============================================================================
-// Catch-all for undefined routes (return 404)
+// Static files from public directory
 // ============================================================================
-// NOTE: Static files are served by Vercel's built-in static file serving
-// from the public/ directory. This function only handles API routes.
-app.use((req: express.Request, res: express.Response) => {
-  console.log(`[API] 404 Not Found: ${req.method} ${req.path}`);
-  res.status(404).json({ error: 'Not found' });
+// Use process.cwd() to get the correct path in Vercel Functions
+const publicDir = path.join(process.cwd(), 'public');
+
+// Serve static files with proper cache headers
+app.use(express.static(publicDir, {
+  maxAge: '1d',
+  etag: false,
+  index: false, // Don't auto-serve index.html
+}));
+
+// ============================================================================
+// SPA fallback: serve index.html for all non-API, non-static routes
+// ============================================================================
+app.get('*', (req: express.Request, res: express.Response) => {
+  const indexPath = path.join(publicDir, 'index.html');
+  
+  try {
+    if (fs.existsSync(indexPath)) {
+      res.set({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      });
+      res.sendFile(indexPath);
+    } else {
+      console.error(`[SPA] index.html not found at: ${indexPath}`);
+      res.status(404).json({ error: 'Not found' });
+    }
+  } catch (err) {
+    console.error(`[SPA] Error serving index.html:`, err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Global error handler
