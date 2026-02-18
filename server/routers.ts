@@ -121,6 +121,7 @@ import { farmConsolidationRouter } from "./routers/farmConsolidation";
 import { budgetManagementRouter } from "./routers/budgetManagement";
 import { notificationDataRouter } from "./routers/notificationDataRouter";
 import { blockchainSupplyChainRouter } from "./routers/blockchainSupplyChain";
+import { accountLinkingRouter } from "./routers/accountLinking";
 // import { accountingExportRouter } from "./routers/accountingExport";
 // import { expenseNotifications } from "./routers/expenseNotifications";
 // import { farmAnalytics } from "./routers/farmAnalytics";
@@ -303,6 +304,7 @@ export const appRouter = router({
   predictiveAnalytics: predictiveAnalyticsRouter,
   notificationData: notificationDataRouter,
   blockchainSupplyChain: blockchainSupplyChainRouter,
+  accountLinking: accountLinkingRouter,
   cropRecommendations: cropRecommendationRouter,
   forum: forumRouter,
   reputation: reputationRouter,
