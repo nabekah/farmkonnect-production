@@ -5247,16 +5247,16 @@ All components are integrated into the Financial Management Dashboard and tested
 - [ ] Update ZoomIndicator with accessibility presets section
 
 ### Phase 3: Remove Dashboard Header & Add Profile to Main Navbar
-- [ ] Remove dashboard header/top bar from DashboardLayout
-- [ ] Move profile dropdown from sidebar to main navbar
-- [ ] Integrate profile menu into main header
-- [ ] Ensure responsive design for mobile
+- [x] Remove dashboard header/top bar from DashboardLayout
+- [x] Move profile dropdown from sidebar to main navbar
+- [x] Integrate profile menu into main header
+- [x] Ensure responsive design for mobile
 
 ### Phase 4: Fix Search Menu Sync
-- [ ] Audit current search implementation
-- [ ] Sync search results with sidebar navigation structure
-- [ ] Ensure search returns all menu items from navigationStructure
-- [ ] Test search functionality across all menu categories
+- [x] Audit current search implementation
+- [x] Sync search results with sidebar navigation structure
+- [x] Ensure search returns all menu items from navigationStructure
+- [x] Test search functionality across all menu categories
 
 ### Phase 5: Fix Theme Persistence & Sync
 - [x] Create theme persistence service (localStorage + user profile)

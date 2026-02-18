@@ -284,18 +284,6 @@ function DashboardLayoutContent({
           </div>
         )}
         <main className="flex-1 p-4 flex flex-col">
-        {!isMobile && (
-          <div className="flex justify-between items-center mb-4 gap-2 pb-4 border-b border-gray-200">
-            <TimeTrackerWidget />
-            <div className="flex gap-2 items-center">
-              <ZoomIndicator />
-              <CartButton />
-              {user && <FieldWorkerNotificationCenter workerId={user.id} />}
-              <NotificationCenter />
-              <NotificationHistoryPanel />
-            </div>
-          </div>
-        )}
           {children}
         </main>
       </SidebarInset>

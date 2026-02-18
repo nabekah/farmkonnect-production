@@ -155,6 +155,7 @@ import AdvancedAnalyticsDashboard from "./pages/AdvancedAnalyticsDashboard";
 import AISchedulingDashboard from "./pages/AISchedulingDashboard";
 import { ResponsiveZoomManager } from "./components/ResponsiveZoomManager";
 import { useZoomKeyboardShortcuts } from "./hooks/useZoomKeyboardShortcuts";
+import { ProfileMenu } from "./components/ProfileMenu";
 
 function Router() {
   return (
@@ -1088,6 +1089,7 @@ function AppContent() {
                       <CommandPalette />
                       <NotificationCenter />
                       <ThemeSelector />
+                      <ProfileMenu />
                     </div>
                     <MobileDrawer
                       items={[

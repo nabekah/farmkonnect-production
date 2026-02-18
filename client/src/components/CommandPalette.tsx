@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Command, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
+import { navigationStructure } from "./NavigationStructure";
 
 interface CommandItem {
   id: string;
@@ -10,21 +11,34 @@ interface CommandItem {
   category: string;
   href?: string;
   action?: () => void;
+  icon?: React.ReactNode;
 }
 
 interface CommandPaletteProps {
   items?: CommandItem[];
 }
 
-const DEFAULT_ITEMS: CommandItem[] = [
-  { id: "home", title: "Home", category: "Navigation", href: "/" },
-  { id: "farms", title: "Farms", category: "Navigation", href: "/farms" },
-  { id: "livestock", title: "Livestock", category: "Navigation", href: "/livestock" },
-  { id: "crops", title: "Crops", category: "Navigation", href: "/crops" },
-  { id: "marketplace", title: "Marketplace", category: "Navigation", href: "/marketplace" },
-  { id: "analytics", title: "Analytics", category: "Navigation", href: "/analytics" },
-  { id: "settings", title: "Settings", category: "Navigation", href: "/settings" },
-];
+/**
+ * Build command items from navigation structure
+ * Ensures search results are always in sync with sidebar navigation
+ */
+function buildCommandItems(): CommandItem[] {
+  const items: CommandItem[] = [];
+  navigationStructure.forEach((group) => {
+    group.items.forEach((item) => {
+      items.push({
+        id: item.path,
+        title: item.label,
+        category: group.title,
+        href: item.path,
+        icon: <item.icon className="h-4 w-4" />,
+      });
+    });
+  });
+  return items;
+}
+
+const DEFAULT_ITEMS: CommandItem[] = buildCommandItems();
 
 export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,8 +46,11 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Rebuild items to ensure they're always in sync with navigation
+  const currentItems = items === DEFAULT_ITEMS ? buildCommandItems() : items;
+
   // Filter items based on search
-  const filteredItems = items.filter(
+  const filteredItems = currentItems.filter(
     (item) =>
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.description?.toLowerCase().includes(search.toLowerCase()) ||
@@ -110,6 +127,7 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
       <button
         onClick={() => setIsOpen(true)}
         className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 text-sm text-muted-foreground transition-colors"
+        title="Search pages and features (Cmd+K)"
       >
         <Search className="w-4 h-4" />
         <span>Search...</span>
@@ -121,24 +139,24 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
       {/* Command Palette Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-20">
-          <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="w-full max-w-2xl bg-background rounded-lg shadow-lg overflow-hidden border border-border">
             {/* Search Input */}
-            <div className="border-b p-4 flex items-center gap-3">
+            <div className="border-b border-border p-4 flex items-center gap-3">
               <Search className="w-5 h-5 text-muted-foreground" />
               <Input
                 ref={inputRef}
                 type="text"
-                placeholder="Search commands, pages, actions..."
+                placeholder="Search pages, features, and sections..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
                   setSelectedIndex(0);
                 }}
-                className="border-0 focus:ring-0 text-lg"
+                className="border-0 focus:ring-0 text-lg bg-transparent"
               />
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-muted rounded"
+                className="p-1 hover:bg-accent rounded"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -163,20 +181,27 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
                       return (
                         <div key={item.id}>
                           {item.href ? (
-                            <Link href={item.href} className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${
-                                  isSelected
-                                    ? "bg-blue-50 text-blue-900"
-                                    : "hover:bg-muted"
-                                }`} onClick={() => setIsOpen(false)}>
-                              <div>
-                                <div className="font-medium">{item.title}</div>
-                                {item.description && (
-                                  <div className="text-sm text-muted-foreground">
-                                    {item.description}
-                                  </div>
-                                )}
+                            <Link
+                              href={item.href}
+                              className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "hover:bg-accent"
+                              }`}
+                              onClick={() => setIsOpen(false)}
+                            >
+                              <div className="flex items-center gap-3 flex-1">
+                                {item.icon && <div className="text-muted-foreground">{item.icon}</div>}
+                                <div>
+                                  <div className="font-medium">{item.title}</div>
+                                  {item.description && (
+                                    <div className="text-sm text-muted-foreground">
+                                      {item.description}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <kbd className="text-xs font-semibold border border-muted-foreground/20 rounded px-2 py-1">
+                              <kbd className="text-xs font-semibold border border-border rounded px-2 py-1">
                                 ↵
                               </kbd>
                             </Link>
@@ -188,19 +213,22 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
                               }}
                               className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
                                 isSelected
-                                  ? "bg-blue-50 text-blue-900"
-                                  : "hover:bg-muted"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "hover:bg-accent"
                               }`}
                             >
-                              <div>
-                                <div className="font-medium">{item.title}</div>
-                                {item.description && (
-                                  <div className="text-sm text-muted-foreground">
-                                    {item.description}
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-3 flex-1">
+                                {item.icon && <div className="text-muted-foreground">{item.icon}</div>}
+                                <div>
+                                  <div className="font-medium">{item.title}</div>
+                                  {item.description && (
+                                    <div className="text-sm text-muted-foreground">
+                                      {item.description}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              <kbd className="text-xs font-semibold border border-muted-foreground/20 rounded px-2 py-1">
+                              <kbd className="text-xs font-semibold border border-border rounded px-2 py-1">
                                 ↵
                               </kbd>
                             </button>
@@ -214,22 +242,22 @@ export function CommandPalette({ items = DEFAULT_ITEMS }: CommandPaletteProps) {
             </div>
 
             {/* Footer */}
-            <div className="border-t px-4 py-3 text-xs text-muted-foreground bg-muted/30 flex items-center justify-between">
+            <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground bg-muted/30 flex items-center justify-between">
               <div className="flex gap-4">
                 <div className="flex items-center gap-1">
-                  <kbd className="border border-muted-foreground/20 rounded px-2 py-1">
+                  <kbd className="border border-border rounded px-2 py-1">
                     ↑↓
                   </kbd>
                   <span>Navigate</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <kbd className="border border-muted-foreground/20 rounded px-2 py-1">
+                  <kbd className="border border-border rounded px-2 py-1">
                     ↵
                   </kbd>
                   <span>Select</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <kbd className="border border-muted-foreground/20 rounded px-2 py-1">
+                  <kbd className="border border-border rounded px-2 py-1">
                     Esc
                   </kbd>
                   <span>Close</span>
