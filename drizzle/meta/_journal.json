@@ -414,6 +414,13 @@
       "when": 1771432275682,
       "tag": "0058_tiresome_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "5",
+      "when": 1771436437640,
+      "tag": "0059_clammy_the_call",
+      "breakpoints": true
     }
   ]
 }

@@ -4035,3 +4035,96 @@ export const workerPerformanceHistory = mysqlTable("workerPerformanceHistory", {
 
 export type WorkerPerformanceHistory = typeof workerPerformanceHistory.$inferSelect;
 export type InsertWorkerPerformanceHistory = typeof workerPerformanceHistory.$inferInsert;
+
+
+// ============================================================================
+// TWO-FACTOR AUTHENTICATION (2FA)
+// ============================================================================
+/**
+ * Backup codes for account recovery
+ */
+export const backupCodes = mysqlTable("backupCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  used: boolean("used").default(false).notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BackupCode = typeof backupCodes.$inferSelect;
+export type InsertBackupCode = typeof backupCodes.$inferInsert;
+
+/**
+ * 2FA settings per user
+ */
+export const twoFactorSettings = mysqlTable("twoFactorSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  primaryMethod: mysqlEnum("primaryMethod", ["totp", "sms", "none"]).default("none").notNull(),
+  backupMethod: mysqlEnum("backupMethod", ["totp", "sms", "none"]).default("none").notNull(),
+  enabledAt: timestamp("enabledAt"),
+  disabledAt: timestamp("disabledAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TwoFactorSettings = typeof twoFactorSettings.$inferSelect;
+export type InsertTwoFactorSettings = typeof twoFactorSettings.$inferInsert;
+
+/**
+ * 2FA attempts for rate limiting and security
+ */
+export const twoFactorAttempts = mysqlTable("twoFactorAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  attemptType: mysqlEnum("attemptType", ["totp", "sms"]).notNull(),
+  successful: boolean("successful").default(false).notNull(),
+  attemptTime: timestamp("attemptTime").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TwoFactorAttempt = typeof twoFactorAttempts.$inferSelect;
+export type InsertTwoFactorAttempt = typeof twoFactorAttempts.$inferInsert;
+
+// ============================================================================
+// LOGIN ANALYTICS
+// ============================================================================
+/**
+ * Login analytics for tracking authentication methods and user behavior
+ */
+export const loginAnalytics = mysqlTable("loginAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  authProvider: mysqlEnum("authProvider", ["manus", "google"]).notNull(),
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: varchar("userAgent", { length: 500 }),
+  deviceType: mysqlEnum("deviceType", ["mobile", "tablet", "desktop"]).default("desktop").notNull(),
+  loginTime: timestamp("loginTime").defaultNow().notNull(),
+  country: varchar("country", { length: 100 }),
+  city: varchar("city", { length: 100 }),
+  successfulLogin: boolean("successfulLogin").default(true).notNull(),
+  failureReason: varchar("failureReason", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LoginAnalytic = typeof loginAnalytics.$inferSelect;
+export type InsertLoginAnalytic = typeof loginAnalytics.$inferInsert;
+
+/**
+ * Auth provider usage summary for analytics
+ */
+export const authProviderStats = mysqlTable("authProviderStats", {
+  id: int("id").autoincrement().primaryKey(),
+  date: date("date").notNull().unique(),
+  manusLogins: int("manusLogins").default(0).notNull(),
+  googleLogins: int("googleLogins").default(0).notNull(),
+  totalLogins: int("totalLogins").default(0).notNull(),
+  manusSuccessRate: decimal("manusSuccessRate", { precision: 5, scale: 2 }).default(100),
+  googleSuccessRate: decimal("googleSuccessRate", { precision: 5, scale: 2 }).default(100),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AuthProviderStat = typeof authProviderStats.$inferSelect;
+export type InsertAuthProviderStat = typeof authProviderStats.$inferInsert;
