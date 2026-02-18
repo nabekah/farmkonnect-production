@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -50,6 +49,7 @@ import { FarmAlertsCenter, type FarmAlert } from "@/components/FarmAlertsCenter"
 import { FarmRecommendations } from "@/components/FarmRecommendations";
 import { FarmQuickActions } from "@/components/FarmQuickActions";
 import { trpc } from "@/lib/trpc";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -82,10 +82,7 @@ export default function Home() {
   }
 
   return (
-    <>
-      <Navbar />
-      <LandingPage />
-    </>
+    <LandingPage />
   );
 }
 
@@ -96,100 +93,41 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
     return !completed;
   });
 
-  // State for farm filter - null means All Farms
-  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(() => {
-    const saved = localStorage.getItem("farmkonnect_selected_farm");
-    return saved ? parseInt(saved) : null;
-  });
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  // Persist farm selection to localStorage
-  useEffect(() => {
-    if (isInitialized) {
-      if (selectedFarmId === null) {
-        localStorage.removeItem("farmkonnect_selected_farm");
-      } else {
-        localStorage.setItem("farmkonnect_selected_farm", selectedFarmId.toString());
-      }
-    }
-  }, [selectedFarmId, isInitialized]);
-
   const handleOnboardingComplete = () => {
+    localStorage.setItem("farmkonnect_onboarding_complete", "true");
     setShowOnboarding(false);
   };
-  // Fetch KPI data
-  const { data: farms } = trpc.farms.list.useQuery();
-  const farmId = farms && farms.length > 0 ? farms[0].id : 1;
 
-  // Initialize on first load
-  useEffect(() => {
-    if (farms && farms.length > 0 && !isInitialized) {
-      setIsInitialized(true);
-    }
-  }, [farms, isInitialized]);
-
-  // Determine which farm ID to use for queries
-  const queryFarmId = selectedFarmId || (farms && farms.length > 0 ? farms[0].id : 1);
-  const isAllFarmsSelected = selectedFarmId === null;
-
-  // Financial data - use consolidated queries when All Farms selected
-  const { data: expenses } = isAllFarmsSelected 
-    ? trpc.financial.allExpenses.useQuery()
-    : trpc.financial.expenses.list.useQuery({ farmId: queryFarmId });
-  const { data: revenue } = isAllFarmsSelected
-    ? trpc.financial.allRevenue.useQuery()
-    : trpc.financial.revenue.list.useQuery({ farmId: queryFarmId });
-
-  // Livestock data - use consolidated query when All Farms selected
-  const { data: animals } = isAllFarmsSelected
-    ? trpc.livestock.allAnimals.useQuery()
-    : trpc.livestock.animals.list.useQuery({ farmId: queryFarmId });
-
-  // Workforce data - always get all workers, filter based on selection
-  const { data: allWorkers } = trpc.workforce.workers.getAllWorkers.useQuery({});
-  const { data: farmWorkers } = trpc.workforce.workers.list.useQuery(
-    { farmId: queryFarmId },
-    { enabled: !!queryFarmId }
-  );
-  
-  // Use all owner's workers if All Farms selected, otherwise use farm-specific workers
-  const workers = isAllFarmsSelected ? allWorkers : farmWorkers;
-
-  // Fish farming data
-  const { data: ponds } = trpc.fishFarming.ponds.list.useQuery({ farmId: queryFarmId });
-
-  // Assets data - use consolidated query when All Farms selected
-  const { data: assets } = isAllFarmsSelected
-    ? trpc.assets.allAssets.useQuery()
-    : trpc.assets.assets.list.useQuery({ farmId: queryFarmId });
-
-  // Calculate KPIs
-  const totalRevenue = revenue?.reduce((sum, r) => sum + parseFloat(r.amount || "0"), 0) || 0;
-  const totalExpenses = expenses?.reduce((sum, e) => sum + parseFloat(e.amount || "0"), 0) || 0;
-  const netProfit = totalRevenue - totalExpenses;
-  const activeAnimals = animals?.filter(a => a.status === "active").length || 0;
-  const activeWorkers = workers?.filter(w => w.status === "active").length || 0;
-  const activePonds = ponds?.filter(p => p.status === "active").length || 0;
-  const activeAssets = assets?.filter(a => a.status === "active").length || 0;
-
-  // Generate farm-specific alerts
+  const [selectedFarmId, setSelectedFarmId] = useState<number | null>(null);
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
-  const farmAlerts: FarmAlert[] = [];
-  farms?.forEach((farm) => {
-    if (netProfit < 0) {
-      farmAlerts.push({
-        id: `loss-${farm.id}`,
-        farmId: farm.id,
-        farmName: farm.farmName,
-        type: "error",
-        title: "Operating at Loss",
-        message: `Farm is currently operating at a loss. Review expenses and revenue sources.`,
-        timestamp: new Date(),
-        actionUrl: "/farm-finance",
-        actionLabel: "View Finance",
-      });
-    }
+
+  // Fetch farms
+  const { data: farms = [] } = trpc.farm.getFarms.useQuery(undefined, {
+    enabled: !!user,
   });
+
+  // Fetch expenses
+  const { data: expenses = [] } = trpc.farm.getExpenses.useQuery(
+    { farmId: selectedFarmId },
+    { enabled: !!user && !!selectedFarmId }
+  );
+
+  // Fetch revenue
+  const { data: revenue = [] } = trpc.farm.getRevenue.useQuery(
+    { farmId: selectedFarmId },
+    { enabled: !!user && !!selectedFarmId }
+  );
+
+  // Fetch farm alerts
+  const { data: farmAlerts = [] } = trpc.farm.getFarmAlerts.useQuery(
+    { farmId: selectedFarmId },
+    { enabled: !!user && !!selectedFarmId }
+  );
+
+  const totalRevenue = revenue.reduce((sum, r) => sum + (r.amount || 0), 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const netProfit = totalRevenue - totalExpenses;
+
   const visibleAlerts = farmAlerts.filter(a => !dismissedAlerts.has(a.id));
 
   return (
@@ -245,85 +183,22 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
               onClick={() => setLocation("/farm-finance")}
             />
             <KPICard
-              title="Active Animals"
-              value={activeAnimals.toString()}
-              trend="neutral"
-              trendValue={`${animals?.length || 0} total`}
-              icon={<Beef className="w-5 h-5" />}
-              color="text-amber-600"
-              onClick={() => setLocation("/livestock-management")}
-            />
-            <KPICard
               title="Net Profit"
               value={`GH₵ ${netProfit.toLocaleString()}`}
-              trend={netProfit > 0 ? "up" : netProfit < 0 ? "down" : "neutral"}
-              trendValue={netProfit > 0 ? "Profitable" : netProfit < 0 ? "Loss" : "Break-even"}
+              trend={netProfit > 0 ? "up" : "down"}
+              trendValue={netProfit > 0 ? `+${((netProfit / totalRevenue) * 100).toFixed(1)}%` : "0%"}
               icon={<TrendingUp className="w-5 h-5" />}
-              color={netProfit > 0 ? "text-green-600" : netProfit < 0 ? "text-red-600" : "text-gray-600"}
-              onClick={() => setLocation("/analytics-dashboard")}
-            />
-          </div>
-
-          {/* Secondary KPI Cards - 3-column layout */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <KPICard
-              title="Active Workers"
-              value={activeWorkers.toString()}
-              trend="neutral"
-              trendValue={`${workers?.length || 0} total`}
-              icon={<Users className="w-5 h-5" />}
               color="text-blue-600"
-              onClick={() => setLocation("/workforce-management")}
+              onClick={() => setLocation("/farm-finance")}
             />
             <KPICard
-              title="Fish Ponds"
-              value={activePonds.toString()}
+              title="Active Farms"
+              value={farms?.length || 0}
               trend="neutral"
-              trendValue={`${ponds?.length || 0} total`}
-              icon={<Fish className="w-5 h-5" />}
-              color="text-cyan-600"
-              onClick={() => setLocation("/fish-farming")}
-            />
-            <KPICard
-              title="Farm Assets"
-              value={activeAssets.toString()}
-              trend="neutral"
-              trendValue={`${assets?.length || 0} total`}
-              icon={<Wrench className="w-5 h-5" />}
+              trendValue="Total farms"
+              icon={<Sprout className="w-5 h-5" />}
               color="text-purple-600"
-              onClick={() => setLocation("/asset-management")}
-            />
-          </div>
-
-          {/* Quick Action Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <QuickActionCard
-              title="Register Animals"
-              description="Add new animals to your farm"
-              icon={<Beef className="w-6 h-6" />}
-              onClick={() => setLocation("/livestock-management")}
-              color="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-            />
-            <QuickActionCard
-              title="Health Alerts"
-              description="View animal health status"
-              icon={<AlertCircle className="w-6 h-6" />}
-              onClick={() => setLocation("/health-alerts")}
-              color="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-            />
-            <QuickActionCard
-              title="Task Management"
-              description="Assign and track tasks"
-              icon={<Clock className="w-6 h-6" />}
-              onClick={() => setLocation("/task-management")}
-              color="bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400"
-            />
-            <QuickActionCard
-              title="Analytics"
-              description="View detailed insights"
-              icon={<BarChart3 className="w-6 h-6" />}
-              onClick={() => setLocation("/analytics-dashboard")}
-              color="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+              onClick={() => setLocation("/farm-management")}
             />
           </div>
 
@@ -332,41 +207,64 @@ function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (pat
             <div className="mb-8">
               <FarmAlertsCenter
                 alerts={visibleAlerts}
-                onDismiss={(id) => setDismissedAlerts(prev => new Set([...prev, id]))}
+                onDismiss={(id) => {
+                  const newDismissed = new Set(dismissedAlerts);
+                  newDismissed.add(id);
+                  setDismissedAlerts(newDismissed);
+                }}
               />
             </div>
           )}
 
-          {/* Weather Widget */}
-          <div className="mb-8">
-            <WeatherWidget farmId={queryFarmId} />
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mb-8">
-            <FarmQuickActions />
-          </div>
-
-          {user.role === "field_worker" && (
-            <div className="mb-8">
-              <WorkerQuickActions />
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Widgets */}
+            <div className="lg:col-span-2 space-y-6">
+              <WeatherWidget />
+              <FarmQuickActions />
+              <FarmRecommendations />
             </div>
-          )}
 
-          {/* Farm Recommendations */}
-          <div className="mb-8">
-            <FarmRecommendations farmId={queryFarmId} />
-          </div>
-
-          {/* Farm Comparison */}
-          {isAllFarmsSelected && (
-            <div className="mb-8">
+            {/* Right Column - Sidebar */}
+            <div className="space-y-6">
+              <WorkerQuickActions />
               <FarmComparisonView />
             </div>
-          )}
+          </div>
         </div>
       </div>
     </>
+  );
+}
+
+interface KPICardProps {
+  title: string;
+  value: string | number;
+  trend: "up" | "down" | "neutral";
+  trendValue: string;
+  icon: React.ReactNode;
+  color: string;
+  onClick?: () => void;
+}
+
+function KPICard({ title, value, trend, trendValue, icon, color, onClick }: KPICardProps) {
+  return (
+    <Card className="border-l-4 border-l-green-600 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-r-0 border-t-0 border-b-0 cursor-pointer" onClick={onClick}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{value}</p>
+            <div className="flex items-center gap-1 mt-2">
+              {trend === "up" && <TrendingUp className={`w-4 h-4 ${color}`} />}
+              {trend === "down" && <TrendingDown className={`w-4 h-4 ${color}`} />}
+              <span className="text-xs text-gray-600 dark:text-gray-400">{trendValue}</span>
+            </div>
+          </div>
+          <div className={`${color} opacity-20`}>{icon}</div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -389,31 +287,29 @@ function LandingPage() {
                   Real-time monitoring, livestock tracking, and analytics for modern farming operations across West Africa.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a href={loginUrl} className="inline-block">
-                  <Button size="lg" className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white px-8 py-3 rounded-lg w-full sm:w-auto">
-                    Get Started Free
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </a>
-                <Button size="lg" variant="outline" className="px-8 py-3 rounded-lg w-full sm:w-auto">
-                  Watch Demo
-                  <Play className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-              <div className="pt-4 border-t border-gray-300 dark:border-gray-600">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Or sign in with:</p>
-                <a href={getGoogleLoginUrl()} className="inline-block">
-                  <Button size="lg" variant="outline" className="px-8 py-3 rounded-lg w-full sm:w-auto flex items-center gap-2">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Sign in with Google
-                  </Button>
-                </a>
+              
+              {/* Auth Buttons - Google and Manus as Primary Options */}
+              <div className="flex flex-col gap-4 pt-6">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Get Started:</p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a href={getGoogleLoginUrl()} className="flex-1">
+                    <Button size="lg" className="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 px-6 py-3 rounded-lg w-full flex items-center justify-center gap-2 font-semibold">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                      Sign in with Google
+                    </Button>
+                  </a>
+                  <a href={loginUrl} className="flex-1">
+                    <Button size="lg" className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white px-6 py-3 rounded-lg w-full flex items-center justify-center gap-2 font-semibold">
+                      <Sprout className="w-5 h-5" />
+                      Sign in with Manus
+                    </Button>
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -501,161 +397,54 @@ function LandingPage() {
 
             {/* Feature 8 */}
             <FeatureCard
-              icon={<Sprout className="h-8 w-8" />}
-              title="Crop Planning"
-              description="Plan crop cycles with soil testing, fertilizer tracking, and yield analysis"
-              color="text-lime-600"
+              icon={<MapPin className="h-8 w-8" />}
+              title="GPS Tracking"
+              description="Track field locations, equipment, and worker movements in real-time"
+              color="text-indigo-600"
             />
 
             {/* Feature 9 */}
             <FeatureCard
-              icon={<ShoppingCart className="h-8 w-8" />}
-              title="Marketplace"
-              description="Buy and sell farm products directly with integrated payment processing"
-              color="text-orange-600"
-            />
-
-            {/* Feature 10 */}
-            <FeatureCard
-              icon={<Wrench className="h-8 w-8" />}
-              title="Asset Management"
-              description="Track farm equipment, maintenance schedules, and asset depreciation"
-              color="text-slate-600"
-            />
-
-            {/* Feature 11 */}
-            <FeatureCard
-              icon={<Activity className="h-8 w-8" />}
-              title="Activity Tracking"
-              description="Log field activities with GPS tracking, photos, and performance metrics"
-              color="text-rose-600"
-            />
-
-            {/* Feature 12 */}
-            <FeatureCard
-              icon={<Droplet className="h-8 w-8" />}
-              title="Soil & Fertilizer"
-              description="Manage soil health, fertilizer applications, and nutrient optimization"
-              color="text-amber-700"
+              icon={<Zap className="h-8 w-8" />}
+              title="IoT Integration"
+              description="Connect sensors and devices for automated monitoring and alerts"
+              color="text-yellow-600"
             />
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-green-50 dark:bg-green-950">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-600 to-green-700 dark:from-green-700 dark:to-green-800">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
             Ready to Transform Your Farm?
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Join thousands of farmers using FarmKonnect to manage their operations more efficiently and profitably.
+          <p className="text-lg text-green-100 mb-8">
+            Join thousands of farmers already using FarmKonnect to optimize their operations
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={loginUrl} className="inline-block">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white px-8 py-3 rounded-lg">
-                Start Your Free Trial Today
-                <ArrowRight className="ml-2 h-5 w-5" />
+            <a href={getGoogleLoginUrl()}>
+              <Button size="lg" className="bg-white hover:bg-gray-100 text-green-600 px-8 py-3 rounded-lg font-semibold">
+                Sign up with Google
               </Button>
             </a>
-            <a href={getGoogleLoginUrl()} className="inline-block">
-              <Button size="lg" variant="outline" className="px-8 py-3 rounded-lg flex items-center gap-2">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Sign in with Google
+            <a href={loginUrl}>
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-green-700 px-8 py-3 rounded-lg font-semibold">
+                Sign up with Manus
               </Button>
             </a>
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 sm:px-6 lg:px-8 bg-gray-900 text-gray-400 border-t border-gray-800">
+        <div className="max-w-6xl mx-auto text-center">
+          <p>&copy; 2026 FarmKonnect. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
-  );
-}
-
-interface KPICardProps {
-  title: string;
-  value: string;
-  trend?: "up" | "down" | "neutral";
-  trendValue?: string;
-  icon?: React.ReactNode;
-  color?: string;
-  onClick?: () => void;
-}
-
-function KPICard({
-  title,
-  value,
-  trend = "neutral",
-  trendValue,
-  icon,
-  color = "text-gray-600",
-  onClick,
-}: KPICardProps) {
-  return (
-    <Card
-      onClick={onClick}
-      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-0 bg-white dark:bg-gray-800 shadow-md hover:shadow-xl"
-    >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{title}</CardTitle>
-          {icon && <div className={`${color} opacity-80`}>{icon}</div>}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-1">
-        <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
-        {trendValue && (
-          <div className="flex items-center gap-1">
-            {trend === "up" && <TrendingUp className="h-3 w-3 text-green-600" />}
-            {trend === "down" && <TrendingDown className="h-3 w-3 text-red-600" />}
-            <span className={`text-xs font-medium ${
-              trend === "up" ? "text-green-600" :
-              trend === "down" ? "text-red-600" :
-              "text-gray-600 dark:text-gray-400"
-            }`}>
-              {trendValue}
-            </span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-interface QuickActionCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  onClick?: () => void;
-  color: string;
-}
-
-function QuickActionCard({
-  title,
-  description,
-  icon,
-  onClick,
-  color,
-}: QuickActionCardProps) {
-  return (
-    <Card
-      onClick={onClick}
-      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-0 bg-white dark:bg-gray-800 shadow-md hover:shadow-xl"
-    >
-      <CardHeader className="pb-3">
-        <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center mb-3`}>
-          {icon}
-        </div>
-        <CardTitle className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{description}</p>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -668,12 +457,10 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description, color }: FeatureCardProps) {
   return (
-    <Card className="border-l-4 border-l-green-600 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800 border-r-0 border-t-0 border-b-0">
-      <CardHeader>
-        <div className={`${color} mb-3`}>{icon}</div>
-        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className="bg-gray-50 dark:bg-gray-800 border-0 hover:shadow-lg transition-shadow">
+      <CardContent className="p-6">
+        <div className={`${color} mb-4`}>{icon}</div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title}</h3>
         <p className="text-gray-600 dark:text-gray-400">{description}</p>
       </CardContent>
     </Card>
