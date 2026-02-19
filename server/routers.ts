@@ -436,6 +436,7 @@ export const appRouter = router({
           });
         }
 
+        const now = new Date();
         const newUser = await db.insert(users).values({
           name: input.name,
           email: input.email,
@@ -444,7 +445,11 @@ export const appRouter = router({
           loginMethod: "manual",
           approvalStatus: "pending",
           accountStatus: "active",
-          createdAt: new Date(),
+          mfaEnabled: false,
+          failedLoginAttempts: 0,
+          createdAt: now,
+          updatedAt: now,
+          lastSignedIn: now,
         });
 
         const createdUser = await db
