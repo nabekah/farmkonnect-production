@@ -1,4 +1,3 @@
-import { useLocation } from "wouter";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import {
@@ -51,9 +50,11 @@ import { FarmQuickActions } from "@/components/FarmQuickActions";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function Home() {
 
   if (isAuthenticated && user) {
     return (
-      <AuthenticatedHome user={user} setLocation={setLocation} />
+      <AuthenticatedHome user={user} />
     );
   }
 
@@ -86,7 +87,7 @@ export default function Home() {
   );
 }
 
-function AuthenticatedHome({ user, setLocation }: { user: any; setLocation: (path: string) => void }) {
+function AuthenticatedHome({ user }: { user: any }) {
   // Check if onboarding is complete
   const [showOnboarding, setShowOnboarding] = useState(() => {
     const completed = localStorage.getItem("farmkonnect_onboarding_complete");

@@ -154,7 +154,7 @@ async function startServer() {
   // Initialize alert scheduler
   initializeAlertScheduler();
   
-  // Initialize scheduled report executor
+  // Initialize scheduled report executor with improved error handling
   scheduledReportExecutor.start();
     
     // Initialize cron jobs after server starts
