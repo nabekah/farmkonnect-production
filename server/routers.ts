@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { users } from "../drizzle/schema";
 import { desc } from "drizzle-orm";
-import { getDb } from "./db";
+import { getDb, createUserAccount } from "./db";
 import { notificationRouter } from "./notificationRouter";
 import { feedingRouter } from "./feedingRouter";
 import { marketplaceRouter } from "./marketplaceRouter";
@@ -203,7 +203,6 @@ import { pushNotificationIntegrationRouter } from "./routers/pushNotificationInt
 import { notificationEventHandlersRouter } from "./routers/notificationEventHandlers";
 import { notificationRouter as advancedNotificationRouter } from "./routers/notificationRouter";
 import { z } from "zod";
-import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
 import {
   farms,
@@ -436,37 +435,24 @@ export const appRouter = router({
           });
         }
 
-        const newUser = await db.insert(users).values({
-          name: input.name,
-          email: input.email,
-          phone: input.phone || null,
-          role: input.role || "user",
-          loginMethod: "manual",
-          approvalStatus: "pending",
-          accountStatus: "active",
-          accountStatusReason: null,
-          mfaEnabled: false,
-          mfaSecret: null,
-          mfaBackupCodes: null,
-          failedLoginAttempts: 0,
-          lastFailedLoginAt: null,
-          accountLockedUntil: null,
-          // Let database set timestamps with defaultNow()
-          // createdAt, updatedAt, and lastSignedIn are set by database
-        });
-
-        const createdUser = await db
-          .select({
-            id: users.id,
-            name: users.name,
-            email: users.email,
-            phone: users.phone,
-            role: users.role,
-            approvalStatus: users.approvalStatus,
-          })
-          .from(users)
-          .where(eq(users.email, input.email))
-          .limit(1);
+        // Solution 1: Use raw SQL to avoid Drizzle column mapping issues
+        // Use helper function to create user
+        let createdUser;
+        try {
+          const newUser = await createUserAccount({
+            name: input.name,
+            email: input.email,
+            phone: input.phone,
+            role: input.role || "user",
+          });
+          createdUser = [newUser];
+        } catch (error: any) {
+          console.error("Registration Error:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Failed to create user account",
+          });
+        }
 
         // Send registration confirmation email
         try {

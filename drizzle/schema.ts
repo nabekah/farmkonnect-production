@@ -13,13 +13,13 @@ export const users = mysqlTable("users", {
    */
   id: int("id").autoincrement().primaryKey(),
   /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).unique(),
+  openId: varchar("openId", { length: 64 }).unique().default(null),
   /** Google OAuth identifier (sub) for Google Sign-In users */
-  googleId: varchar("googleId", { length: 255 }).unique(),
-  name: text("name"),
-  email: varchar("email", { length: 320 }),
+  googleId: varchar("googleId", { length: 255 }).unique().default(null),
+  name: text("name").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
   phone: varchar("phone", { length: 20 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
+  loginMethod: varchar("loginMethod", { length: 64 }).notNull(),
   role: mysqlEnum("role", ["farmer", "agent", "veterinarian", "buyer", "transporter", "admin", "user"]).default("user").notNull(),
   // Security fields
   approvalStatus: mysqlEnum("approvalStatus", ["pending", "approved", "rejected"]).default("pending").notNull(),

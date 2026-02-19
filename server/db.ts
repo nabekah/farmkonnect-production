@@ -150,3 +150,60 @@ export async function getUserAuthProviders(userId: number) {
 }
 
 // TODO: add feature queries here as your schema grows.
+
+
+// Create a new user during registration
+export async function createUserAccount(userData: {
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database connection failed");
+
+  // Check if user already exists
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, userData.email))
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new Error("Email already registered");
+  }
+
+  // Create user with minimal fields
+  const now = new Date();
+  const insertResult = await db.insert(users).values({
+    name: userData.name,
+    email: userData.email,
+    phone: userData.phone || null,
+    role: userData.role || "user",
+    loginMethod: "manual",
+    approvalStatus: "pending",
+    accountStatus: "active",
+    mfaEnabled: false,
+    failedLoginAttempts: 0,
+  });
+
+  // Fetch and return the created user
+  const createdUser = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      phone: users.phone,
+      role: users.role,
+      approvalStatus: users.approvalStatus,
+    })
+    .from(users)
+    .where(eq(users.email, userData.email))
+    .limit(1);
+
+  if (!createdUser || createdUser.length === 0) {
+    throw new Error("Failed to retrieve created user");
+  }
+
+  return createdUser[0];
+}
