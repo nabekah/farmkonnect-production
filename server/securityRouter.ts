@@ -1043,14 +1043,16 @@ export const securityRouter = router({
         } else {
           // Auto-approve and create user
           const userResult = await db.insert(users).values({
-            openId: `local_${input.email}_${Date.now()}`, // Generate temporary openId for local auth
             email: input.email,
             name: input.name,
-            phone: input.phone,
-            role: input.requestedRole,
+            phone: input.phone || null,
+            role: input.requestedRole || "user",
             accountStatus: "active",
             approvalStatus: "approved",
-            loginMethod: "email",
+            loginMethod: "manual",
+            mfaEnabled: false,
+            failedLoginAttempts: 0,
+            // Let database set timestamps with defaultNow()
           });
 
           await logSecurityEvent({
