@@ -444,8 +444,13 @@ export const appRouter = router({
           loginMethod: "manual",
           approvalStatus: "pending",
           accountStatus: "active",
+          accountStatusReason: null,
           mfaEnabled: false,
+          mfaSecret: null,
+          mfaBackupCodes: null,
           failedLoginAttempts: 0,
+          lastFailedLoginAt: null,
+          accountLockedUntil: null,
           // Let database set timestamps with defaultNow()
           // createdAt, updatedAt, and lastSignedIn are set by database
         });
@@ -471,7 +476,14 @@ export const appRouter = router({
           // Don't throw error - registration should succeed even if email fails
         }
 
-        return createdUser[0] || { id: 0, name: input.name, email: input.email, phone: input.phone, role: input.role, approvalStatus: "pending" };
+        if (!createdUser || createdUser.length === 0) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create user account",
+          });
+        }
+
+        return createdUser[0];
       }),
   }),
 
