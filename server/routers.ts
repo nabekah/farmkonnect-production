@@ -2,6 +2,9 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { users } from "../drizzle/schema";
+import { desc } from "drizzle-orm";
+import { getDb } from "./db";
 import { notificationRouter } from "./notificationRouter";
 import { feedingRouter } from "./feedingRouter";
 import { marketplaceRouter } from "./marketplaceRouter";
@@ -389,6 +392,21 @@ export const appRouter = router({
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
+    }),
+    getAllUsers: publicProcedure.query(async () => {
+      const db = await getDb();
+      const allUsers = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        loginMethod: users.loginMethod,
+        approvalStatus: users.approvalStatus,
+        accountStatus: users.accountStatus,
+        createdAt: users.createdAt,
+      }).from(users).orderBy(desc(users.createdAt));
+      return allUsers;
     }),
   }),
 

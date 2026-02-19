@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Menu, X, LogOut, Settings, User, ChevronDown } from "lucide-react";
+import { Menu, X, LogOut, Settings, User, ChevronDown, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -16,7 +16,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
-    setLocation("/");
+    setLocation("/users-list");
   };
 
   return (
@@ -107,6 +107,16 @@ export function Navbar() {
                     >
                       <User className="h-4 w-4" />
                       Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLocation("/users-list");
+                        setProfileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                    >
+                      <Users className="h-4 w-4" />
+                      View All Users
                     </button>
                     <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
                     <button

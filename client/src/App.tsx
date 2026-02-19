@@ -48,6 +48,7 @@ import AssetManagement from "./pages/AssetManagement";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import PredictiveAnalytics from "./pages/PredictiveAnalytics";
 import PredictionDashboard from "./pages/PredictionDashboard";
+import { UsersList } from "./pages/UsersList";
 import PredictionHistoryComparison from "./pages/PredictionHistoryComparison";
 import OutcomeRecordingForm from "./pages/OutcomeRecordingForm";
 import NotificationSettings from "./pages/NotificationSettings";
@@ -161,6 +162,7 @@ function Router() {
   return (
     <Switch>
        <Route path="/" component={Home} />
+      <Route path="/users-list" component={UsersList} />
       <Route path="/report-management">
         {() => (
           <DashboardLayout>
