@@ -5334,3 +5334,44 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] UI component: client/src/components/PasswordResetForm.tsx
   - [x] Email notifications and 24-hour token expiration
   - [x] Change password for authenticated users
+
+
+## Security Features - Rate Limiting & Audit Logging
+- [ ] Implement Rate Limiting
+  - [ ] Create rate limiting middleware for login attempts
+  - [ ] Implement 2FA brute-force protection (max 5 attempts)
+  - [ ] Add account lockout after failed attempts (15 minutes)
+  - [ ] Create rate limiting tRPC router
+  - [ ] Build Rate Limiting Dashboard UI
+  - [ ] Add IP-based and user-based throttling
+- [ ] Implement Audit Logging
+  - [ ] Create audit log schema and database table
+  - [ ] Log all authentication events (login, logout, 2FA, password changes)
+  - [ ] Log session management events (remote logout, device changes)
+  - [ ] Create audit logging middleware
+  - [ ] Build Audit Log Viewer UI
+  - [ ] Add filtering and search capabilities
+  - [ ] Implement retention policies (90 days)
+- [ ] Write unit tests for both features
+- [ ] Integration testing and verification
+
+## COMPLETED - Rate Limiting & Audit Logging
+- [x] Rate Limiting Implementation
+  - [x] RateLimitingService with in-memory store
+  - [x] Login rate limiting (5 attempts per 15 minutes)
+  - [x] 2FA rate limiting (5 attempts per 10 minutes)
+  - [x] Account lockout functionality (15 minutes)
+  - [x] Rate limiting tRPC router
+  - [x] RateLimitingDashboard UI component
+  - [x] Statistics and monitoring
+- [x] Audit Logging Implementation
+  - [x] AuditLoggingService with comprehensive event logging
+  - [x] 18 different event types (login, 2FA, password, session, suspicious)
+  - [x] Severity levels (low, medium, high, critical)
+  - [x] IP address and user agent tracking
+  - [x] Audit logging tRPC router
+  - [x] AuthenticationAuditLogViewer UI component
+  - [x] CSV export functionality
+  - [x] Event filtering and search
+  - [x] Critical events dashboard
+  - [x] Statistics and analytics
