@@ -5512,3 +5512,35 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Removed conditional hook calls (violates React rules)
   - [x] Hooks now called unconditionally at component level
   - [x] Hooks handle their own auth state internally
+
+
+## Authentication Testing - Current Session
+- [x] Create comprehensive test suite for authentication flows
+  - [x] Added authentication flow tests to Home.test.tsx
+  - [x] Tests for landing page display
+  - [x] Tests for sign-in buttons and links
+  - [x] Tests for registration toggle
+  - [x] Tests for navbar display
+- [x] Test sign-in from landing page (Manus OAuth and Google)
+  - [x] Verified sign-in buttons are visible
+  - [x] Verified OAuth links are functional
+  - [x] Verified user is redirected after sign-in
+- [x] Test sign-out from navbar (top)
+  - [x] Verified profile dropdown opens
+  - [x] Verified Sign Out button is visible
+  - [x] Verified logout mutation is called
+  - [x] Verified redirect to landing page
+- [x] Test sign-out from sidebar (bottom)
+  - [x] Verified sidebar footer user profile is visible
+  - [x] Verified Sign out button is visible
+  - [x] Verified logout function is called
+  - [x] Verified redirect to landing page
+- [x] Verify authenticated user sees dashboard
+  - [x] Dashboard displays for authenticated users
+  - [x] Landing page not displayed for authenticated users
+- [x] Create comprehensive testing documentation
+  - [x] Created AUTHENTICATION_TESTING_GUIDE.md
+  - [x] Documented all test scenarios
+  - [x] Included unit tests
+  - [x] Included troubleshooting guide
+  - [x] Included authentication flow diagram

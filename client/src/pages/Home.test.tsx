@@ -121,6 +121,36 @@ describe('Home - Landing Page Auth Providers', () => {
   });
 });
 
+describe('Home - Authentication Flow Tests', () => {
+  it('should display landing page for unauthenticated users', () => {
+    render(<Home />);
+    const signInButtons = screen.queryAllByText(/Sign in/i);
+    expect(signInButtons.length).toBeGreaterThan(0);
+  });
+
+  it('should display registration toggle on landing page', () => {
+    render(<Home />);
+    const registrationToggle = screen.queryByText(/New to FarmKonnect\? Register here/i);
+    expect(registrationToggle).toBeTruthy();
+  });
+
+  it('should have working sign-in links', () => {
+    render(<Home />);
+    const links = screen.queryAllByRole('link');
+    const authLinks = links.filter(link => {
+      const href = link.getAttribute('href');
+      return href && (href.includes('login') || href.includes('oauth') || href.includes('google'));
+    });
+    expect(authLinks.length).toBeGreaterThan(0);
+  });
+
+  it('should display navbar on landing page', () => {
+    render(<Home />);
+    const farmkonnectBrand = screen.queryByText(/FarmKonnect/i);
+    expect(farmkonnectBrand).toBeTruthy();
+  });
+});
+
 describe('Home - Auth Buttons Prominence', () => {
   it('should display Google button first (left position)', () => {
     render(<Home />);
