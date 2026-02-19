@@ -5504,3 +5504,11 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Test tier-based limits
   - [x] Test window expiration
   - [x] Test tier management
+
+
+## Bug Fix - React Hooks Violation
+- [x] Fix "Invalid hook call" error in Home.tsx
+  - [x] Moved useSessionTimeout() and useRememberMe() to top level
+  - [x] Removed conditional hook calls (violates React rules)
+  - [x] Hooks now called unconditionally at component level
+  - [x] Hooks handle their own auth state internally

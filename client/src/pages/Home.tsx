@@ -58,11 +58,10 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [showContent, setShowContent] = useState(true);
 
-  // Initialize session timeout and remember me features (only for authenticated users)
-  if (isAuthenticated) {
-    useSessionTimeout();
-    useRememberMe();
-  }
+  // Initialize session timeout and remember me features
+  // These hooks are safe to call unconditionally - they handle auth state internally
+  useSessionTimeout();
+  useRememberMe();
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -83,6 +82,11 @@ export default function Home() {
         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
       </div>
     );
+  }
+
+  // Don't show content if still loading
+  if (!showContent) {
+    return null;
   }
 
   // Show authenticated home if user is logged in
