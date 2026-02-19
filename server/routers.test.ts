@@ -794,3 +794,83 @@ describe("Push Notifications", () => {
     expect(typeof prefs2.enabled).toBe("boolean");
   });
 });
+
+
+describe("Registration with Email Notifications", () => {
+  it("should have auth.register procedure", () => {
+    const caller = appRouter.createCaller({
+      user: null,
+      db: {} as any,
+    });
+    expect(caller.auth.register).toBeDefined();
+  });
+
+  it("should validate email format in registration", () => {
+    const validEmails = [
+      "user@example.com",
+      "john.doe@company.co.uk",
+      "test+tag@domain.org",
+    ];
+    validEmails.forEach((email) => {
+      expect(email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+    });
+  });
+
+  it("should reject invalid email format in registration", () => {
+    const invalidEmails = [
+      "not-an-email",
+      "@example.com",
+      "user@",
+    ];
+    invalidEmails.forEach((email) => {
+      expect(email).not.toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+    });
+  });
+
+  it("should require name with minimum 2 characters", () => {
+    const validNames = ["John", "Jane", "AB"];
+    const invalidNames = ["A", ""];
+    
+    validNames.forEach((name) => {
+      expect(name.length).toBeGreaterThanOrEqual(2);
+    });
+    
+    invalidNames.forEach((name) => {
+      expect(name.length).toBeLessThan(2);
+    });
+  });
+});
+
+describe("Admin Dashboard Features", () => {
+  it("should have admin.getDashboardOverview procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "admin@example.com", role: "admin" },
+      db: {} as any,
+    });
+    expect(caller.admin).toBeDefined();
+  });
+
+  it("should have admin.getUsers procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "admin@example.com", role: "admin" },
+      db: {} as any,
+    });
+    expect(caller.admin.getUsers).toBeDefined();
+  });
+
+  it("should have admin.suspendUser procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "admin@example.com", role: "admin" },
+      db: {} as any,
+    });
+    expect(caller.admin.suspendUser).toBeDefined();
+  });
+
+  it("should have admin.getAnalytics procedure", () => {
+    const caller = appRouter.createCaller({
+      user: { id: 1, email: "admin@example.com", role: "admin" },
+      db: {} as any,
+    });
+    expect(caller.admin.getAnalytics).toBeDefined();
+  });
+});

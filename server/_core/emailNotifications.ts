@@ -343,6 +343,134 @@ class EmailNotificationService {
   }
 
   /**
+   * Send registration confirmation email
+   * @param toEmail - Recipient email address
+   * @param userName - User's name
+   * @returns Success status and message ID
+   */
+  async sendRegistrationConfirmation(toEmail: string, userName: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const subject = "Welcome to FarmKonnect - Account Registration Confirmation";
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #2D5016; color: white; padding: 20px; text-align: center;">
+          <h1>Welcome to FarmKonnect!</h1>
+        </div>
+        
+        <div style="padding: 20px; background-color: #f9f9f9;">
+          <p>Dear ${this.escapeHtml(userName)},</p>
+          
+          <p>Thank you for registering with FarmKonnect, your smart agricultural management platform.</p>
+          
+          <div style="background-color: white; border-left: 4px solid #2D5016; padding: 15px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #2D5016;">Account Status: Pending Approval</h3>
+            <p>Your account has been created and is awaiting approval from our administrators. You will receive an email notification once your account is approved.</p>
+          </div>
+          
+          <h3 style="color: #2D5016;">What's Next?</h3>
+          <ul>
+            <li>Wait for account approval from our team</li>
+            <li>Once approved, you'll receive a confirmation email</li>
+            <li>Sign in with your credentials to access the platform</li>
+          </ul>
+          
+          <p style="color: #666; font-size: 12px; margin-top: 30px;">
+            If you have any questions, please contact our support team at support@farmkonnect.com
+          </p>
+        </div>
+      </div>
+    `;
+
+    const textContent = `
+      Welcome to FarmKonnect!
+      
+      Dear ${userName},
+      
+      Thank you for registering with FarmKonnect, your smart agricultural management platform.
+      
+      Account Status: Pending Approval
+      
+      Your account has been created and is awaiting approval from our administrators. You will receive an email notification once your account is approved.
+      
+      What's Next?
+      - Wait for account approval from our team
+      - Once approved, you'll receive a confirmation email
+      - Sign in with your credentials to access the platform
+      
+      If you have any questions, please contact our support team at support@farmkonnect.com
+    `;
+
+    return this.sendEmail(toEmail, subject, htmlContent, textContent);
+  }
+
+  /**
+   * Send account approval email
+   * @param toEmail - Recipient email address
+   * @param userName - User's name
+   * @param loginUrl - Login URL
+   * @returns Success status and message ID
+   */
+  async sendAccountApprovalEmail(toEmail: string, userName: string, loginUrl: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const subject = "Your FarmKonnect Account is Approved!";
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #28a745; color: white; padding: 20px; text-align: center;">
+          <h1>Your Account is Approved!</h1>
+        </div>
+        
+        <div style="padding: 20px; background-color: #f9f9f9;">
+          <p>Dear ${this.escapeHtml(userName)},</p>
+          
+          <p>Great news! Your FarmKonnect account has been approved and is now active.</p>
+          
+          <div style="background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #155724;"><strong>You're all set!</strong> You can now access the FarmKonnect platform.</p>
+          </div>
+          
+          <p style="text-align: center; margin: 20px 0;">
+            <a href="${loginUrl}" style="background-color: #2D5016; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Sign In to FarmKonnect
+            </a>
+          </p>
+          
+          <h3 style="color: #2D5016;">Getting Started</h3>
+          <ul>
+            <li>Complete your farm profile</li>
+            <li>Add your crops or livestock</li>
+            <li>Set up notifications and alerts</li>
+            <li>Connect with other farmers and specialists</li>
+          </ul>
+          
+          <p style="color: #666; font-size: 12px; margin-top: 30px;">
+            If you have any questions, please contact our support team at support@farmkonnect.com
+          </p>
+        </div>
+      </div>
+    `;
+
+    const textContent = `
+      Your FarmKonnect Account is Approved!
+      
+      Dear ${userName},
+      
+      Great news! Your FarmKonnect account has been approved and is now active.
+      
+      You're all set! You can now access the FarmKonnect platform.
+      
+      Sign In: ${loginUrl}
+      
+      Getting Started:
+      - Complete your farm profile
+      - Add your crops or livestock
+      - Set up notifications and alerts
+      - Connect with other farmers and specialists
+      
+      If you have any questions, please contact our support team at support@farmkonnect.com
+    `;
+
+    return this.sendEmail(toEmail, subject, htmlContent, textContent);
+  }
+
+  /**
    * Escape HTML special characters
    * @param text - Text to escape
    * @returns Escaped text

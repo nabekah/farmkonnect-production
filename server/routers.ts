@@ -48,6 +48,8 @@ import { complianceReportsRouter } from "./routers/complianceReports";
 import { deviceFingerprintingRouter } from "./routers/deviceFingerprinting";
 import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
 import { exportRouter } from "./exportRouter";
+import { emailNotifications } from "./_core/emailNotifications";
+import { eq } from "drizzle-orm";
 import { alertHistoryRouter } from "./alertHistoryRouter";
 import { fertilizerRouter } from "./fertilizerRouter";
 import { reportSchedulingRouter } from "./routers/reportScheduling";
@@ -457,6 +459,14 @@ export const appRouter = router({
           .from(users)
           .where(eq(users.email, input.email))
           .limit(1);
+
+        // Send registration confirmation email
+        try {
+          await emailNotifications.sendRegistrationConfirmation(input.email, input.name);
+        } catch (error) {
+          console.error("Failed to send registration confirmation email:", error);
+          // Don't throw error - registration should succeed even if email fails
+        }
 
         return createdUser[0] || { id: 0, name: input.name, email: input.email, phone: input.phone, role: input.role, approvalStatus: "pending" };
       }),
