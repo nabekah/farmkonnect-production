@@ -15,7 +15,6 @@ export default function Register() {
     name: "",
     phone: "",
     requestedRole: "farmer" as "farmer" | "agent" | "veterinarian" | "buyer" | "transporter",
-    justification: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [requiresApproval, setRequiresApproval] = useState(false);
@@ -28,11 +27,11 @@ export default function Register() {
     setTimeout(() => toastEl.remove(), 3000);
   };
 
-  const registerMutation = trpc.security.registration.register.useMutation({
+  const registerMutation = trpc.auth.register.useMutation({
     onSuccess: (data) => {
       setSubmitted(true);
-      setRequiresApproval(data.requiresApproval);
-      toast({ title: "Success", description: data.message });
+      setRequiresApproval(data.approvalStatus === "pending");
+      toast({ title: "Success", description: "Registration successful! Please check your email for confirmation." });
     },
     onError: (error) => {
       toast({ title: "Registration Failed", description: error.message, variant: "destructive" });
@@ -42,17 +41,17 @@ export default function Register() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.email || !formData.name || !formData.justification) {
+    if (!formData.email || !formData.name) {
       toast({ title: "Missing Fields", description: "Please fill in all required fields", variant: "destructive" });
       return;
     }
 
-    if (formData.justification.length < 10) {
-      toast({ title: "Justification Too Short", description: "Please provide at least 10 characters", variant: "destructive" });
-      return;
-    }
-
-    registerMutation.mutate(formData);
+    registerMutation.mutate({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.requestedRole,
+    });
   };
 
   if (submitted) {
@@ -179,22 +178,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="justification">
-                Why do you want to join FarmKonnect? <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="justification"
-                placeholder="Please explain your interest in using FarmKonnect and how you plan to use the platform (minimum 10 characters)..."
-                rows={4}
-                value={formData.justification}
-                onChange={(e) => setFormData({ ...formData, justification: e.target.value })}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                {formData.justification.length}/500 characters (minimum 10)
-              </p>
-            </div>
+
 
             <div className="p-4 border rounded-lg bg-muted">
               <h4 className="font-semibold mb-2">What to expect:</h4>

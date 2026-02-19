@@ -310,6 +310,12 @@
 - [x] Add getProductImages query to fetch images for individual products
 
 
+## Bug Fixes - Current Session
+- [x] Fix registration page schema mismatch - updated Register.tsx to use new auth.register procedure
+- [x] Remove or update old /register page - updated to use auth.register instead of security.registration.register
+- [ ] Consolidate registration to landing page only
+- [ ] Test registration form end-to-end
+
 ## Current Issues and Enhancements
 - [x] Fix crop list dropdown - not loading crops properly
 - [x] Fix marketplace product details display
