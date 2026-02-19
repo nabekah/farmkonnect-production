@@ -5375,3 +5375,61 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Event filtering and search
   - [x] Critical events dashboard
   - [x] Statistics and analytics
+
+
+## Advanced Security Features - IP Management & Alerts
+- [ ] IP Whitelist/Blacklist Management
+  - [ ] Create IP whitelist/blacklist database schema
+  - [ ] Create IP management service
+  - [ ] Create IP management tRPC router
+  - [ ] Build IP Management Dashboard UI
+  - [ ] Integrate with rate limiting (whitelist bypass)
+  - [ ] Add bulk import/export for IP lists
+- [ ] Email Alerts for Critical Events
+  - [ ] Create alert configuration database schema
+  - [ ] Create alert notification service
+  - [ ] Create alert configuration tRPC router
+  - [ ] Build Alert Configuration UI
+  - [ ] Integrate with audit logging
+  - [ ] Add email templates for different event types
+  - [ ] Implement alert throttling (avoid spam)
+- [ ] Geo-IP Detection & Suspicious Activity
+  - [ ] Integrate MaxMind GeoIP2 or IP2Location API
+  - [ ] Create geo-IP detection service
+  - [ ] Create geo-IP tRPC router
+  - [ ] Implement suspicious activity detection
+  - [ ] Build Geo-IP Dashboard UI
+  - [ ] Add location-based alerts
+  - [ ] Track user login locations
+- [ ] Write unit tests for all features
+- [ ] Integration testing and verification
+
+## COMPLETED - Advanced Security Features (IP Management, Email Alerts, Geo-IP)
+- [x] IP Whitelist/Blacklist Management
+  - [x] IPManagementService with whitelist/blacklist logic
+  - [x] Add/remove IPs with reasons and descriptions
+  - [x] Expiring IP entries (temporary blocks)
+  - [x] Bulk import/export functionality
+  - [x] IP search and filtering
+  - [x] Statistics tracking
+  - [x] securityManagement tRPC router (IP endpoints)
+  - [x] IPManagementDashboard UI component
+- [x] Email Alerts for Critical Events
+  - [x] EmailAlertsService with 8 alert types
+  - [x] Alert throttling (5-minute window)
+  - [x] HTML email templates for each event
+  - [x] Alert preference management
+  - [x] User-configurable alert settings
+  - [x] securityManagement tRPC router (alert endpoints)
+  - [x] SecurityAlertsConfiguration UI component
+- [x] Geo-IP Detection & Suspicious Activity
+  - [x] GeoIPDetectionService with mock GeoIP data
+  - [x] Record user login locations
+  - [x] Detect impossible travel (location change too fast)
+  - [x] Detect VPN/Proxy usage
+  - [x] Track unique login locations
+  - [x] Calculate distance between locations
+  - [x] securityManagement tRPC router (geo-IP endpoints)
+  - [x] GeoIPDashboard UI component
+  - [x] Login history tracking
+  - [x] Suspicious activity detection
