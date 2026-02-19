@@ -48,12 +48,12 @@ import { FarmComparisonView } from "@/components/FarmComparisonView";
 import { FarmAlertsCenter, type FarmAlert } from "@/components/FarmAlertsCenter";
 import { FarmRecommendations } from "@/components/FarmRecommendations";
 import { FarmQuickActions } from "@/components/FarmQuickActions";
+import { RegistrationForm } from "@/components/RegistrationForm";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [, setLocation] = useLocation();
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -270,6 +270,8 @@ function KPICard({ title, value, trend, trendValue, icon, color, onClick }: KPIC
 
 function LandingPage() {
   const loginUrl = getLoginUrl();
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [, setLocation] = useLocation();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-green-950 dark:via-gray-900 dark:to-green-950">
@@ -310,18 +312,30 @@ function LandingPage() {
                     </Button>
                   </a>
                 </div>
+                <p className="text-center text-sm text-gray-600 dark:text-gray-400 pt-2">
+                  New to FarmKonnect?{" "}
+                  <button
+                    onClick={() => setShowRegistration(!showRegistration)}
+                    className="text-green-600 dark:text-green-400 hover:underline font-semibold"
+                  >
+                    {showRegistration ? "Back to Login" : "Register Here"}
+                  </button>
+                </p>
               </div>
             </div>
 
-            {/* Right: Hero Image */}
-            <div className="relative h-80 sm:h-96 bg-gradient-to-br from-green-200 to-green-100 dark:from-green-900 dark:to-green-800 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <Tractor className="h-32 w-32 text-green-700 dark:text-green-300 mx-auto mb-4" />
-                  <p className="text-green-700 dark:text-green-300 font-semibold">Farm Management Platform</p>
+            {showRegistration ? (
+              <RegistrationForm />
+            ) : (
+              <div className="relative h-80 sm:h-96 bg-gradient-to-br from-green-200 to-green-100 dark:from-green-900 dark:to-green-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <Tractor className="h-32 w-32 text-green-700 dark:text-green-300 mx-auto mb-4" />
+                    <p className="text-green-700 dark:text-green-300 font-semibold">Farm Management Platform</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

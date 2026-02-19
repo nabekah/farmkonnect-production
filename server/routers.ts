@@ -408,6 +408,58 @@ export const appRouter = router({
       }).from(users).orderBy(desc(users.createdAt));
       return allUsers;
     }),
+    register: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(2, "Name must be at least 2 characters"),
+          email: z.string().email("Invalid email address"),
+          phone: z.string().nullable().optional(),
+          role: z.string().default("user"),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error("Database connection failed");
+
+        const existingUser = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
+
+        if (existingUser.length > 0) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Email already registered. Please sign in or use a different email.",
+          });
+        }
+
+        const newUser = await db.insert(users).values({
+          name: input.name,
+          email: input.email,
+          phone: input.phone || null,
+          role: input.role || "user",
+          loginMethod: "manual",
+          approvalStatus: "pending",
+          accountStatus: "active",
+          createdAt: new Date(),
+        });
+
+        const createdUser = await db
+          .select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            phone: users.phone,
+            role: users.role,
+            approvalStatus: users.approvalStatus,
+          })
+          .from(users)
+          .where(eq(users.email, input.email))
+          .limit(1);
+
+        return createdUser[0] || { id: 0, name: input.name, email: input.email, phone: input.phone, role: input.role, approvalStatus: "pending" };
+      }),
   }),
 
   // ============================================================================
