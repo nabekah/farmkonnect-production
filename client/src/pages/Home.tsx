@@ -47,6 +47,7 @@ import { FarmAlertsCenter, type FarmAlert } from "@/components/FarmAlertsCenter"
 import { FarmRecommendations } from "@/components/FarmRecommendations";
 import { FarmQuickActions } from "@/components/FarmQuickActions";
 import { RegistrationForm } from "@/components/RegistrationForm";
+import { SocialProof } from "@/components/SocialProof";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -165,7 +166,7 @@ function LandingPage() {
             <p className="text-xl text-gray-600 mb-8">
               FarmKonnect helps you manage crops, livestock, weather, and marketplace sales all in one place. Increase productivity and profitability with data-driven insights.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <a
                 href={getLoginUrl()}
                 className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
@@ -178,6 +179,15 @@ function LandingPage() {
               >
                 Sign In with Google
               </a>
+              <button
+                onClick={() => {
+                  const elem = document.getElementById('registration-section');
+                  if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+              >
+                Create Account
+              </button>
             </div>
           </div>
           <div className="bg-gradient-to-br from-green-400 to-blue-500 rounded-lg p-8 text-white">
@@ -224,6 +234,16 @@ function LandingPage() {
               description="Enterprise-grade security for your farm data"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <SocialProof />
+
+      {/* Registration Section */}
+      <section id="registration-section" className="bg-white py-20">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <RegistrationForm />
         </div>
       </section>
 

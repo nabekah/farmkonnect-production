@@ -324,6 +324,30 @@
   - [x] Move session timeout/remember me hooks to authenticated users only
   - [x] Ensure landing page renders without delay for unauthenticated users
 
+## Landing Page & Auth Enhancements - Current Session
+- [x] Implement Email Verification Flow on Registration
+  - [x] Create emailVerificationService.ts with token generation and verification
+  - [x] Add emailVerificationTokens table support
+  - [x] Implement email verification procedures
+- [x] Create Onboarding Tutorial for New Users
+  - [x] Build OnboardingTutorial component with 6 steps
+  - [x] Add progress tracking and localStorage persistence
+  - [x] Implement skip and complete functionality
+- [x] Add Social Proof Section to Landing Page
+  - [x] Create SocialProof component with testimonials and stats
+  - [x] Add farmer testimonials from Ghana and West Africa
+  - [x] Include trust badges and certifications
+- [x] Add Register Button/Link to Landing Page
+  - [x] Add "Create Account" button to hero section
+  - [x] Add registration form section with smooth scroll
+  - [x] Add register button to CTA section
+- [x] Add Home Button to Auth Page Navigation
+  - [x] Add home button to top-left of LoginPage
+  - [x] Add "Back to Landing Page" link
+  - [x] Implement navigation using wouter
+- [ ] Write unit tests for new features
+- [ ] Test all features end-to-end
+
 ## Current Issues and Enhancements
 - [x] Fix crop list dropdown - not loading crops properly
 - [x] Fix marketplace product details display
