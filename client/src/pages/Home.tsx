@@ -56,11 +56,13 @@ import { useRememberMe } from "@/_core/hooks/useRememberMe";
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
-  const [showContent, setShowContent] = useState(false);
+  const [showContent, setShowContent] = useState(true);
 
-  // Initialize session timeout and remember me features
-  useSessionTimeout();
-  useRememberMe();
+  // Initialize session timeout and remember me features (only for authenticated users)
+  if (isAuthenticated) {
+    useSessionTimeout();
+    useRememberMe();
+  }
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -74,19 +76,8 @@ export default function Home() {
     }
   }, []);
 
-  // Show content only after auth state is determined
-  useEffect(() => {
-    // Add a small delay to ensure smooth transition
-    const timer = setTimeout(() => {
-      if (!loading) {
-        setShowContent(true);
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [loading]);
-
   // Show loading state while checking authentication
-  if (loading || !showContent) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
         <Loader2 className="h-8 w-8 animate-spin text-green-600" />
@@ -94,12 +85,14 @@ export default function Home() {
     );
   }
 
+  // Show authenticated home if user is logged in
   if (isAuthenticated && user) {
     return (
       <AuthenticatedHome user={user} />
     );
   }
 
+  // Show landing page for unauthenticated users
   return (
     <LandingPage />
   );

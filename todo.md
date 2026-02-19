@@ -318,6 +318,12 @@
 - [ ] Test registration form end-to-end
 - [ ] Test sign-in/sign-out from navbar and sidebar
 
+## Landing Page Routing - Current Session
+- [x] Fix Home.tsx to display landing page immediately for unauthenticated users
+  - [x] Remove unnecessary showContent state delay
+  - [x] Move session timeout/remember me hooks to authenticated users only
+  - [x] Ensure landing page renders without delay for unauthenticated users
+
 ## Current Issues and Enhancements
 - [x] Fix crop list dropdown - not loading crops properly
 - [x] Fix marketplace product details display
