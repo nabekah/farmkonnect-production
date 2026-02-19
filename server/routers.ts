@@ -436,7 +436,6 @@ export const appRouter = router({
           });
         }
 
-        const now = new Date();
         const newUser = await db.insert(users).values({
           name: input.name,
           email: input.email,
@@ -447,9 +446,8 @@ export const appRouter = router({
           accountStatus: "active",
           mfaEnabled: false,
           failedLoginAttempts: 0,
-          createdAt: now,
-          updatedAt: now,
-          lastSignedIn: now,
+          // Let database set timestamps with defaultNow()
+          // createdAt, updatedAt, and lastSignedIn are set by database
         });
 
         const createdUser = await db
