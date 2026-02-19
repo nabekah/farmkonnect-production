@@ -1,7 +1,16 @@
 import { Button } from "./ui/button";
 import { getLoginUrl, getGoogleLoginUrl } from "@/const";
+import { useState } from "react";
+import { setRememberMe } from "@/_core/hooks/useRememberMe";
 
 export function LoginPage() {
+  const [rememberMe, setRememberMeState] = useState(false);
+
+  const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRememberMeState(e.target.checked);
+    setRememberMe(e.target.checked);
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 dark:from-green-950 dark:via-gray-900 dark:to-green-950">
       <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
@@ -55,6 +64,19 @@ export function LoginPage() {
             </svg>
             Sign in with Google
           </Button>
+        </div>
+
+        <div className="w-full flex items-center gap-2 px-2">
+          <input
+            type="checkbox"
+            id="rememberMe"
+            checked={rememberMe}
+            onChange={handleRememberMeChange}
+            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+          />
+          <label htmlFor="rememberMe" className="text-sm text-gray-700 dark:text-gray-300">
+            Remember me on this device
+          </label>
         </div>
 
         <div className="pt-4 border-t border-gray-300 dark:border-gray-600 w-full">

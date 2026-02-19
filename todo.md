@@ -5284,3 +5284,12 @@ All components are integrated into the Financial Management Dashboard and tested
 - [ ] Audit tables and data displays
 - [ ] Audit modals and dialogs
 - [ ] Fix all elements not responding to theme changes
+
+
+## Authentication Enhancements - Current Session
+- [x] Fix landing page showing briefly before redirect to dashboard
+- [x] Implement session timeout after 30 minutes of inactivity
+- [x] Implement "Remember me" checkbox for persistent login
+- [x] Write unit tests for session timeout feature
+- [x] Write unit tests for remember me feature
+- [ ] Test authentication flow end-to-end
