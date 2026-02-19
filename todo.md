@@ -313,8 +313,10 @@
 ## Bug Fixes - Current Session
 - [x] Fix registration page schema mismatch - updated Register.tsx to use new auth.register procedure
 - [x] Remove or update old /register page - updated to use auth.register instead of security.registration.register
+- [x] Fix logout from sidebar - added redirect to home page after sign-out from DashboardLayout
 - [ ] Consolidate registration to landing page only
 - [ ] Test registration form end-to-end
+- [ ] Test sign-in/sign-out from navbar and sidebar
 
 ## Current Issues and Enhancements
 - [x] Fix crop list dropdown - not loading crops properly

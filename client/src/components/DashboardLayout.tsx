@@ -102,8 +102,14 @@ function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
-  const { user, logout } = useAuth();
+  const { user, logout: baseLogout } = useAuth();
   const [location, setLocation] = useLocation();
+  
+  // Wrap logout to redirect to home page
+  const logout = async () => {
+    await baseLogout();
+    setLocation("/");
+  };
   const { state, toggleSidebar } = useSidebar();
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const isCollapsed = state === "collapsed";
@@ -242,7 +248,7 @@ function DashboardLayoutContent({
                   <span>Notification Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={logout}
+                  onClick={() => logout()}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
