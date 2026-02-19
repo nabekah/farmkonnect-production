@@ -5293,3 +5293,44 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Write unit tests for session timeout feature
 - [x] Write unit tests for remember me feature
 - [ ] Test authentication flow end-to-end
+
+
+## Advanced Authentication Features - Current Session
+- [ ] Implement Two-Factor Authentication (2FA) for admin accounts
+  - [ ] Create 2FA database schema (twoFactorSecrets table)
+  - [ ] Add tRPC procedures for 2FA setup and verification
+  - [ ] Create 2FA setup UI component
+  - [ ] Implement 2FA verification during login
+  - [ ] Add backup codes generation and management
+- [ ] Create Session Activity Dashboard
+  - [ ] Add sessions database table to track active sessions
+  - [ ] Create tRPC procedures for session management
+  - [ ] Build Session Activity Dashboard UI
+  - [ ] Implement remote logout functionality
+  - [ ] Add session device and location tracking
+- [ ] Implement Password Reset Flow
+  - [ ] Create password reset tokens table
+  - [ ] Add tRPC procedures for reset request and verification
+  - [ ] Create password reset email template
+  - [ ] Build password reset form UI
+  - [ ] Implement token expiration (24 hours)
+  - [ ] Add reset confirmation email
+- [ ] Write unit tests for all features
+- [ ] Integration testing and verification
+
+## COMPLETED - Advanced Authentication Features
+- [x] Two-Factor Authentication (2FA) for admin accounts
+  - [x] tRPC router: server/routers/twoFactorAuth.ts
+  - [x] UI component: client/src/components/TwoFactorSetup.tsx
+  - [x] QR code generation and TOTP support
+  - [x] Backup codes with secure hashing
+- [x] Session Activity Dashboard
+  - [x] tRPC router: server/routers/sessionManagement.ts
+  - [x] UI component: client/src/components/SessionActivityDashboard.tsx
+  - [x] Remote logout and logout all others
+  - [x] Suspicious activity detection
+- [x] Password Reset Flow
+  - [x] tRPC router: server/routers/passwordReset.ts
+  - [x] UI component: client/src/components/PasswordResetForm.tsx
+  - [x] Email notifications and 24-hour token expiration
+  - [x] Change password for authenticated users
