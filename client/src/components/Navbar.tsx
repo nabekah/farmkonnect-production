@@ -16,7 +16,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
-    setLocation("/users-list");
+    setLocation("/");
   };
 
   return (
