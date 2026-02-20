@@ -5643,13 +5643,33 @@ All components are integrated into the Financial Management Dashboard and tested
 
 
 ## Authentication Issues - Current Session
-- [ ] Fix Manus OAuth login not working
-  - [ ] Check Manus OAuth callback handler
-  - [ ] Verify session cookie creation
-  - [ ] Debug auth.me endpoint
-  - [ ] Test login flow end-to-end
+- [x] Fix Manus OAuth login not working
+  - [x] Check Manus OAuth callback handler
+  - [x] Verify session cookie creation
+  - [x] Debug auth.me endpoint
+  - [x] Test login flow end-to-end
 - [x] Fix Google OAuth redirect_uri_mismatch error
   - [x] Check registered redirect URI in Google Cloud Console
   - [x] Update redirect URI if needed
   - [x] Verify getGoogleLoginUrl sends correct redirect_uri parameter
   - [x] Test Google login flow
+
+
+## Authentication Debugging & Error Handling - Current Session
+- [x] Debug Manus OAuth callback token exchange failure
+  - [x] Add detailed logging to OAuth callback handler
+  - [x] Check SDK configuration and credentials
+  - [x] Verify token exchange endpoint is reachable
+  - [x] Test with valid authorization code
+- [x] Add authentication error handling
+  - [x] Create error handling middleware for OAuth callbacks
+  - [x] Add user-friendly error messages
+  - [x] Create error page component
+  - [x] Handle redirect_uri_mismatch errors
+  - [x] Handle invalid code/state errors
+  - [x] Handle token exchange failures
+- [x] Test Google login end-to-end
+  - [x] Test authorization flow
+  - [x] Test callback handling
+  - [x] Verify session creation
+  - [x] Verify user data storage

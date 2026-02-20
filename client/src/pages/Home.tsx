@@ -39,6 +39,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl, getGoogleLoginUrl } from "@/const";
 import { Navbar } from "@/components/Navbar";
 import DashboardLayout from "@/components/DashboardLayout";
+import { AuthErrorPage } from "@/components/AuthErrorPage";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { WorkerQuickActions } from "@/components/WorkerQuickActions";
@@ -56,8 +57,15 @@ import { useRememberMe } from "@/_core/hooks/useRememberMe";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location] = useLocation();
   const [showContent, setShowContent] = useState(true);
+  const params = new URLSearchParams(location.split("?")[1] || "");
+  const authError = params.get("auth_error");
+
+  // Show authentication error if present
+  if (authError) {
+    return <AuthErrorPage />;
+  }
 
   // Initialize session timeout and remember me features
   // These hooks are safe to call unconditionally - they handle auth state internally

@@ -48,8 +48,18 @@ export function registerOAuthRoutes(app: Express) {
 
       res.redirect(302, "/");
     } catch (error) {
-      console.error("[OAuth] Manus callback failed", error);
-      res.status(500).json({ error: "OAuth callback failed" });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("[OAuth] Manus callback failed:", {
+        error: errorMessage,
+        code,
+        state: state?.substring(0, 20) + "...",
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // Redirect to error page instead of JSON response
+      const errorCode = errorMessage.includes('invalid') ? 'invalid_code' : 'token_exchange_failed';
+      const redirectUrl = `/?auth_error=${errorCode}&error_message=${encodeURIComponent(errorMessage)}`;
+      res.redirect(302, redirectUrl);
     }
   });
 
@@ -134,8 +144,22 @@ export function registerOAuthRoutes(app: Express) {
       const redirectUrl = state ? atob(state) : "/";
       res.redirect(302, redirectUrl);
     } catch (error) {
-      console.error("[GoogleOAuth] Callback failed", error);
-      res.status(500).json({ error: "Google OAuth callback failed" });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("[GoogleOAuth] Callback failed:", {
+        error: errorMessage,
+        code: code?.substring(0, 20) + "...",
+        state: state?.substring(0, 20) + "...",
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // Redirect to error page instead of JSON response
+      let errorCode = 'callback_failed';
+      if (errorMessage.includes('redirect_uri')) errorCode = 'redirect_uri_mismatch';
+      if (errorMessage.includes('invalid')) errorCode = 'invalid_code';
+      if (errorMessage.includes('token')) errorCode = 'token_error';
+      
+      const redirectUrl = `/?auth_error=${errorCode}&error_message=${encodeURIComponent(errorMessage)}`;
+      res.redirect(302, redirectUrl);
     }
   });
 
@@ -148,8 +172,13 @@ export function registerOAuthRoutes(app: Express) {
       
       res.json({ authUrl });
     } catch (error) {
-      console.error("[GoogleOAuth] Failed to generate auth URL", error);
-      res.status(500).json({ error: "Failed to generate authorization URL" });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("[GoogleOAuth] Failed to generate auth URL:", {
+        error: errorMessage,
+        redirectUri: req.query.redirect_uri,
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      res.status(500).json({ error: "Failed to generate authorization URL", details: errorMessage });
     }
   });
 }
