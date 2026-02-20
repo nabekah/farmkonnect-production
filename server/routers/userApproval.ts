@@ -5,6 +5,12 @@ import { getDb } from "../db";
 import { users, auditLogs } from "../../drizzle/schema";
 import { eq, inArray } from "drizzle-orm";
 import crypto from "crypto";
+import {
+  sendVerificationEmail,
+  sendApprovalEmail,
+  sendRejectionEmail,
+  sendSuspensionEmail
+} from "../services/emailService";
 
 // Helper function to generate verification token
 function generateVerificationToken(): string {
@@ -93,6 +99,21 @@ export const userApprovalRouter = router({
           });
         }
 
+        // Get user details before updating
+        const userRecord = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, input.userId));
+
+        if (!userRecord || userRecord.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found"
+          });
+        }
+
+        const user = userRecord[0];
+
         // Update user approval status
         await db
           .update(users)
@@ -102,9 +123,12 @@ export const userApprovalRouter = router({
         // Log audit action
         await logAuditAction(db, ctx.user.id, input.userId, "approve");
 
+        // Send approval email
+        await sendApprovalEmail(user.email, user.name);
+
         return {
           success: true,
-          message: "User approved successfully"
+          message: "User approved successfully and notification email sent"
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -135,21 +159,40 @@ export const userApprovalRouter = router({
           });
         }
 
+        // Get user details before updating
+        const userRecord = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, input.userId));
+
+        if (!userRecord || userRecord.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found"
+          });
+        }
+
+        const user = userRecord[0];
+        const rejectionReason = input.reason || "Your registration does not meet our current requirements";
+
         // Update user approval status
         await db
           .update(users)
           .set({
             approvalStatus: "rejected",
-            accountStatusReason: input.reason || "Rejected by admin"
+            accountStatusReason: rejectionReason
           })
           .where(eq(users.id, input.userId));
 
         // Log audit action
         await logAuditAction(db, ctx.user.id, input.userId, "reject", input.reason);
 
+        // Send rejection email
+        await sendRejectionEmail(user.email, user.name, rejectionReason);
+
         return {
           success: true,
-          message: "User rejected successfully"
+          message: "User rejected successfully and notification email sent"
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -180,21 +223,40 @@ export const userApprovalRouter = router({
           });
         }
 
+        // Get user details before updating
+        const userRecord = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, input.userId));
+
+        if (!userRecord || userRecord.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found"
+          });
+        }
+
+        const user = userRecord[0];
+        const suspensionReason = input.reason || "Your account has been suspended by an administrator";
+
         // Update user account status
         await db
           .update(users)
           .set({
             accountStatus: "suspended",
-            accountStatusReason: input.reason || "Suspended by admin"
+            accountStatusReason: suspensionReason
           })
           .where(eq(users.id, input.userId));
 
         // Log audit action
         await logAuditAction(db, ctx.user.id, input.userId, "suspend", input.reason);
 
+        // Send suspension email
+        await sendSuspensionEmail(user.email, user.name, suspensionReason);
+
         return {
           success: true,
-          message: "User suspended successfully"
+          message: "User suspended successfully and notification email sent"
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -227,15 +289,22 @@ export const userApprovalRouter = router({
 
         const bulkOperationId = crypto.randomUUID();
 
+        // Get all users
+        const userRecords = await db
+          .select()
+          .from(users)
+          .where(inArray(users.id, input.userIds));
+
         // Update users approval status
         await db
           .update(users)
           .set({ approvalStatus: "approved" })
           .where(inArray(users.id, input.userIds));
 
-        // Log audit actions for each user
-        for (const userId of input.userIds) {
-          await logAuditAction(db, ctx.user.id, userId, "bulk_approve", input.reason, bulkOperationId);
+        // Log audit actions and send emails for each user
+        for (const user of userRecords) {
+          await logAuditAction(db, ctx.user.id, user.id, "bulk_approve", input.reason, bulkOperationId);
+          await sendApprovalEmail(user.email, user.name);
         }
 
         return {
@@ -273,19 +342,27 @@ export const userApprovalRouter = router({
         }
 
         const bulkOperationId = crypto.randomUUID();
+        const rejectionReason = input.reason || "Your registration does not meet our current requirements";
+
+        // Get all users
+        const userRecords = await db
+          .select()
+          .from(users)
+          .where(inArray(users.id, input.userIds));
 
         // Update users approval status
         await db
           .update(users)
           .set({
             approvalStatus: "rejected",
-            accountStatusReason: input.reason || "Rejected by admin"
+            accountStatusReason: rejectionReason
           })
           .where(inArray(users.id, input.userIds));
 
-        // Log audit actions for each user
-        for (const userId of input.userIds) {
-          await logAuditAction(db, ctx.user.id, userId, "bulk_reject", input.reason, bulkOperationId);
+        // Log audit actions and send emails for each user
+        for (const user of userRecords) {
+          await logAuditAction(db, ctx.user.id, user.id, "bulk_reject", input.reason, bulkOperationId);
+          await sendRejectionEmail(user.email, user.name, rejectionReason);
         }
 
         return {
@@ -323,19 +400,27 @@ export const userApprovalRouter = router({
         }
 
         const bulkOperationId = crypto.randomUUID();
+        const suspensionReason = input.reason || "Your account has been suspended by an administrator";
+
+        // Get all users
+        const userRecords = await db
+          .select()
+          .from(users)
+          .where(inArray(users.id, input.userIds));
 
         // Update users account status
         await db
           .update(users)
           .set({
             accountStatus: "suspended",
-            accountStatusReason: input.reason || "Suspended by admin"
+            accountStatusReason: suspensionReason
           })
           .where(inArray(users.id, input.userIds));
 
-        // Log audit actions for each user
-        for (const userId of input.userIds) {
-          await logAuditAction(db, ctx.user.id, userId, "bulk_suspend", input.reason, bulkOperationId);
+        // Log audit actions and send emails for each user
+        for (const user of userRecords) {
+          await logAuditAction(db, ctx.user.id, user.id, "bulk_suspend", input.reason, bulkOperationId);
+          await sendSuspensionEmail(user.email, user.name, suspensionReason);
         }
 
         return {
@@ -354,7 +439,7 @@ export const userApprovalRouter = router({
     }),
 
   // Send verification email
-  sendVerificationEmail: protectedProcedure
+  sendVerificationEmailProcedure: protectedProcedure
     .input(z.object({ userId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -369,6 +454,20 @@ export const userApprovalRouter = router({
           });
         }
 
+        // Get user details
+        const userRecord = await db
+          .select()
+          .from(users)
+          .where(eq(users.id, input.userId));
+
+        if (!userRecord || userRecord.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found"
+          });
+        }
+
+        const user = userRecord[0];
         const token = generateVerificationToken();
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -381,9 +480,16 @@ export const userApprovalRouter = router({
           })
           .where(eq(users.id, input.userId));
 
-        // TODO: Send email with verification link
-        // const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-        // await sendEmail(user.email, "Verify Your Email", verificationUrl);
+        // Send verification email
+        const emailResult = await sendVerificationEmail(user.email, user.name, token);
+
+        if (!emailResult.success) {
+          console.error("Failed to send verification email:", emailResult.error);
+          return {
+            success: false,
+            message: "Failed to send verification email"
+          };
+        }
 
         return {
           success: true,
