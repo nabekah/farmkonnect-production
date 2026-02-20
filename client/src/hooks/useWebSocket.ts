@@ -28,11 +28,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const reconnectAttemptsRef = useRef<number>(0);
-  const maxReconnectAttemptsRef = useRef<number>(10);
+  const maxReconnectAttemptsRef = useRef<number>(3); // Reduced from 10 to 3 attempts
+  const wsFailedRef = useRef<boolean>(false); // Track if WebSocket has permanently failed
 
   const connect = useCallback(() => {
     if (!user) {
       console.log('[WebSocket] No user, skipping connection');
+      return;
+    }
+
+    // Skip connection if WebSocket has permanently failed
+    if (wsFailedRef.current) {
+      console.log('[WebSocket] WebSocket unavailable, skipping connection attempt');
       return;
     }
 
@@ -105,7 +112,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
       // Check max reconnection attempts
       if (reconnectAttemptsRef.current >= maxReconnectAttemptsRef.current) {
-        console.error('[WebSocket] Max reconnection attempts reached');
+        console.warn('[WebSocket] Max reconnection attempts reached. Application will continue without real-time updates.');
+        wsFailedRef.current = true; // Mark WebSocket as permanently failed
         setIsReconnecting(false);
         return;
       }
@@ -128,6 +136,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       if (process.env.NODE_ENV === 'development') {
         const errorMsg = event instanceof Event ? `WebSocket error: ${event.type}` : String(event);
         console.debug('[WebSocket] Connection error (expected):', errorMsg);
+      }
+      // Mark as failed after first error
+      if (reconnectAttemptsRef.current === 0) {
+        wsFailedRef.current = true;
       }
     };
 
@@ -161,5 +173,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     isReconnecting,
     lastMessage,
     sendMessage,
+    wsAvailable: !wsFailedRef.current, // Indicate if WebSocket is available
   };
 }

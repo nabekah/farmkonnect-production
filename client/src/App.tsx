@@ -1069,7 +1069,7 @@ function Router() {
 
 function AppContent() {
   const { notifications, removeNotification } = useNotification();
-  const { isConnected, isReconnecting } = useWebSocket();
+  const { isConnected, isReconnecting, wsAvailable } = useWebSocket();
   useZoomKeyboardShortcuts();
 
   // Initialize theme on app load
@@ -1124,7 +1124,7 @@ function AppContent() {
                 <div className="flex-1 overflow-auto">
                   <Toaster />
                   <FloatingElements />
-                  <WebSocketStatus isConnected={isConnected} isReconnecting={isReconnecting} />
+                  <WebSocketStatus isConnected={isConnected} isReconnecting={isReconnecting} wsAvailable={wsAvailable} />
                   <ActivityNotificationContainer
                     notifications={notifications}
                     onDismiss={removeNotification}

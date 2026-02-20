@@ -5,6 +5,7 @@ interface WebSocketStatusProps {
   isConnected: boolean;
   isReconnecting: boolean;
   reconnectAttempt?: number;
+  wsAvailable?: boolean; // Indicates if WebSocket is available
 }
 
 /**
@@ -15,12 +16,13 @@ export function WebSocketStatus({
   isConnected,
   isReconnecting,
   reconnectAttempt = 0,
+  wsAvailable = true,
 }: WebSocketStatusProps) {
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Auto-hide when reconnected
   useEffect(() => {
-    if (isConnected && !isDismissed) {
+    if (isConnected && !isDismissed && wsAvailable) {
       // Auto-hide after 2 seconds when connected
       const timer = setTimeout(() => {
         setIsDismissed(true);
@@ -30,18 +32,35 @@ export function WebSocketStatus({
         clearTimeout(timer);
       };
     }
-  }, [isConnected]);
+  }, [isConnected, wsAvailable]);
 
   // Reset dismissed state when connection status changes
   useEffect(() => {
-    if (isReconnecting || (!isConnected && !isReconnecting)) {
+    if (isReconnecting || (!isConnected && !isReconnecting) || !wsAvailable) {
       setIsDismissed(false);
     }
-  }, [isReconnecting, isConnected]);
+  }, [isReconnecting, isConnected, wsAvailable]);
 
   // Don't show if dismissed and connected
   if (isDismissed && isConnected) {
     return null;
+  }
+
+  // If WebSocket is not available, show a graceful message
+  if (!wsAvailable) {
+    return (
+      <div className="fixed top-16 right-4 flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg shadow-sm z-50">
+        <WifiOff className="w-4 h-4 text-yellow-600" />
+        <span className="text-sm text-yellow-700 font-medium">Real-time updates unavailable</span>
+        <button
+          onClick={() => setIsDismissed(true)}
+          className="ml-2 text-yellow-600 hover:text-yellow-800 transition-colors"
+          aria-label="Dismiss"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
   }
 
   if (isConnected && !isReconnecting) {
