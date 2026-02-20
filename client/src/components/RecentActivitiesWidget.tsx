@@ -1,10 +1,28 @@
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Tractor, Sprout, CheckCircle2, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-export function RecentActivitiesWidget() {
-  const { data: activities, isLoading } = trpc.dashboard.getRecentActivities.useQuery();
+interface RecentActivitiesWidgetProps {
+  refreshInterval?: number; // in milliseconds, default 30000 (30 seconds)
+}
+
+export function RecentActivitiesWidget({ refreshInterval = 30000 }: RecentActivitiesWidgetProps = {}) {
+  const { data: activities, isLoading, refetch } = trpc.dashboard.getRecentActivities.useQuery(undefined, {
+    refetchInterval: refreshInterval,
+  });
+
+  // Set up polling interval
+  useEffect(() => {
+    if (refreshInterval <= 0) return; // Disable polling if interval is 0 or negative
+    
+    const interval = setInterval(() => {
+      refetch();
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [refreshInterval, refetch]);
 
   if (isLoading) {
     return (
@@ -18,7 +36,12 @@ export function RecentActivitiesWidget() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activities</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Recent Activities</CardTitle>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Auto-refreshing every {(refreshInterval / 1000).toFixed(0)}s
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-gray-500 dark:text-gray-400">No recent activities</p>
@@ -60,7 +83,12 @@ export function RecentActivitiesWidget() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activities</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Recent Activities</CardTitle>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Auto-refreshing every {(refreshInterval / 1000).toFixed(0)}s
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -74,9 +102,9 @@ export function RecentActivitiesWidget() {
             return (
               <div
                 key={activity.id}
-                className="flex items-start gap-4 pb-4 border-b last:border-b-0 last:pb-0"
+                className="flex items-start gap-4 pb-4 border-b last:border-b-0 last:pb-0 animate-in fade-in"
               >
-                <div className={`p-2 rounded-lg ${colorClass} flex-shrink-0`}>
+                <div className={`p-2 rounded-lg ${colorClass} flex-shrink-0 transition-all`}>
                   <IconComponent className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">

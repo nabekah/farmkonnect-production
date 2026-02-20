@@ -13,7 +13,7 @@ import { subDays } from "date-fns";
 export const dashboardRouter = router({
   // Get quick stats for the dashboard
   getQuickStats: protectedProcedure.query(async ({ ctx }) => {
-    const db = getDb();
+    const db = await getDb();
     const userId = ctx.user.id;
 
     try {
@@ -99,7 +99,7 @@ export const dashboardRouter = router({
 
   // Get recent activities
   getRecentActivities: protectedProcedure.query(async ({ ctx }) => {
-    const db = getDb();
+    const db = await getDb();
     const userId = ctx.user.id;
     const thirtyDaysAgo = subDays(new Date(), 30);
 
