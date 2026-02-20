@@ -4,6 +4,7 @@ import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { googleOAuth } from "./googleOAuth";
+import { logAuthenticationAttempt } from "./authAnalyticsLogger";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -17,6 +18,13 @@ export function registerOAuthRoutes(app: Express) {
     const state = getQueryParam(req, "state");
 
     if (!code || !state) {
+      // Log failed attempt
+      await logAuthenticationAttempt({
+        req,
+        loginMethod: "manus",
+        success: false,
+        failureReason: "Missing code or state parameters",
+      });
       res.status(400).json({ error: "code and state are required" });
       return;
     }
@@ -26,6 +34,13 @@ export function registerOAuthRoutes(app: Express) {
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
 
       if (!userInfo.openId) {
+        // Log failed attempt
+        await logAuthenticationAttempt({
+          req,
+          loginMethod: "manus",
+          success: false,
+          failureReason: "openId missing from user info",
+        });
         res.status(400).json({ error: "openId missing from user info" });
         return;
       }
@@ -46,6 +61,15 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
+      // Log successful login
+      const user = await db.getUserByOpenId(userInfo.openId);
+      await logAuthenticationAttempt({
+        req,
+        userId: user?.id,
+        loginMethod: "manus",
+        success: true,
+      });
+
       res.redirect(302, "/");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -54,6 +78,14 @@ export function registerOAuthRoutes(app: Express) {
         code,
         state: state?.substring(0, 20) + "...",
         stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // Log failed attempt
+      await logAuthenticationAttempt({
+        req,
+        loginMethod: "manus",
+        success: false,
+        failureReason: errorMessage,
       });
       
       // Redirect to error page instead of JSON response
@@ -69,6 +101,13 @@ export function registerOAuthRoutes(app: Express) {
     const state = getQueryParam(req, "state");
 
     if (!code || !state) {
+      // Log failed attempt
+      await logAuthenticationAttempt({
+        req,
+        loginMethod: "google",
+        success: false,
+        failureReason: "Missing code or state parameters",
+      });
       res.status(400).json({ error: "code and state are required" });
       return;
     }
@@ -78,6 +117,13 @@ export function registerOAuthRoutes(app: Express) {
       const tokens = await googleOAuth.exchangeCodeForToken(code);
       
       if (!tokens.id_token) {
+        // Log failed attempt
+        await logAuthenticationAttempt({
+          req,
+          loginMethod: "google",
+          success: false,
+          failureReason: "id_token missing from Google response",
+        });
         res.status(400).json({ error: "id_token missing from Google response" });
         return;
       }
@@ -86,6 +132,13 @@ export function registerOAuthRoutes(app: Express) {
       const payload = await googleOAuth.verifyIdToken(tokens.id_token);
 
       if (!payload.sub) {
+        // Log failed attempt
+        await logAuthenticationAttempt({
+          req,
+          loginMethod: "google",
+          success: false,
+          failureReason: "sub (user ID) missing from Google token",
+        });
         res.status(400).json({ error: "sub (user ID) missing from Google token" });
         return;
       }
@@ -131,6 +184,13 @@ export function registerOAuthRoutes(app: Express) {
       }
 
       if (!user) {
+        // Log failed attempt
+        await logAuthenticationAttempt({
+          req,
+          loginMethod: "google",
+          success: false,
+          failureReason: "Failed to create or retrieve user",
+        });
         res.status(500).json({ error: "Failed to create or retrieve user" });
         return;
       }
@@ -144,6 +204,14 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
+      // Log successful login
+      await logAuthenticationAttempt({
+        req,
+        userId: user.id,
+        loginMethod: "google",
+        success: true,
+      });
+
       // Redirect to home or to the state-encoded redirect URL
       const redirectUrl = state ? atob(state) : "/";
       res.redirect(302, redirectUrl);
@@ -154,6 +222,14 @@ export function registerOAuthRoutes(app: Express) {
         code: code?.substring(0, 20) + "...",
         state: state?.substring(0, 20) + "...",
         stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // Log failed attempt
+      await logAuthenticationAttempt({
+        req,
+        loginMethod: "google",
+        success: false,
+        failureReason: errorMessage,
       });
       
       // Redirect to error page instead of JSON response

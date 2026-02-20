@@ -5695,3 +5695,30 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Track login success/failure rates
   - [x] Create analytics dashboard component
   - [x] Add analytics queries to auth router
+
+
+## Analytics Logging Implementation - Current Session
+- [x] Add analytics logging to Google OAuth callback
+  - [x] Log successful Google logins
+  - [x] Log failed Google login attempts
+  - [x] Capture IP address and user agent
+  - [x] Track login method as "google"
+- [x] Add analytics logging to Manus OAuth callback
+  - [x] Log successful Manus logins
+  - [x] Log failed Manus login attempts
+  - [x] Capture IP address and user agent
+  - [x] Track login method as "manus"
+- [x] Add analytics logging to manual registration login
+  - [x] Log successful manual logins
+  - [x] Log failed manual login attempts
+  - [x] Capture IP address and user agent
+  - [x] Track login method as "manual"
+- [x] Add analytics logging to logout events
+  - [x] Log logout events with session duration
+  - [x] Calculate session duration from login to logout
+  - [x] Track logout timestamp
+- [x] Test analytics logging
+  - [x] Verify analytics data is being recorded
+  - [x] Test with multiple login methods
+  - [x] Verify IP and user agent capture
+  - [x] Test session duration calculation

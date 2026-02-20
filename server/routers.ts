@@ -50,6 +50,7 @@ import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
 import { exportRouter } from "./exportRouter";
 import { tokenRefreshRouter } from "./routers/tokenRefresh";
 import { authAnalyticsRouter } from "./routers/authAnalytics";
+import { logAuthenticationAttempt, logLogoutEvent } from "./_core/authAnalyticsLogger";
 import { emailNotifications } from "./_core/emailNotifications";
 import { eq } from "drizzle-orm";
 import { alertHistoryRouter } from "./alertHistoryRouter";
@@ -393,9 +394,19 @@ export const appRouter = router({
   shiftTaskNotificationTriggers: shiftTaskNotificationTriggersRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
+    logout: publicProcedure.mutation(async ({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      
+      if (ctx.user?.id) {
+        const sessionStartTime = ctx.req.headers['x-session-start-time'] as string;
+        const sessionDurationMs = sessionStartTime ? Date.now() - parseInt(sessionStartTime) : 0;
+        await logLogoutEvent({
+          userId: ctx.user.id,
+          sessionDurationMs,
+        });
+      }
+      
       return { success: true } as const;
     }),
     getAllUsers: publicProcedure.query(async () => {
@@ -422,7 +433,7 @@ export const appRouter = router({
           role: z.string().default("user"),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const db = await getDb();
         if (!db) throw new Error("Database connection failed");
 
@@ -433,6 +444,12 @@ export const appRouter = router({
           .limit(1);
 
         if (existingUser.length > 0) {
+          await logAuthenticationAttempt({
+            req: ctx.req,
+            loginMethod: "manual",
+            success: false,
+            failureReason: "Email already registered",
+          });
           throw new TRPCError({
             code: "CONFLICT",
             message: "Email already registered. Please sign in or use a different email.",
@@ -450,8 +467,23 @@ export const appRouter = router({
             role: input.role || "user",
           });
           createdUser = [newUser];
+          
+          await logAuthenticationAttempt({
+            req: ctx.req,
+            userId: newUser.id,
+            loginMethod: "manual",
+            success: true,
+          });
         } catch (error: any) {
           console.error("Registration Error:", error);
+          
+          await logAuthenticationAttempt({
+            req: ctx.req,
+            loginMethod: "manual",
+            success: false,
+            failureReason: error.message || "Failed to create user account",
+          });
+          
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: error.message || "Failed to create user account",
