@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/_core/hooks/useAuth';
+import { trpc } from '@/lib/trpc';
 
 export interface WebSocketMessage {
   type: string;
@@ -31,6 +32,16 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const maxReconnectAttemptsRef = useRef<number>(3); // Reduced from 10 to 3 attempts
   const wsFailedRef = useRef<boolean>(false); // Track if WebSocket has permanently failed
 
+  // Get WebSocket token from backend
+  const { data: tokenData, isLoading: isLoadingToken } = trpc.websocketToken.getToken.useQuery(
+    undefined,
+    {
+      enabled: !!user, // Only fetch token if user is authenticated
+      staleTime: 50 * 60 * 1000, // Cache token for 50 minutes (expires in 60)
+      refetchInterval: 50 * 60 * 1000, // Refresh token every 50 minutes
+    }
+  );
+
   const connect = useCallback(() => {
     if (!user) {
       console.log('[WebSocket] No user, skipping connection');
@@ -43,11 +54,12 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       return;
     }
 
-    // Get token from cookie or localStorage
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('auth_token='))
-      ?.split('=')[1] || localStorage.getItem('auth_token') || 'demo_token';
+    // Use JWT token from backend
+    const token = tokenData?.token;
+    if (!token) {
+      console.log('[WebSocket] Waiting for token from backend...');
+      return;
+    }
 
     // Determine WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -147,7 +159,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, [user]);
 
   useEffect(() => {
-    connect();
+    // Only connect if token is available and not loading
+    if (!isLoadingToken && tokenData?.token) {
+      connect();
+    }
 
     return () => {
       if (reconnectTimeoutRef.current) {
@@ -157,7 +172,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         wsRef.current.close(1000, 'Component unmounted');
       }
     };
-  }, [connect]);
+  }, [connect, isLoadingToken, tokenData?.token]);
 
   const sendMessage = useCallback((message: WebSocketMessage) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {

@@ -1,0 +1,10 @@
+{
+  "query": "\n-- Get Total Farms count\nSELECT COUNT(*) as total_farms FROM farms;\n\n-- Get Farm Area sum\nSELECT COALESCE(SUM(totalArea), 0) as total_area_ha FROM farms;\n\n-- Get Active Crops count\nSELECT COUNT(*) as active_crops FROM cropCycles WHERE status = 'active';\n\n-- Get Pending Tasks count\nSELECT COUNT(*) as pending_tasks FROM fieldWorkerTasks WHERE status = 'pending';\n\n-- Get Weather Alerts count\nSELECT COUNT(*) as weather_alerts FROM weatherHistory WHERE eventType IN ('alert', 'warning', 'severe');\n\n-- Get Livestock count\nSELECT COUNT(*) as total_livestock FROM animals;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute \n-- Get Total Farms count\nSELECT COUNT(*) as total_farms FROM farms;\n\n-- Get Farm Area sum\nSELECT COALESCE(SUM(totalArea), 0) as total_area_ha FROM farms;\n\n-- Get Active Crops count\nSELECT COUNT(*) as active_crops FROM cropCycles WHERE status = 'active';\n\n-- Get Pending Tasks count\nSELECT COUNT(*) as pending_tasks FROM fieldWorkerTasks WHERE status = 'pending';\n\n-- Get Weather Alerts count\nSELECT COUNT(*) as weather_alerts FROM weatherHistory WHERE eventType IN ('alert', 'warning', 'severe');\n\n-- Get Livestock count\nSELECT COUNT(*) as total_livestock FROM animals;\n",
+  "returncode": 1,
+  "logs": [
+    "total_farms",
+    "419",
+    "ERROR 1054 (42S22) at line 6: Unknown column 'totalarea' in ''"
+  ]
+}

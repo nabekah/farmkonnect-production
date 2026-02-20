@@ -54,6 +54,7 @@ import { dashboardRouter } from "./routers/dashboard";
 import { emailFeaturesRouter } from "./routers/emailFeatures";
 import { emailRouter } from "./routers/email";
 import { sendgridWebhookRouter } from "./routers/sendgridWebhook";
+import { websocketTokenRouter } from "./routers/websocketToken";
 import { suspiciousActivityAlertsRouter } from "./routers/suspiciousActivityAlerts";
 import { logAuthenticationAttempt, logLogoutEvent } from "./_core/authAnalyticsLogger";
 import { emailNotifications } from "./_core/emailNotifications";
@@ -241,6 +242,7 @@ export const appRouter = router({
   email: emailRouter,
   emailFeatures: emailFeaturesRouter,
   sendgridWebhook: sendgridWebhookRouter,
+  websocketToken: websocketTokenRouter,
   suspiciousActivityAlerts: suspiciousActivityAlertsRouter,
   rbac: rbacRouter,
   invitations: invitationsRouter,

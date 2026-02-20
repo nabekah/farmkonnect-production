@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
-// JWT verification will be handled by cookie middleware
+import { verifyWebSocketToken } from '../routers/websocketToken';
 
 interface AuthenticatedWebSocket extends WebSocket {
   userId?: number;
@@ -29,15 +29,17 @@ export class FarmKonnectWebSocketServer {
           return;
         }
 
-        // For now, accept any token and extract user info from it
-        // In production, verify JWT signature
+        // Verify JWT token
         try {
-          const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-          ws.userId = decoded.userId || 1;
-          ws.farmId = decoded.farmId || 1;
-        } catch {
-          ws.userId = 1;
-          ws.farmId = 1;
+          const decoded = verifyWebSocketToken(token);
+          ws.userId = decoded.userId;
+          // Extract farmId from token if available, otherwise use default
+          ws.farmId = (decoded as any).farmId || 1;
+          console.log(`[WebSocket] Token verified for user ${ws.userId}`);
+        } catch (error) {
+          console.error('[WebSocket] Token verification failed:', error);
+          ws.close(4001, 'Invalid or expired token');
+          return;
         }
         ws.isAlive = true;
 

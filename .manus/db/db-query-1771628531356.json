@@ -1,0 +1,43 @@
+{
+  "query": "\n-- Get Total Farms count\nSELECT COUNT(*) as total_farms FROM farms;\n\n-- Get Farm Area sum (in hectares)\nSELECT COALESCE(SUM(CAST(sizeHectares AS DECIMAL(10,2))), 0) as total_area_ha FROM farms;\n\n-- Get Active Crops count\nSELECT COUNT(*) as active_crops FROM cropCycles WHERE status = 'active';\n\n-- Get Pending Alerts count\nSELECT COUNT(*) as pending_alerts FROM alerts WHERE isResolved = false;\n\n-- Get Weather Alerts count\nSELECT COUNT(*) as weather_alerts FROM alerts WHERE alertType = 'weather' AND isResolved = false;\n\n-- Get Livestock count\nSELECT COUNT(*) as total_livestock FROM animals;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute \n-- Get Total Farms count\nSELECT COUNT(*) as total_farms FROM farms;\n\n-- Get Farm Area sum (in hectares)\nSELECT COALESCE(SUM(CAST(sizeHectares AS DECIMAL(10,2))), 0) as total_area_ha FROM farms;\n\n-- Get Active Crops count\nSELECT COUNT(*) as active_crops FROM cropCycles WHERE status = 'active';\n\n-- Get Pending Alerts count\nSELECT COUNT(*) as pending_alerts FROM alerts WHERE isResolved = false;\n\n-- Get Weather Alerts count\nSELECT COUNT(*) as weather_alerts FROM alerts WHERE alertType = 'weather' AND isResolved = false;\n\n-- Get Livestock count\nSELECT COUNT(*) as total_livestock FROM animals;\n",
+  "rows": [
+    {
+      "total_farms": "419"
+    },
+    {
+      "total_farms": "total_area_ha"
+    },
+    {
+      "total_farms": "2302.50"
+    },
+    {
+      "total_farms": "active_crops"
+    },
+    {
+      "total_farms": "0"
+    },
+    {
+      "total_farms": "pending_alerts"
+    },
+    {
+      "total_farms": "9"
+    },
+    {
+      "total_farms": "weather_alerts"
+    },
+    {
+      "total_farms": "0"
+    },
+    {
+      "total_farms": "total_livestock"
+    },
+    {
+      "total_farms": "22"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_farms\n419\ntotal_area_ha\n2302.50\nactive_crops\n0\npending_alerts\n9\nweather_alerts\n0\ntotal_livestock\n22\n",
+  "stderr": "",
+  "execution_time_ms": 79
+}

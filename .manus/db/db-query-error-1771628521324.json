@@ -1,0 +1,12 @@
+{
+  "query": "\n-- Get Total Farms count\nSELECT COUNT(*) as total_farms FROM farms;\n\n-- Get Farm Area sum (in hectares)\nSELECT COALESCE(SUM(CAST(sizeHectares AS DECIMAL(10,2))), 0) as total_area_ha FROM farms;\n\n-- Get Active Crops count\nSELECT COUNT(*) as active_crops FROM crops WHERE status = 'active' OR status = 'growing';\n\n-- Get Pending Tasks/Alerts count\nSELECT COUNT(*) as pending_items FROM alerts WHERE status = 'active' OR status = 'pending';\n\n-- Get Weather Alerts count\nSELECT COUNT(*) as weather_alerts FROM alerts WHERE alertType = 'weather';\n\n-- Get Livestock count\nSELECT COUNT(*) as total_livestock FROM animals;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute \n-- Get Total Farms count\nSELECT COUNT(*) as total_farms FROM farms;\n\n-- Get Farm Area sum (in hectares)\nSELECT COALESCE(SUM(CAST(sizeHectares AS DECIMAL(10,2))), 0) as total_area_ha FROM farms;\n\n-- Get Active Crops count\nSELECT COUNT(*) as active_crops FROM crops WHERE status = 'active' OR status = 'growing';\n\n-- Get Pending Tasks/Alerts count\nSELECT COUNT(*) as pending_items FROM alerts WHERE status = 'active' OR status = 'pending';\n\n-- Get Weather Alerts count\nSELECT COUNT(*) as weather_alerts FROM alerts WHERE alertType = 'weather';\n\n-- Get Livestock count\nSELECT COUNT(*) as total_livestock FROM animals;\n",
+  "returncode": 1,
+  "logs": [
+    "total_farms",
+    "419",
+    "total_area_ha",
+    "2302.50",
+    "ERROR 1054 (42S22) at line 9: Unknown column 'status' in 'where clause'"
+  ]
+}
