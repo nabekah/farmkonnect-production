@@ -6004,3 +6004,26 @@ All components are integrated into the Financial Management Dashboard and tested
   - [ ] Test with SendGrid test events
   - [ ] Verify database updates
   - [ ] Check analytics dashboard
+
+
+## WebSocket Server, Polling, and Offline Mode Implementation - Current Session
+- [ ] Implement WebSocket Server on backend
+  - [ ] Create WebSocket server using ws or Socket.io
+  - [ ] Implement event handlers for real-time updates
+  - [ ] Add authentication for WebSocket connections
+  - [ ] Broadcast events for farms, crops, tasks, activities
+- [ ] Implement Polling-Based Data Refresh
+  - [ ] Create polling hooks for critical data
+  - [ ] Add configurable polling intervals
+  - [ ] Implement smart polling (pause when tab inactive)
+  - [ ] Add polling for farms, crops, tasks, weather alerts
+- [ ] Implement Offline Mode Support
+  - [ ] Create and register Service Worker
+  - [ ] Implement cache strategies (Cache-first, Network-first)
+  - [ ] Add offline data persistence with IndexedDB
+  - [ ] Create offline UI indicator
+  - [ ] Sync data when connection restored
+- [ ] Test all three features
+  - [ ] Test WebSocket connections
+  - [ ] Test polling updates
+  - [ ] Test offline mode and sync
