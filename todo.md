@@ -5632,3 +5632,11 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Add export button to AuditLogViewer
   - [x] Implement file download functionality
   - [x] Test CSV export
+
+
+## Bug Fixes - Current Session
+- [x] Fix Google sign-in OAuth callback Promise error
+  - [x] Identify Promise-to-string conversion in OAuth callback
+  - [x] Fix getLoginUrl to properly await Promise
+  - [x] Test Google sign-in flow
+  - [x] Verify redirect URL is correct

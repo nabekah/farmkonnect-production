@@ -173,12 +173,17 @@ function LandingPage() {
               >
                 Sign In with Manus
               </a>
-              <a
-                href={getGoogleLoginUrl()}
-                className="px-8 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition"
+              <button
+                onClick={async () => {
+                  const authUrl = await getGoogleLoginUrl();
+                  if (authUrl) {
+                    window.location.href = authUrl;
+                  }
+                }}
+                className="px-8 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition cursor-pointer"
               >
                 Sign In with Google
-              </a>
+              </button>
               <button
                 onClick={() => {
                   const elem = document.getElementById('registration-section');
@@ -259,12 +264,17 @@ function LandingPage() {
             >
               Get Started with Manus
             </a>
-            <a
-              href={getGoogleLoginUrl()}
-              className="px-8 py-3 bg-green-700 text-white rounded-lg font-semibold hover:bg-green-800 transition"
+            <button
+              onClick={async () => {
+                const authUrl = await getGoogleLoginUrl();
+                if (authUrl) {
+                  window.location.href = authUrl;
+                }
+              }}
+              className="px-8 py-3 bg-green-700 text-white rounded-lg font-semibold hover:bg-green-800 transition cursor-pointer"
             >
               Sign Up with Google
-            </a>
+            </button>
           </div>
         </div>
       </section>

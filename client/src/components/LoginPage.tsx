@@ -66,8 +66,11 @@ export function LoginPage() {
           </div>
 
           <Button
-            onClick={() => {
-              window.location.href = getGoogleLoginUrl();
+            onClick={async () => {
+              const authUrl = await getGoogleLoginUrl();
+              if (authUrl) {
+                window.location.href = authUrl;
+              }
             }}
             size="lg"
             variant="outline"

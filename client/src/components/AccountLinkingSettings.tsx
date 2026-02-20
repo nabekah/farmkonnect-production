@@ -124,8 +124,11 @@ export function AccountLinkingSettings() {
                 </>
               ) : (
                 <Button
-                  onClick={() => {
-                    window.location.href = getGoogleLoginUrl();
+                  onClick={async () => {
+                    const authUrl = await getGoogleLoginUrl();
+                    if (authUrl) {
+                      window.location.href = authUrl;
+                    }
                   }}
                   size="sm"
                   className="bg-blue-600 hover:bg-blue-700"
