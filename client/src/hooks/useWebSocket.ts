@@ -22,23 +22,30 @@ interface UseWebSocketOptions {
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { user } = useAuth();
-  const { onTaskCreated, onTaskUpdated, onActivityCreated, onActivityUpdated, onExpenseCreated, onRevenueCreated, onExpenseUpdated, onRevenueUpdated, onFinancialDataRefresh, onMessage } = options;
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const reconnectAttemptsRef = useRef<number>(0);
-  const maxReconnectAttemptsRef = useRef<number>(3); // Reduced from 10 to 3 attempts
-  const wsFailedRef = useRef<boolean>(false); // Track if WebSocket has permanently failed
+  const maxReconnectAttemptsRef = useRef<number>(3);
+  const wsFailedRef = useRef<boolean>(false);
+  
+  // Store options in a ref to avoid stale closures
+  const optionsRef = useRef(options);
+  
+  // Update options ref when options change
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   // Get WebSocket token from backend
   const { data: tokenData, isLoading: isLoadingToken } = trpc.websocketToken.getToken.useQuery(
     undefined,
     {
-      enabled: !!user, // Only fetch token if user is authenticated
-      staleTime: 50 * 60 * 1000, // Cache token for 50 minutes (expires in 60)
-      refetchInterval: 50 * 60 * 1000, // Refresh token every 50 minutes
+      enabled: !!user,
+      staleTime: 50 * 60 * 1000,
+      refetchInterval: 50 * 60 * 1000,
     }
   );
 
@@ -48,20 +55,17 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       return;
     }
 
-    // Skip connection if WebSocket has permanently failed
     if (wsFailedRef.current) {
       console.log('[WebSocket] WebSocket unavailable, skipping connection attempt');
       return;
     }
 
-    // Use JWT token from backend
     const token = tokenData?.token;
     if (!token) {
       console.log('[WebSocket] Waiting for token from backend...');
       return;
     }
 
-    // Determine WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
 
@@ -81,30 +85,30 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         console.log('[WebSocket] Received:', message);
         setLastMessage(message);
 
-        // Call generic message handler if provided
-        if (onMessage) {
-          onMessage(message);
+        const opts = optionsRef.current;
+        
+        if (opts.onMessage) {
+          opts.onMessage(message);
         }
 
-        // Handle specific event types
-        if (message.type === 'task_created' && onTaskCreated) {
-          onTaskCreated(message.data);
-        } else if (message.type === 'task_updated' && onTaskUpdated) {
-          onTaskUpdated(message.data);
-        } else if (message.type === 'activity_created' && onActivityCreated) {
-          onActivityCreated(message.data);
-        } else if (message.type === 'activity_updated' && onActivityUpdated) {
-          onActivityUpdated(message.data);
-        } else if (message.type === 'expense_created' && onExpenseCreated) {
-          onExpenseCreated(message.data);
-        } else if (message.type === 'revenue_created' && onRevenueCreated) {
-          onRevenueCreated(message.data);
-        } else if (message.type === 'expense_updated' && onExpenseUpdated) {
-          onExpenseUpdated(message.data);
-        } else if (message.type === 'revenue_updated' && onRevenueUpdated) {
-          onRevenueUpdated(message.data);
-        } else if (message.type === 'financial_data_refresh' && onFinancialDataRefresh) {
-          onFinancialDataRefresh(message.data);
+        if (message.type === 'task_created' && opts.onTaskCreated) {
+          opts.onTaskCreated(message.data);
+        } else if (message.type === 'task_updated' && opts.onTaskUpdated) {
+          opts.onTaskUpdated(message.data);
+        } else if (message.type === 'activity_created' && opts.onActivityCreated) {
+          opts.onActivityCreated(message.data);
+        } else if (message.type === 'activity_updated' && opts.onActivityUpdated) {
+          opts.onActivityUpdated(message.data);
+        } else if (message.type === 'expense_created' && opts.onExpenseCreated) {
+          opts.onExpenseCreated(message.data);
+        } else if (message.type === 'revenue_created' && opts.onRevenueCreated) {
+          opts.onRevenueCreated(message.data);
+        } else if (message.type === 'expense_updated' && opts.onExpenseUpdated) {
+          opts.onExpenseUpdated(message.data);
+        } else if (message.type === 'revenue_updated' && opts.onRevenueUpdated) {
+          opts.onRevenueUpdated(message.data);
+        } else if (message.type === 'financial_data_refresh' && opts.onFinancialDataRefresh) {
+          opts.onFinancialDataRefresh(message.data);
         }
       } catch (error) {
         console.error('[WebSocket] Error parsing message:', error);
@@ -116,21 +120,18 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       setIsConnected(false);
       wsRef.current = null;
 
-      // Don't reconnect if closed intentionally (code 1000)
       if (event.code === 1000) {
         setIsReconnecting(false);
         return;
       }
 
-      // Check max reconnection attempts
       if (reconnectAttemptsRef.current >= maxReconnectAttemptsRef.current) {
         console.warn('[WebSocket] Max reconnection attempts reached. Application will continue without real-time updates.');
-        wsFailedRef.current = true; // Mark WebSocket as permanently failed
+        wsFailedRef.current = true;
         setIsReconnecting(false);
         return;
       }
 
-      // Exponential backoff reconnection
       const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
       reconnectAttemptsRef.current++;
 
@@ -143,23 +144,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     };
 
     ws.onerror = (event) => {
-      // Suppress WebSocket connection errors - they're expected when server is unavailable
-      // Only log in debug mode
       if (process.env.NODE_ENV === 'development') {
         const errorMsg = event instanceof Event ? `WebSocket error: ${event.type}` : String(event);
         console.debug('[WebSocket] Connection error (expected):', errorMsg);
       }
-      // Mark as failed after first error
       if (reconnectAttemptsRef.current === 0) {
         wsFailedRef.current = true;
       }
     };
 
     wsRef.current = ws;
-  }, [user]);
+  }, [user, tokenData?.token]);
 
   useEffect(() => {
-    // Only connect if token is available and not loading
     if (!isLoadingToken && tokenData?.token) {
       connect();
     }
@@ -188,6 +185,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     isReconnecting,
     lastMessage,
     sendMessage,
-    wsAvailable: !wsFailedRef.current, // Indicate if WebSocket is available
+    wsAvailable: !wsFailedRef.current,
   };
 }

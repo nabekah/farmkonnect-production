@@ -56,11 +56,19 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Cache successful responses
-        if (response.ok) {
-          const cache = caches.open(CACHE_NAME)
-          cache.then((c) => c.put(request, response.clone()))
+        // Only cache successful responses
+        if (!response || !response.ok) {
+          return response
         }
+
+        // Clone response before caching to avoid "already used" error
+        const responseClone = response.clone()
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseClone).catch((err) => {
+            console.log('[Service Worker] Cache put error:', err)
+          })
+        })
+
         return response
       })
       .catch(() => {
