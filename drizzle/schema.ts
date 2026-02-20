@@ -34,6 +34,10 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  // Email verification
+  emailVerified: boolean("emailVerified").default(false).notNull(),
+  emailVerificationToken: varchar("emailVerificationToken", { length: 255 }),
+  emailVerificationTokenExpiresAt: timestamp("emailVerificationTokenExpiresAt"),
 });
 
 // Add a unique constraint to ensure at least one OAuth provider is set
@@ -50,6 +54,23 @@ export type InsertUserAuthProvider = typeof userAuthProviders.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+// ============================================================================
+// AUDIT LOG - Track all admin approval actions
+// ============================================================================
+export const auditLogs = mysqlTable("auditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  adminId: int("adminId").notNull(),
+  userId: int("userId").notNull(),
+  action: mysqlEnum("action", ["approve", "reject", "suspend", "unsuspend", "bulk_approve", "bulk_reject", "bulk_suspend"]).notNull(),
+  reason: text("reason"),
+  bulkOperationId: varchar("bulkOperationId", { length: 255 }),
+  metadata: text("metadata"), // JSON for additional info
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DataChangeLog = typeof dataChangeLogs.$inferSelect;
+export type InsertDataChangeLog = typeof dataChangeLogs.$inferInsert;
 
 // ============================================================================
 // SPECIALIST PROFILES (for Agents and Veterinarians)
@@ -2071,9 +2092,9 @@ export type InsertTaskHistory = typeof taskHistory.$inferInsert;
 
 
 // ============================================================================
-// AUDIT LOGS (for tracking data changes)
+// DATA CHANGE LOGS (for tracking data changes)
 // ============================================================================
-export const auditLogs = mysqlTable("auditLogs", {
+export const dataChangeLogs = mysqlTable("dataChangeLogs", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   entityType: varchar("entityType", { length: 100 }).notNull(), // e.g., "animalType", "cropType", "disease"
@@ -2088,8 +2109,8 @@ export const auditLogs = mysqlTable("auditLogs", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
-export type AuditLog = typeof auditLogs.$inferSelect;
-export type InsertAuditLog = typeof auditLogs.$inferInsert;
+export type DataChangeLog = typeof dataChangeLogs.$inferSelect;
+export type InsertDataChangeLog = typeof dataChangeLogs.$inferInsert;
 
 // ============================================================================
 // DATA VALIDATION RULES
