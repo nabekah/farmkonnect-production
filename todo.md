@@ -5640,3 +5640,16 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Fix getLoginUrl to properly await Promise
   - [x] Test Google sign-in flow
   - [x] Verify redirect URL is correct
+
+
+## Authentication Issues - Current Session
+- [ ] Fix Manus OAuth login not working
+  - [ ] Check Manus OAuth callback handler
+  - [ ] Verify session cookie creation
+  - [ ] Debug auth.me endpoint
+  - [ ] Test login flow end-to-end
+- [x] Fix Google OAuth redirect_uri_mismatch error
+  - [x] Check registered redirect URI in Google Cloud Console
+  - [x] Update redirect URI if needed
+  - [x] Verify getGoogleLoginUrl sends correct redirect_uri parameter
+  - [x] Test Google login flow
