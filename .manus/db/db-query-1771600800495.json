@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users \nMODIFY COLUMN email VARCHAR(255) DEFAULT '',\nMODIFY COLUMN loginMethod VARCHAR(50) DEFAULT 'manual',\nMODIFY COLUMN role ENUM('admin', 'user', 'farmer', 'worker') DEFAULT 'user';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute ALTER TABLE users \nMODIFY COLUMN email VARCHAR(255) DEFAULT '',\nMODIFY COLUMN loginMethod VARCHAR(50) DEFAULT 'manual',\nMODIFY COLUMN role ENUM('admin', 'user', 'farmer', 'worker') DEFAULT 'user';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 782
+}

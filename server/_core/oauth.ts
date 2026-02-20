@@ -70,7 +70,7 @@ export function registerOAuthRoutes(app: Express) {
         success: true,
       });
 
-      res.redirect(302, "/");
+      res.redirect(302, "/dashboard");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("[OAuth] Manus callback failed:", {

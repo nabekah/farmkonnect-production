@@ -5722,3 +5722,52 @@ All components are integrated into the Financial Management Dashboard and tested
   - [x] Test with multiple login methods
   - [x] Verify IP and user agent capture
   - [x] Test session duration calculation
+
+
+## Advanced Features - Current Session
+
+### 1. Admin Analytics Dashboard
+- [ ] Create AuthAnalyticsDashboard component
+- [ ] Display login trends chart (daily/weekly/monthly)
+- [ ] Show success/failure rate statistics
+- [ ] Display login method breakdown (Google vs Manus vs Manual)
+- [ ] Show failed attempts by IP address
+- [ ] Add date range filter for analytics
+- [ ] Add export analytics to CSV button
+
+### 2. Automatic Token Refresh
+- [ ] Create token refresh hook (useTokenRefresh)
+- [ ] Implement automatic refresh before expiration
+- [ ] Add refresh token to session storage
+- [ ] Handle refresh token expiration
+- [ ] Add refresh error handling and retry logic
+- [ ] Test token refresh flow
+
+### 3. Suspicious Activity Alerts
+- [ ] Create alerts table in database
+- [ ] Implement multiple failed attempts detection
+- [ ] Add geographic anomaly detection
+- [ ] Create alert notification system
+- [ ] Add admin notification for suspicious activity
+- [ ] Create alerts management UI component
+
+
+## Critical Bug Fixes - Current Session
+
+### 1. Database Name Field Error
+- [ ] Add default value to users.name field
+- [ ] Fix OAuth user creation to handle null names
+- [ ] Test user creation from OAuth
+
+### 2. Manus Login Redirect Issue
+- [ ] Check OAuth callback redirect logic
+- [ ] Verify dashboard route is accessible after login
+- [ ] Fix redirect to dashboard instead of landing page
+- [ ] Test Manus login flow end-to-end
+
+### 3. End-to-End Authentication Tests
+- [ ] Test Manus OAuth login
+- [ ] Test Google OAuth login
+- [ ] Test manual registration
+- [ ] Test logout
+- [ ] Verify session persistence
