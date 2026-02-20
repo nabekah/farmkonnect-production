@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 
+// Storage key for preferences
+const STORAGE_KEY = 'dashboardPreferences';
+
 export interface DashboardPreferences {
   selectedFarmId: number | null;
   visibleKPIs: {
@@ -12,6 +15,8 @@ export interface DashboardPreferences {
     assets: boolean;
   };
   defaultFarmId?: number | null;
+  refreshInterval?: number; // in milliseconds
+  isPollingEnabled?: boolean;
 }
 
 const DEFAULT_PREFERENCES: DashboardPreferences = {
@@ -25,6 +30,8 @@ const DEFAULT_PREFERENCES: DashboardPreferences = {
     ponds: true,
     assets: true,
   },
+  refreshInterval: 30000, // 30 seconds
+  isPollingEnabled: true,
 };
 
 export const useDashboardPreferences = () => {
@@ -33,23 +40,30 @@ export const useDashboardPreferences = () => {
 
   // Load preferences from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('dashboardPreferences');
-    if (stored) {
-      try {
-        setPreferences(JSON.parse(stored));
-      } catch (error) {
-        console.error('Failed to parse dashboard preferences:', error);
-        setPreferences(DEFAULT_PREFERENCES);
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Merge with defaults to ensure all properties exist
+        setPreferences({ ...DEFAULT_PREFERENCES, ...parsed });
       }
+    } catch (error) {
+      console.error('Failed to parse dashboard preferences:', error);
+      setPreferences(DEFAULT_PREFERENCES);
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
   // Save preferences to localStorage whenever they change
   const updatePreferences = (newPreferences: Partial<DashboardPreferences>) => {
     const updated = { ...preferences, ...newPreferences };
     setPreferences(updated);
-    localStorage.setItem('dashboardPreferences', JSON.stringify(updated));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to save dashboard preferences:', error);
+    }
   };
 
   // Update selected farm
@@ -72,10 +86,24 @@ export const useDashboardPreferences = () => {
     updatePreferences({ defaultFarmId: farmId });
   };
 
+  // Update refresh interval
+  const setRefreshInterval = (interval: number) => {
+    updatePreferences({ refreshInterval: interval });
+  };
+
+  // Toggle polling
+  const togglePolling = () => {
+    updatePreferences({ isPollingEnabled: !preferences.isPollingEnabled });
+  };
+
   // Reset to defaults
   const resetPreferences = () => {
     setPreferences(DEFAULT_PREFERENCES);
-    localStorage.removeItem('dashboardPreferences');
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error('Failed to clear dashboard preferences:', error);
+    }
   };
 
   return {
@@ -85,6 +113,8 @@ export const useDashboardPreferences = () => {
     setSelectedFarmId,
     setKPIVisibility,
     setDefaultFarmId,
+    setRefreshInterval,
+    togglePolling,
     resetPreferences,
   };
 };

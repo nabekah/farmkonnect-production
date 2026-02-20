@@ -1,23 +1,37 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AdminAnalyticsDashboard } from "./AdminAnalyticsDashboard";
 import { QuickStatsWidget } from "./QuickStatsWidget";
 import { RecentActivitiesWidget } from "./RecentActivitiesWidget";
+import { useDashboardPreferences } from "@/hooks/useDashboardPreferences";
 import { BarChart3, TrendingUp, Activity, RefreshCw, Pause, Play } from "lucide-react";
 
 export function WelcomeDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [isPollingEnabled, setIsPollingEnabled] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds default
+  const { preferences, isLoaded, setRefreshInterval, togglePolling } = useDashboardPreferences();
+
+  // Use stored preferences or defaults
+  const isPollingEnabled = preferences.isPollingEnabled ?? true;
+  const refreshInterval = preferences.refreshInterval ?? 30000;
 
   const handleRefreshIntervalChange = (interval: number) => {
     setRefreshInterval(interval);
   };
 
-  const togglePolling = () => {
-    setIsPollingEnabled(!isPollingEnabled);
+  const handleTogglePolling = () => {
+    togglePolling();
   };
+
+  // Show loading state while preferences are being loaded
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400">Loading dashboard preferences...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -34,7 +48,7 @@ export function WelcomeDashboard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={togglePolling}
+            onClick={handleTogglePolling}
             className="gap-2"
             title={isPollingEnabled ? "Pause auto-refresh" : "Resume auto-refresh"}
           >
@@ -51,18 +65,22 @@ export function WelcomeDashboard() {
             )}
           </Button>
           <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            {[10, 30, 60].map((seconds) => (
-              <Button
-                key={seconds}
-                variant={refreshInterval === seconds * 1000 ? "default" : "ghost"}
-                size="sm"
-                onClick={() => handleRefreshIntervalChange(seconds * 1000)}
-                className="text-xs"
-                disabled={!isPollingEnabled}
-              >
-                {seconds}s
-              </Button>
-            ))}
+            {[10, 30, 60].map((seconds) => {
+              const intervalMs = seconds * 1000;
+              return (
+                <Button
+                  key={seconds}
+                  variant={refreshInterval === intervalMs ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleRefreshIntervalChange(intervalMs)}
+                  className="text-xs"
+                  disabled={!isPollingEnabled}
+                  title={`Set refresh interval to ${seconds} seconds`}
+                >
+                  {seconds}s
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -101,7 +119,6 @@ export function WelcomeDashboard() {
         <TabsContent value="analytics" className="space-y-6">
           <AdminAnalyticsDashboard />
         </TabsContent>
-
         <TabsContent value="activities" className="space-y-6">
           <RecentActivitiesWidget refreshInterval={isPollingEnabled ? refreshInterval : 0} />
         </TabsContent>
