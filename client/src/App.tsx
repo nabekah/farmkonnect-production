@@ -158,11 +158,19 @@ import AISchedulingDashboard from "./pages/AISchedulingDashboard";
 import { ResponsiveZoomManager } from "./components/ResponsiveZoomManager";
 import { useZoomKeyboardShortcuts } from "./hooks/useZoomKeyboardShortcuts";
 import { ProfileMenu } from "./components/ProfileMenu";
+import { TestEmailPage } from "./pages/TestEmail";
 
 function Router() {
   return (
     <Switch>
        <Route path="/" component={Home} />
+      <Route path="/test-email">
+        {() => (
+          <DashboardLayout>
+            <TestEmailPage />
+          </DashboardLayout>
+        )}
+      </Route>
       <Route path="/users-list" component={UsersList} />
       <Route path="/report-management">
         {() => (
