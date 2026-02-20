@@ -57,10 +57,17 @@ import { useRememberMe } from "@/_core/hooks/useRememberMe";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [showContent, setShowContent] = useState(true);
   const params = new URLSearchParams(location.split("?")[1] || "");
   const authError = params.get("auth_error");
+
+  // Redirect authenticated users to /farms
+  useEffect(() => {
+    if (isAuthenticated && user && location === "/") {
+      setLocation("/farms");
+    }
+  }, [isAuthenticated, user, location, setLocation]);
 
   // Show authentication error if present
   if (authError) {
@@ -98,10 +105,13 @@ export default function Home() {
     return null;
   }
 
-  // Show authenticated home if user is logged in
+  // Authenticated users are redirected to /farms, so this shouldn't be reached
+  // But keep it as a fallback
   if (isAuthenticated && user) {
     return (
-      <AuthenticatedHome user={user} />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
     );
   }
 
