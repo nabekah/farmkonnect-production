@@ -135,6 +135,7 @@ import ExtensionAgents from "./pages/ExtensionAgents";
 import TemplateManagementPage from "./pages/TemplateManagementPage";
 import NotificationDeliveryTrackingDashboard from "./pages/NotificationDeliveryTrackingDashboard";
 import AdminSchedulerControlPanel from "./pages/AdminSchedulerControlPanel";
+import { UserApprovalPage } from "./pages/UserApprovalPage";
 import CropRecommendationPage from "./pages/CropRecommendationPage";
 import FarmerCommunityForum from "./pages/FarmerCommunityForum";
 import SupplyChainDashboard from "./pages/SupplyChainDashboard";
@@ -1002,6 +1003,9 @@ function Router() {
             <AdminSchedulerControlPanel />
           </DashboardLayout>
         )}
+      </Route>
+      <Route path="/admin/user-approval">
+        {() => <UserApprovalPage />}
       </Route>
       <Route path="/blockchain-supply-chain">
         {() => (

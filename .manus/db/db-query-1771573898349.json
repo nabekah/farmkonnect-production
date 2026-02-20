@@ -1,0 +1,26 @@
+{
+  "query": "SELECT DISTINCT loginMethod, LENGTH(loginMethod) as len FROM users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT DISTINCT loginMethod, LENGTH(loginMethod) as len FROM users LIMIT 10;",
+  "rows": [
+    {
+      "loginMethod": "email",
+      "len": "5"
+    },
+    {
+      "loginMethod": "oauth",
+      "len": "5"
+    },
+    {
+      "loginMethod": "NULL",
+      "len": "NULL"
+    },
+    {
+      "loginMethod": "google",
+      "len": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "loginMethod\tlen\nemail\t5\noauth\t5\nNULL\tNULL\ngoogle\t6\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

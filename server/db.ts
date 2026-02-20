@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, InsertUserAuthProvider, users, userAuthProviders } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -151,8 +151,7 @@ export async function getUserAuthProviders(userId: number) {
 
 // TODO: add feature queries here as your schema grows.
 
-
-// Create a new user during registration
+// Create a new user during registration using raw SQL to bypass Drizzle ORM issues
 export async function createUserAccount(userData: {
   name: string;
   email: string;
@@ -162,7 +161,7 @@ export async function createUserAccount(userData: {
   const db = await getDb();
   if (!db) throw new Error("Database connection failed");
 
-  // Check if user already exists
+  // Check if user already exists using Drizzle
   const existing = await db
     .select()
     .from(users)
@@ -173,37 +172,47 @@ export async function createUserAccount(userData: {
     throw new Error("Email already registered");
   }
 
-  // Create user with minimal fields
-  const now = new Date();
-  const insertResult = await db.insert(users).values({
-    name: userData.name,
-    email: userData.email,
-    phone: userData.phone || null,
-    role: userData.role || "user",
-    loginMethod: "manual",
-    approvalStatus: "pending",
-    accountStatus: "active",
-    mfaEnabled: false,
-    failedLoginAttempts: 0,
-  });
+  // Use Drizzle's sql function to execute raw SQL with all parameters
+  try {
+    const phone = userData.phone || null;
+    const role = userData.role || "user";
+    
+    // Execute raw SQL insert using Drizzle's sql function
+    // Note: We exclude openId and googleId since they cannot be null in the database
+    await db.execute(sql`
+      INSERT INTO users (
+        name, email, phone, role, loginMethod, approvalStatus, accountStatus, 
+        mfaEnabled, failedLoginAttempts, accountStatusReason, mfaSecret, 
+        mfaBackupCodes, lastFailedLoginAt, accountLockedUntil
+      ) VALUES (
+        ${userData.name}, ${userData.email}, ${phone}, ${role}, 
+        ${"manual"}, ${"pending"}, ${"active"}, ${false}, ${0}, 
+        ${null}, ${null}, ${null}, ${null}, ${null}
+      )
+    `);
+    
+    // Fetch and return the created user
+    const createdUser = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        phone: users.phone,
+        role: users.role,
+        approvalStatus: users.approvalStatus,
+        loginMethod: users.loginMethod,
+      })
+      .from(users)
+      .where(eq(users.email, userData.email))
+      .limit(1);
 
-  // Fetch and return the created user
-  const createdUser = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      phone: users.phone,
-      role: users.role,
-      approvalStatus: users.approvalStatus,
-    })
-    .from(users)
-    .where(eq(users.email, userData.email))
-    .limit(1);
+    if (!createdUser || createdUser.length === 0) {
+      throw new Error("Failed to retrieve created user");
+    }
 
-  if (!createdUser || createdUser.length === 0) {
-    throw new Error("Failed to retrieve created user");
+    return createdUser[0];
+  } catch (error: any) {
+    console.error("Raw SQL insert error:", error);
+    throw error;
   }
-
-  return createdUser[0];
 }

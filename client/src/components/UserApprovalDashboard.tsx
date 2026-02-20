@@ -5,38 +5,51 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react";
+import { toast } from "sonner";
 
 export const UserApprovalDashboard: React.FC = () => {
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [suspensionReason, setSuspensionReason] = useState("");
 
-  const { data: pendingRequests = [], refetch } = trpc.userApproval.getPendingRequests.useQuery();
+  const { data: pendingRequests = [], refetch, isLoading } = trpc.userApproval.getPendingRequests.useQuery();
 
   const approveMutation = trpc.userApproval.approveUser.useMutation({
     onSuccess: () => {
+      toast.success("User approved successfully");
       refetch();
       setSelectedUser(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to approve user");
     }
   });
 
   const rejectMutation = trpc.userApproval.rejectUser.useMutation({
     onSuccess: () => {
+      toast.success("User rejected successfully");
       refetch();
       setSelectedUser(null);
       setRejectionReason("");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to reject user");
     }
   });
 
   const suspendMutation = trpc.userApproval.suspendUser.useMutation({
     onSuccess: () => {
+      toast.success("User suspended successfully");
       refetch();
       setSelectedUser(null);
       setSuspensionReason("");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to suspend user");
     }
   });
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (userId: number) => {
     try {
       await approveMutation.mutateAsync({ userId });
     } catch (error) {
@@ -44,9 +57,9 @@ export const UserApprovalDashboard: React.FC = () => {
     }
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async (userId: number) => {
     if (!rejectionReason.trim()) {
-      alert("Please provide a rejection reason");
+      toast.error("Please provide a rejection reason");
       return;
     }
     try {
@@ -56,9 +69,9 @@ export const UserApprovalDashboard: React.FC = () => {
     }
   };
 
-  const handleSuspend = async (userId: string) => {
+  const handleSuspend = async (userId: number) => {
     if (!suspensionReason.trim()) {
-      alert("Please provide a suspension reason");
+      toast.error("Please provide a suspension reason");
       return;
     }
     try {
@@ -76,22 +89,26 @@ export const UserApprovalDashboard: React.FC = () => {
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" /> Approved</Badge>;
       case "rejected":
         return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" /> Rejected</Badge>;
-      case "suspended":
-        return <Badge className="bg-orange-100 text-orange-800"><AlertCircle className="h-3 w-3 mr-1" /> Suspended</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
+
+  const selectedUserData = pendingRequests.find((r: any) => r.id === selectedUser);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>User Approval Requests</CardTitle>
-          <CardDescription>Review and approve new user registrations</CardDescription>
+          <CardDescription>Review and approve new user registrations ({pendingRequests.length} pending)</CardDescription>
         </CardHeader>
         <CardContent>
-          {pendingRequests.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-500">
+              Loading approval requests...
+            </div>
+          ) : pendingRequests.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No pending approval requests
             </div>
@@ -99,19 +116,25 @@ export const UserApprovalDashboard: React.FC = () => {
             <div className="space-y-4">
               {pendingRequests.map((request: any) => (
                 <div
-                  key={request.userId}
-                  className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => setSelectedUser(request.userId)}
+                  key={request.id}
+                  className={`border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition ${
+                    selectedUser === request.id ? "border-blue-500 bg-blue-50" : ""
+                  }`}
+                  onClick={() => setSelectedUser(request.id)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <h3 className="font-semibold">{request.fullName}</h3>
+                      <h3 className="font-semibold">{request.name}</h3>
                       <p className="text-sm text-gray-600">{request.email}</p>
+                      {request.phone && <p className="text-xs text-gray-500">{request.phone}</p>}
                     </div>
-                    {getStatusBadge(request.status)}
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{request.role}</Badge>
+                      {getStatusBadge(request.approvalStatus)}
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Requested: {new Date(request.requestedAt).toLocaleDateString()}
+                    Registered: {new Date(request.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               ))}
@@ -121,15 +144,34 @@ export const UserApprovalDashboard: React.FC = () => {
       </Card>
 
       {/* Approval Actions */}
-      {selectedUser && (
+      {selectedUser && selectedUserData && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <CardTitle>Approval Actions</CardTitle>
             <CardDescription>
-              {pendingRequests.find((r: any) => r.userId === selectedUser)?.fullName}
+              {selectedUserData.name} ({selectedUserData.email})
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-white rounded border">
+              <div>
+                <p className="text-xs text-gray-600">Role</p>
+                <p className="font-semibold">{selectedUserData.role}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Login Method</p>
+                <p className="font-semibold">{selectedUserData.loginMethod}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Status</p>
+                <p className="font-semibold">{selectedUserData.approvalStatus}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Registered</p>
+                <p className="font-semibold">{new Date(selectedUserData.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Rejection Reason (if rejecting):</label>
               <Input
@@ -155,7 +197,7 @@ export const UserApprovalDashboard: React.FC = () => {
                 disabled={approveMutation.isPending}
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Approve
+                {approveMutation.isPending ? "Approving..." : "Approve"}
               </Button>
               <Button
                 variant="destructive"
@@ -163,7 +205,7 @@ export const UserApprovalDashboard: React.FC = () => {
                 disabled={rejectMutation.isPending || !rejectionReason.trim()}
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Reject
+                {rejectMutation.isPending ? "Rejecting..." : "Reject"}
               </Button>
               <Button
                 variant="outline"
@@ -171,7 +213,7 @@ export const UserApprovalDashboard: React.FC = () => {
                 disabled={suspendMutation.isPending || !suspensionReason.trim()}
               >
                 <AlertCircle className="h-4 w-4 mr-2" />
-                Suspend
+                {suspendMutation.isPending ? "Suspending..." : "Suspend"}
               </Button>
               <Button
                 variant="ghost"

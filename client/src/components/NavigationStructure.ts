@@ -316,6 +316,7 @@ export const navigationStructure: MenuGroup[] = [
     defaultExpanded: false,
     items: [
       { icon: Database, label: "Data Management", path: "/data-management" },
+      { icon: Users, label: "User Approval", path: "/admin/user-approval", adminOnly: true },
       { icon: Shield, label: "Security", path: "/security", adminOnly: true },
       { icon: Shield, label: "Role Management", path: "/role-management", adminOnly: true },
       { icon: CheckCircle, label: "Seller Verification", path: "/admin-verification", adminOnly: true },

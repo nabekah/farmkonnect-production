@@ -428,6 +428,20 @@
       "when": 1771536660080,
       "tag": "0060_striped_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "5",
+      "when": 1771576430255,
+      "tag": "0061_spotty_dakota_north",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "5",
+      "when": 1771579451605,
+      "tag": "0062_tranquil_vampiro",
+      "breakpoints": true
     }
   ]
 }

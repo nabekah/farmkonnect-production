@@ -2,54 +2,10 @@ import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getDb } from "../db";
+import { users } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export const userApprovalRouter = router({
-  // Create approval request (called on user signup)
-  createApprovalRequest: publicProcedure
-    .input(z.object({
-      userId: z.string(),
-      email: z.string().email(),
-      fullName: z.string()
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-
-        // Check if request already exists
-        const existing = await db.query.raw(
-          `SELECT id FROM user_approval_requests WHERE userId = ?`,
-          [input.userId]
-        );
-
-        if (existing && existing.length > 0) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Approval request already exists for this user"
-          });
-        }
-
-        // Create approval request
-        await db.query.raw(
-          `INSERT INTO user_approval_requests (userId, email, fullName, status)
-           VALUES (?, ?, ?, 'pending')`,
-          [input.userId, input.email, input.fullName]
-        );
-
-        return {
-          success: true,
-          message: "Approval request created. Awaiting admin approval."
-        };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        console.error("Error creating approval request:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create approval request"
-        });
-      }
-    }),
-
   // Get pending approval requests (admin only)
   getPendingRequests: protectedProcedure.query(async ({ ctx }) => {
     try {
@@ -57,27 +13,29 @@ export const userApprovalRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
       // Verify user is admin
-      const isAdmin = await db.query.raw(
-        `SELECT fw.role FROM farm_workers fw
-         WHERE fw.userId = ? AND fw.role = 'admin'`,
-        [ctx.user.id]
-      );
-
-      if (!isAdmin || isAdmin.length === 0) {
+      if (ctx.user.role !== "admin") {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Only admins can view approval requests"
         });
       }
 
-      const requests = await db.query.raw(
-        `SELECT id, userId, email, fullName, status, requestedAt, rejectionReason
-         FROM user_approval_requests
-         WHERE status IN ('pending', 'suspended')
-         ORDER BY requestedAt ASC`
-      );
+      // Get pending users from users table
+      const pendingUsers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          loginMethod: users.loginMethod,
+          approvalStatus: users.approvalStatus,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(eq(users.approvalStatus, "pending"));
 
-      return requests || [];
+      return pendingUsers || [];
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       console.error("Error fetching pending requests:", error);
@@ -90,33 +48,25 @@ export const userApprovalRouter = router({
 
   // Approve user
   approveUser: protectedProcedure
-    .input(z.object({ userId: z.string() }))
+    .input(z.object({ userId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       try {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
         // Verify user is admin
-        const isAdmin = await db.query.raw(
-          `SELECT fw.role FROM farm_workers fw
-           WHERE fw.userId = ? AND fw.role = 'admin'`,
-          [ctx.user.id]
-        );
-
-        if (!isAdmin || isAdmin.length === 0) {
+        if (ctx.user.role !== "admin") {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Only admins can approve users"
           });
         }
 
-        // Update approval request
-        await db.query.raw(
-          `UPDATE user_approval_requests 
-           SET status = 'approved', approvedAt = NOW(), approvedBy = ?
-           WHERE userId = ?`,
-          [ctx.user.id, input.userId]
-        );
+        // Update user approval status
+        const result = await db
+          .update(users)
+          .set({ approvalStatus: "approved" })
+          .where(eq(users.id, input.userId));
 
         return {
           success: true,
@@ -135,8 +85,8 @@ export const userApprovalRouter = router({
   // Reject user
   rejectUser: protectedProcedure
     .input(z.object({
-      userId: z.string(),
-      reason: z.string()
+      userId: z.number(),
+      reason: z.string().optional()
     }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -144,26 +94,21 @@ export const userApprovalRouter = router({
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
         // Verify user is admin
-        const isAdmin = await db.query.raw(
-          `SELECT fw.role FROM farm_workers fw
-           WHERE fw.userId = ? AND fw.role = 'admin'`,
-          [ctx.user.id]
-        );
-
-        if (!isAdmin || isAdmin.length === 0) {
+        if (ctx.user.role !== "admin") {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Only admins can reject users"
           });
         }
 
-        // Update approval request
-        await db.query.raw(
-          `UPDATE user_approval_requests 
-           SET status = 'rejected', rejectionReason = ?, approvedBy = ?
-           WHERE userId = ?`,
-          [input.reason, ctx.user.id, input.userId]
-        );
+        // Update user approval status
+        const result = await db
+          .update(users)
+          .set({
+            approvalStatus: "rejected",
+            accountStatusReason: input.reason || "Rejected by admin"
+          })
+          .where(eq(users.id, input.userId));
 
         return {
           success: true,
@@ -182,8 +127,8 @@ export const userApprovalRouter = router({
   // Suspend user
   suspendUser: protectedProcedure
     .input(z.object({
-      userId: z.string(),
-      reason: z.string()
+      userId: z.number(),
+      reason: z.string().optional()
     }))
     .mutation(async ({ ctx, input }) => {
       try {
@@ -191,32 +136,21 @@ export const userApprovalRouter = router({
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
         // Verify user is admin
-        const isAdmin = await db.query.raw(
-          `SELECT fw.role FROM farm_workers fw
-           WHERE fw.userId = ? AND fw.role = 'admin'`,
-          [ctx.user.id]
-        );
-
-        if (!isAdmin || isAdmin.length === 0) {
+        if (ctx.user.role !== "admin") {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "Only admins can suspend users"
           });
         }
 
-        // Update approval request
-        await db.query.raw(
-          `UPDATE user_approval_requests 
-           SET status = 'suspended', suspensionReason = ?
-           WHERE userId = ?`,
-          [input.reason, input.userId]
-        );
-
-        // Disable all farm worker access
-        await db.query.raw(
-          `UPDATE farm_workers SET status = 'suspended' WHERE userId = ?`,
-          [input.userId]
-        );
+        // Update user account status
+        const result = await db
+          .update(users)
+          .set({
+            accountStatus: "suspended",
+            accountStatusReason: input.reason || "Suspended by admin"
+          })
+          .where(eq(users.id, input.userId));
 
         return {
           success: true,
@@ -232,32 +166,74 @@ export const userApprovalRouter = router({
       }
     }),
 
-  // Get approval status
+  // Get approval status for current user
   getApprovalStatus: protectedProcedure.query(async ({ ctx }) => {
     try {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const status = await db.query.raw(
-        `SELECT status, approvedAt, rejectionReason, suspensionReason
-         FROM user_approval_requests
-         WHERE userId = ?`,
-        [ctx.user.id]
-      );
+      const userRecord = await db
+        .select({
+          id: users.id,
+          approvalStatus: users.approvalStatus,
+          accountStatus: users.accountStatus,
+          accountStatusReason: users.accountStatusReason
+        })
+        .from(users)
+        .where(eq(users.id, ctx.user.id));
 
-      if (!status || status.length === 0) {
+      if (!userRecord || userRecord.length === 0) {
         return {
-          status: "not_requested",
-          message: "No approval request found"
+          status: "not_found",
+          message: "User not found"
         };
       }
 
-      return status[0];
+      return userRecord[0];
     } catch (error) {
       console.error("Error fetching approval status:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to fetch approval status"
+      });
+    }
+  }),
+
+  // Get all users (admin only)
+  getAllUsers: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Verify user is admin
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can view all users"
+        });
+      }
+
+      const allUsers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          loginMethod: users.loginMethod,
+          approvalStatus: users.approvalStatus,
+          accountStatus: users.accountStatus,
+          createdAt: users.createdAt,
+        })
+        .from(users);
+
+      return allUsers || [];
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      console.error("Error fetching all users:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch users"
       });
     }
   })
