@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS `authAnalytics` (\n  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,\n  `userId` int,\n  `loginMethod` enum('google', 'manus', 'manual') NOT NULL,\n  `success` boolean NOT NULL DEFAULT true,\n  `failureReason` varchar(255),\n  `ipAddress` varchar(45),\n  `userAgent` varchar(500),\n  `deviceInfo` json,\n  `loginAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `logoutAt` timestamp,\n  `sessionDuration` int,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE SET NULL,\n  INDEX `idx_userId` (`userId`),\n  INDEX `idx_loginMethod` (`loginMethod`),\n  INDEX `idx_loginAt` (`loginAt`),\n  INDEX `idx_success` (`success`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute \nCREATE TABLE IF NOT EXISTS `authAnalytics` (\n  `id` int NOT NULL AUTO_INCREMENT PRIMARY KEY,\n  `userId` int,\n  `loginMethod` enum('google', 'manus', 'manual') NOT NULL,\n  `success` boolean NOT NULL DEFAULT true,\n  `failureReason` varchar(255),\n  `ipAddress` varchar(45),\n  `userAgent` varchar(500),\n  `deviceInfo` json,\n  `loginAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `logoutAt` timestamp,\n  `sessionDuration` int,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE SET NULL,\n  INDEX `idx_userId` (`userId`),\n  INDEX `idx_loginMethod` (`loginMethod`),\n  INDEX `idx_loginAt` (`loginAt`),\n  INDEX `idx_success` (`success`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 211
+}

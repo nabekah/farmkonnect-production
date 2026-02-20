@@ -48,6 +48,8 @@ import { complianceReportsRouter } from "./routers/complianceReports";
 import { deviceFingerprintingRouter } from "./routers/deviceFingerprinting";
 import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
 import { exportRouter } from "./exportRouter";
+import { tokenRefreshRouter } from "./routers/tokenRefresh";
+import { authAnalyticsRouter } from "./routers/authAnalytics";
 import { emailNotifications } from "./_core/emailNotifications";
 import { eq } from "drizzle-orm";
 import { alertHistoryRouter } from "./alertHistoryRouter";
@@ -227,6 +229,8 @@ import { eq } from "drizzle-orm";
 
 export const appRouter = router({
   system: systemRouter,
+  tokenRefresh: tokenRefreshRouter,
+  authAnalytics: authAnalyticsRouter,
   rbac: rbacRouter,
   invitations: invitationsRouter,
   auditLogs: auditLogsRouter,

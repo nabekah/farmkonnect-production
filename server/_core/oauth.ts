@@ -101,9 +101,11 @@ export function registerOAuthRoutes(app: Express) {
 
         // If still no user, create new one
         if (!user) {
+          // Generate default name from email if Google doesn't provide one
+          const defaultName = payload.name || payload.email?.split('@')[0] || 'User';
           await db.upsertUser({
             googleId: payload.sub,
-            name: payload.name || null,
+            name: defaultName,
             email: payload.email ?? null,
             loginMethod: "google",
             lastSignedIn: new Date(),
@@ -111,9 +113,11 @@ export function registerOAuthRoutes(app: Express) {
           user = await db.getUserByGoogleId(payload.sub);
         } else {
           // Link Google account to existing user
+          const defaultName = payload.name || payload.email?.split('@')[0] || user.name || 'User';
           await db.upsertUser({
             ...user,
             googleId: payload.sub,
+            name: defaultName,
             loginMethod: "google",
             lastSignedIn: new Date(),
           });
