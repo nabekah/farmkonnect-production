@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { AdminAnalyticsDashboard } from "./AdminAnalyticsDashboard";
@@ -9,6 +10,7 @@ import { BarChart3, TrendingUp, Activity, RefreshCw, Pause, Play } from "lucide-
 
 export function WelcomeDashboard() {
   const { preferences, isLoaded, setRefreshInterval, togglePolling } = useDashboardPreferences();
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Use stored preferences or defaults
   const isPollingEnabled = preferences.isPollingEnabled ?? true;
