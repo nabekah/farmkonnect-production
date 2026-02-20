@@ -12,6 +12,28 @@ import { ThemeColorProvider } from "@/contexts/ThemeColorContext";
 import { OfflineQueueProvider } from "@/contexts/OfflineQueueContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { NotificationHistoryProvider } from "@/contexts/NotificationHistoryContext";
+import { offlineQueue } from "@/services/offlineQueue";
+
+// Register service worker for PWA support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('[PWA] Service Worker registered:', registration);
+      })
+      .catch(error => {
+        console.warn('[PWA] Service Worker registration failed:', error);
+      });
+  });
+}
+
+// Initialize offline queue
+offlineQueue.init().then(() => {
+  offlineQueue.setupListeners();
+  console.log('[OfflineQueue] Initialized and listening for online/offline events');
+}).catch(error => {
+  console.warn('[OfflineQueue] Initialization failed:', error);
+});
 
 const queryClient = new QueryClient();
 
@@ -78,3 +100,8 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </trpc.Provider>
 );
+
+// Log PWA status
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  console.log('[PWA] App is running in standalone mode');
+}
