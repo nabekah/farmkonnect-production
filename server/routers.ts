@@ -51,6 +51,7 @@ import { exportRouter } from "./exportRouter";
 import { tokenRefreshRouter } from "./routers/tokenRefresh";
 import { authAnalyticsRouter } from "./routers/authAnalytics";
 import { dashboardRouter } from "./routers/dashboard";
+import { emailFeaturesRouter } from "./routers/emailFeatures";
 import { emailRouter } from "./routers/email";
 import { suspiciousActivityAlertsRouter } from "./routers/suspiciousActivityAlerts";
 import { logAuthenticationAttempt, logLogoutEvent } from "./_core/authAnalyticsLogger";
@@ -237,6 +238,7 @@ export const appRouter = router({
   authAnalytics: authAnalyticsRouter,
   dashboard: dashboardRouter,
   email: emailRouter,
+  emailFeatures: emailFeaturesRouter,
   suspiciousActivityAlerts: suspiciousActivityAlertsRouter,
   rbac: rbacRouter,
   invitations: invitationsRouter,

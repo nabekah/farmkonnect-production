@@ -4149,3 +4149,90 @@ export const authProviderStats = mysqlTable("authProviderStats", {
 
 export type AuthProviderStat = typeof authProviderStats.$inferSelect;
 export type InsertAuthProviderStat = typeof authProviderStats.$inferInsert;
+
+
+// ============================================================================
+// EMAIL TEMPLATES & ANALYTICS
+// ============================================================================
+/**
+ * Custom email templates for users
+ */
+export const emailTemplates = mysqlTable("emailTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  templateType: mysqlEnum("templateType", ["basic", "welcome", "alert", "custom"]).default("custom").notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  htmlContent: longtext("htmlContent").notNull(),
+  plainTextContent: longtext("plainTextContent"),
+  isDefault: boolean("isDefault").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
+
+/**
+ * Email analytics for tracking delivery and engagement
+ */
+export const emailAnalytics = mysqlTable("emailAnalytics", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  templateId: int("templateId"),
+  messageId: varchar("messageId", { length: 255 }).unique(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "delivered", "bounced", "complained", "opened", "clicked"]).default("pending").notNull(),
+  sendTime: timestamp("sendTime"),
+  deliveryTime: timestamp("deliveryTime"),
+  openTime: timestamp("openTime"),
+  clickTime: timestamp("clickTime"),
+  bounceType: mysqlEnum("bounceType", ["permanent", "temporary"]),
+  bounceReason: varchar("bounceReason", { length: 255 }),
+  complaintType: mysqlEnum("complaintType", ["abuse", "fraud", "not_requested", "other"]),
+  sendGridEventId: varchar("sendGridEventId", { length: 255 }),
+  metadata: json("metadata"), // Store additional data like campaign info
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmailAnalytic = typeof emailAnalytics.$inferSelect;
+export type InsertEmailAnalytic = typeof emailAnalytics.$inferInsert;
+
+/**
+ * Bulk email campaigns
+ */
+export const emailCampaigns = mysqlTable("emailCampaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  templateId: int("templateId").notNull(),
+  campaignName: varchar("campaignName", { length: 255 }).notNull(),
+  description: text("description"),
+  recipientCount: int("recipientCount").default(0).notNull(),
+  successCount: int("successCount").default(0).notNull(),
+  failureCount: int("failureCount").default(0).notNull(),
+  status: mysqlEnum("status", ["draft", "scheduled", "sending", "completed", "failed"]).default("draft").notNull(),
+  scheduledTime: timestamp("scheduledTime"),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+export type InsertEmailCampaign = typeof emailCampaigns.$inferInsert;
+
+/**
+ * Email campaign recipients
+ */
+export const emailCampaignRecipients = mysqlTable("emailCampaignRecipients", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "failed"]).default("pending").notNull(),
+  errorMessage: varchar("errorMessage", { length: 500 }),
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EmailCampaignRecipient = typeof emailCampaignRecipients.$inferSelect;
+export type InsertEmailCampaignRecipient = typeof emailCampaignRecipients.$inferInsert;
