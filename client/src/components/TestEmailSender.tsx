@@ -4,10 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Mail, CheckCircle2, AlertCircle } from "lucide-react";
+import { EmailTemplateType } from "./EmailTemplatePreview";
 
 export function TestEmailSender() {
   const [recipientEmail, setRecipientEmail] = useState("");
-  const [testType, setTestType] = useState<"basic" | "welcome" | "alert">("basic");
+  const [testType, setTestType] = useState<EmailTemplateType>("basic");
   const [subject, setSubject] = useState("FarmKonnect Test Email");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<{
@@ -56,6 +57,27 @@ export function TestEmailSender() {
     }
   };
 
+  const templateOptions = [
+    {
+      type: "basic" as EmailTemplateType,
+      label: "Basic",
+      icon: "📧",
+      description: "Simple test email",
+    },
+    {
+      type: "welcome" as EmailTemplateType,
+      label: "Welcome",
+      icon: "👋",
+      description: "Welcome email",
+    },
+    {
+      type: "alert" as EmailTemplateType,
+      label: "Alert",
+      icon: "⚠️",
+      description: "Alert email",
+    },
+  ];
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -95,23 +117,31 @@ export function TestEmailSender() {
           />
         </div>
 
-        {/* Test Type Selector */}
-        <div className="space-y-2">
+        {/* Email Template Selector */}
+        <div className="space-y-3">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Test Type
+            Email Template
           </label>
           <div className="grid grid-cols-3 gap-2">
-            {(["basic", "welcome", "alert"] as const).map((type) => (
-              <Button
+            {templateOptions.map(({ type, label, icon, description }) => (
+              <button
                 key={type}
-                variant={testType === type ? "default" : "outline"}
-                size="sm"
                 onClick={() => setTestType(type)}
                 disabled={isLoading}
-                className="capitalize"
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  testType === type
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {type}
-              </Button>
+                <div className="text-2xl mb-1">{icon}</div>
+                <div className="text-xs font-semibold text-gray-900 dark:text-white">
+                  {label}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {description}
+                </div>
+              </button>
             ))}
           </div>
         </div>
@@ -146,7 +176,7 @@ export function TestEmailSender() {
         <Button
           onClick={handleSendTestEmail}
           disabled={isLoading || !recipientEmail}
-          className="w-full"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
         >
           {isLoading ? (
             <>
@@ -161,10 +191,18 @@ export function TestEmailSender() {
           )}
         </Button>
 
-        {/* Info Text */}
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          This will send a test email to verify that your email notifications are working correctly.
-        </p>
+        {/* Template Info */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded p-3 text-xs text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
+          <p className="font-semibold mb-1">Template Info:</p>
+          <p>
+            {testType === "basic" &&
+              "Simple test email to verify delivery is working"}
+            {testType === "welcome" &&
+              "Welcome email for new users with onboarding information"}
+            {testType === "alert" &&
+              "Critical alert email with warning styling and urgency"}
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
