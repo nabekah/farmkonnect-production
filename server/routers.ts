@@ -50,6 +50,7 @@ import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
 import { exportRouter } from "./exportRouter";
 import { tokenRefreshRouter } from "./routers/tokenRefresh";
 import { authAnalyticsRouter } from "./routers/authAnalytics";
+import { dashboardRouter } from "./routers/dashboard";
 import { suspiciousActivityAlertsRouter } from "./routers/suspiciousActivityAlerts";
 import { logAuthenticationAttempt, logLogoutEvent } from "./_core/authAnalyticsLogger";
 import { emailNotifications } from "./_core/emailNotifications";
@@ -233,6 +234,7 @@ export const appRouter = router({
   system: systemRouter,
   tokenRefresh: tokenRefreshRouter,
   authAnalytics: authAnalyticsRouter,
+  dashboard: dashboardRouter,
   suspiciousActivityAlerts: suspiciousActivityAlertsRouter,
   rbac: rbacRouter,
   invitations: invitationsRouter,

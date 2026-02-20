@@ -49,6 +49,7 @@ import { FarmRecommendations } from "@/components/FarmRecommendations";
 import { FarmQuickActions } from "@/components/FarmQuickActions";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { SocialProof } from "@/components/SocialProof";
+import { WelcomeDashboard } from "@/components/WelcomeDashboard";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -62,12 +63,7 @@ export default function Home() {
   const params = new URLSearchParams(location.split("?")[1] || "");
   const authError = params.get("auth_error");
 
-  // Redirect authenticated users to /farms
-  useEffect(() => {
-    if (isAuthenticated && user && location === "/") {
-      setLocation("/farms");
-    }
-  }, [isAuthenticated, user, location, setLocation]);
+  // Don't redirect authenticated users - show welcome dashboard instead
 
   // Show authentication error if present
   if (authError) {
@@ -105,13 +101,12 @@ export default function Home() {
     return null;
   }
 
-  // Authenticated users are redirected to /farms, so this shouldn't be reached
-  // But keep it as a fallback
+  // Show welcome dashboard for authenticated users
   if (isAuthenticated && user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-white">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-      </div>
+      <DashboardLayout>
+        <WelcomeDashboard />
+      </DashboardLayout>
     );
   }
 
