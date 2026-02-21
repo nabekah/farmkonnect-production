@@ -1,6 +1,7 @@
 // Service Worker for FarmKonnect Offline Support
+// Version: 2.0.0 - Fixed response cloning issue and improved error handling
 
-const CACHE_NAME = 'farmkonnect-v1'
+const CACHE_NAME = 'farmkonnect-v2'
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
@@ -9,7 +10,7 @@ const URLS_TO_CACHE = [
 
 // Install event - cache essential files
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...')
+  console.log('[Service Worker] v2.0.0 Installing...')
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[Service Worker] Caching app shell')
@@ -23,12 +24,13 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...')
+  console.log('[Service Worker] v2.0.0 Activating...')
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          // Delete old cache versions
+          if (cacheName !== CACHE_NAME && cacheName.startsWith('farmkonnect-')) {
             console.log('[Service Worker] Deleting old cache:', cacheName)
             return caches.delete(cacheName)
           }
@@ -53,6 +55,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Skip WebSocket connections
+  if (request.url.includes('/ws')) {
+    return
+  }
+
   event.respondWith(
     fetch(request)
       .then((response) => {
@@ -61,14 +68,24 @@ self.addEventListener('fetch', (event) => {
           return response
         }
 
-        // Clone response before caching to avoid "already used" error
-        const responseClone = response.clone()
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseClone).catch((err) => {
-            console.log('[Service Worker] Cache put error:', err)
+        // CRITICAL: Clone response before caching to avoid "already used" error
+        // This must be done immediately after receiving the response
+        try {
+          const responseClone = response.clone()
+          
+          // Cache in background without blocking response
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone).catch((err) => {
+              console.log('[Service Worker] Cache put error:', err)
+            })
+          }).catch((err) => {
+            console.log('[Service Worker] Cache open error:', err)
           })
-        })
+        } catch (err) {
+          console.error('[Service Worker] Failed to clone response:', err)
+        }
 
+        // Return original response to client
         return response
       })
       .catch(() => {
@@ -151,3 +168,5 @@ self.addEventListener('message', (event) => {
     self.clients.claim()
   }
 })
+
+console.log('[Service Worker] v2.0.0 loaded successfully')
