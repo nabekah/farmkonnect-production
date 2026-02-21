@@ -160,6 +160,7 @@ import { useZoomKeyboardShortcuts } from "./hooks/useZoomKeyboardShortcuts";
 import { ProfileMenu } from "./components/ProfileMenu";
 import { TestEmailPage } from "./pages/TestEmail";
 
+// Build version: 2.0.1 - Force rebuild with all fixes
 function Router() {
   return (
     <Switch>
