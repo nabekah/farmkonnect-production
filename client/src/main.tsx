@@ -45,9 +45,9 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 
   if (!isUnauthorized) return;
 
-  // Don't redirect on root page or landing page - allow unauthenticated access
+  // Don't redirect on root page, landing page, login, or register pages - allow unauthenticated access
   const currentPath = window.location.pathname;
-  if (currentPath === "/" || currentPath === "") return;
+  if (currentPath === "/" || currentPath === "" || currentPath === "/login" || currentPath === "/register" || currentPath === "/forgot-password" || currentPath === "/reset-password") return;
 
   window.location.href = getLoginUrl();
 };
