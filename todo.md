@@ -6034,3 +6034,4 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Implement Email Verification with SendGrid - Set up API and email templates
 - [x] Create Password Reset Pages - forgot-password and reset-password UI
 - [x] Fix Main Landing Page UI - Improve hero section, feature cards, and CTA design
+- [x] Fix Authentication Router Integration - Merge authRouter procedures into main app router

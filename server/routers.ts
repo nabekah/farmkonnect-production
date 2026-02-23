@@ -520,6 +520,7 @@ export const appRouter = router({
 
         return createdUser[0];
       }),
+    ...authRouter,
   }),
 
   // ============================================================================

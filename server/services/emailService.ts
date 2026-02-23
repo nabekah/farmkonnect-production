@@ -313,3 +313,76 @@ The FarmKonnect Team
     textContent
   });
 }
+
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  name: string,
+  resetToken: string,
+  resetUrl: string
+): Promise<SendGridResponse> {
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
+        <h2 style="color: #16a34a; margin-bottom: 20px;">Password Reset Request</h2>
+        
+        <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+          Hi ${name},
+        </p>
+
+        <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+          We received a request to reset your FarmKonnect password. Click the button below to create a new password:
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+            Reset Password
+          </a>
+        </div>
+
+        <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+          Or copy and paste this link in your browser:
+        </p>
+        <p style="color: #666; word-break: break-all; font-family: monospace; background-color: #f9f9f9; padding: 10px; border-radius: 4px;">
+          ${resetUrl}
+        </p>
+
+        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="color: #92400e; margin: 0;">
+            <strong>Security Notice:</strong> This password reset link will expire in 1 hour. If you didn't request this reset, please ignore this email and your password will remain unchanged.
+          </p>
+        </div>
+
+        <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px;">
+          Best regards,<br/>
+          The FarmKonnect Team
+        </p>
+      </div>
+    </div>
+  `;
+
+  const textContent = `
+Password Reset Request
+
+Hi ${name},
+
+We received a request to reset your FarmKonnect password. Click the link below to create a new password:
+
+${resetUrl}
+
+This password reset link will expire in 1 hour. If you didn't request this reset, please ignore this email and your password will remain unchanged.
+
+Best regards,
+The FarmKonnect Team
+  `;
+
+  return sendEmail({
+    to: email,
+    subject: "Reset Your FarmKonnect Password",
+    htmlContent,
+    textContent
+  });
+}
