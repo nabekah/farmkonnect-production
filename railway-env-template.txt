@@ -1,24 +1,33 @@
-DATABASE_URL=mysql://root:zraDqTMKAwasWEoKCaAvLDCMdWmaKRox@${{RAILWAY_PRIVATE_DOMAIN}}:3306/railway
+# FarmKonnect - Railway Environment Variables Template
+# Copy these to your Railway service > Variables tab
+
+# === REQUIRED ===
+DATABASE_URL=mysql://user:password@host:3306/database?ssl={"rejectUnauthorized":true}
+JWT_SECRET=generate-a-secure-random-string
 NODE_ENV=production
-PORT=3000
-VITE_APP_ID=
-OAUTH_SERVER_URL=https://api.manus.im
-VITE_OAUTH_PORTAL_URL=https://manus.im/login
-JWT_SECRET=
-OWNER_NAME=Admin
-OWNER_OPEN_ID=
-BUILT_IN_FORGE_API_URL=https://api.manus.im/forge
-BUILT_IN_FORGE_API_KEY=
-VITE_FRONTEND_FORGE_API_URL=https://api.manus.im/forge
-VITE_FRONTEND_FORGE_API_KEY=
-OPENWEATHER_API_KEY=
-SENDGRID_API_KEY=
+
+# === GOOGLE OAUTH ===
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URL=https://your-app.up.railway.app/api/oauth/google/callback
+
+# === EMAIL (SendGrid) ===
+SENDGRID_API_KEY=your-sendgrid-api-key
+
+# === WEATHER ===
+OPENWEATHER_API_KEY=your-openweather-api-key
+
+# === SMS (Twilio) - Optional ===
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_PHONE_NUMBER=
+
+# === PUSH NOTIFICATIONS - Optional ===
 VAPID_PRIVATE_KEY=
 VITE_VAPID_PUBLIC_KEY=
-VITE_ANALYTICS_ENDPOINT=
-VITE_ANALYTICS_WEBSITE_ID=
-VITE_APP_TITLE=FarmKonnect
+
+# === APP BRANDING ===
+VITE_APP_TITLE=FarmKonnect Management System
 VITE_APP_LOGO=
+OWNER_NAME=Admin
+OWNER_OPEN_ID=admin

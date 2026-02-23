@@ -1,5 +1,5 @@
-// This file is kept for backward compatibility but Manus OAuth has been removed
-// The system now uses only username/password and Google OAuth authentication
+// JWT-based session management for FarmKonnect
+// Authentication: username/password + Google OAuth
 
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
@@ -17,7 +17,7 @@ class SessionService {
   constructor() {
     const secretKey = ENV.jwtSecret || "default-secret-key";
     this.secret = new TextEncoder().encode(secretKey);
-    console.log("[Session] JWT service initialized (Manus OAuth removed)");
+    console.log("[Session] JWT session service initialized");
   }
 
   async createSessionToken(userId: string, payload: Partial<SessionPayload>): Promise<string> {
@@ -44,7 +44,7 @@ class SessionService {
 
 export const sessionService = new SessionService();
 
-// Backward compatibility export
+// Backward compatibility export used by context.ts
 export const sdk = {
   authenticateRequest: async (req: any) => {
     const token = req.cookies?.session;
@@ -59,14 +59,5 @@ export const sdk = {
     } catch (error) {
       return null;
     }
-  },
-  exchangeCodeForToken: async (code: string) => {
-    throw new Error("Manus OAuth has been removed");
-  },
-  getUserInfo: async (token: string) => {
-    throw new Error("Manus OAuth has been removed");
-  },
-  createSessionToken: async (openId: string, options: any) => {
-    throw new Error("Manus OAuth has been removed");
   },
 };

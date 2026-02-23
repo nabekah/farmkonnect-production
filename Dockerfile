@@ -1,52 +1,53 @@
-# Multi-stage build for FarmKonnect
-# Stage 1: Build stage
+# Multi-stage build for FarmKonnect - Railway Deployment
+# Stage 1: Build
 FROM node:22-alpine AS builder
-
 WORKDIR /app
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Install pnpm
+RUN npm install -g pnpm
 
-# Install dependencies
-RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile
+# Copy package files first for better Docker layer caching
+COPY package.json pnpm-lock.yaml ./
+COPY patches/ ./patches/
+
+# Install all dependencies (including dev for build)
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (Vite frontend + esbuild server)
 RUN pnpm build
 
-# Stage 2: Runtime stage
+# Stage 2: Runtime
 FROM node:22-alpine
-
 WORKDIR /app
 
-# Install pnpm in runtime image
+# Install pnpm
 RUN npm install -g pnpm
 
-# Copy package files from builder
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
+COPY patches/ ./patches/
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
 
-# Copy built application from builder stage
+# Copy built application from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
+
+# Copy drizzle migrations (needed for DB operations)
 COPY --from=builder /app/drizzle ./drizzle
-COPY --from=builder /app/server ./server
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
 
-# Expose port
+# Expose port (Railway sets PORT dynamically)
 EXPOSE 3000
 
-# Health check
+# Health check using dynamic PORT
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+  CMD node -e "const http = require('http'); http.get('http://localhost:' + (process.env.PORT || 3000) + '/api/health', (r) => { if (r.statusCode !== 200) process.exit(1); }).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "dist/index.js"]

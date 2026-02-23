@@ -112,3 +112,9 @@ temp/
 .manus-logs/
 screenshots/
 uploads/
+
+# Railway deployment secrets
+railway-env-production.txt
+
+# Manus debug collector
+client/public/__manus__/

@@ -6107,3 +6107,15 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Implement password reset page with token validation (already implemented)
 - [x] Add account recovery confirmation emails
 - [x] Test complete email verification and recovery flows end-to-end
+
+
+## Railway Deployment
+- [x] Audit codebase for Manus-specific dependencies (OAuth SDK, _core modules, forge APIs)
+- [x] Remove/replace Manus OAuth gateway middleware from server
+- [x] Create Railway-compatible build and start scripts (Dockerfile + railway.json)
+- [x] Configure environment variables for Railway (railway-env-template.txt)
+- [x] Update build scripts for standalone deployment
+- [x] Test production build locally (health check OK, all services initialized)
+- [x] Fix authentication tests (39/39 passing)
+- [ ] Export code to GitHub repository
+- [ ] Guide user through Railway deployment setup

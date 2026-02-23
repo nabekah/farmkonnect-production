@@ -29,6 +29,10 @@ README.md
 .prettierignore
 .prettierrc
 .eslintrc
-tsconfig.json
 vitest.config.ts
-vite.config.ts
+.manus-logs
+client/public/__manus__
+railway-env-production.txt
+*.test.ts
+*.test.tsx
+attached_assets

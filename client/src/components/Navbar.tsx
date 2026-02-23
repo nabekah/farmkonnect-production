@@ -89,9 +89,7 @@ export function Navbar() {
                       </p>
                     </div>
                     <a
-                      href="https://farmkonnect-wzqk4bd8.manus.space/settings"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="/settings"
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
                       onClick={() => setProfileMenuOpen(false)}
                     >
@@ -175,9 +173,7 @@ export function Navbar() {
                   </div>
                 </div>
                 <a
-                  href="https://farmkonnect-wzqk4bd8.manus.space/settings"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/settings"
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
