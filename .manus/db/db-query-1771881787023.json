@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, username, email, name, role, approvalStatus, emailVerified, loginMethod, createdAt, lastSignedIn FROM users WHERE username = 'dkoo';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT id, username, email, name, role, approvalStatus, emailVerified, loginMethod, createdAt, lastSignedIn FROM users WHERE username = 'dkoo';",
+  "rows": [
+    {
+      "id": "3930307",
+      "username": "dkoo",
+      "email": "abekah.ekow@Gmail.com",
+      "name": "danquah koo",
+      "role": "farmer",
+      "approvalStatus": "approved",
+      "emailVerified": "0",
+      "loginMethod": "local",
+      "createdAt": "2026-02-23 15:31:02",
+      "lastSignedIn": "2026-02-23 15:31:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusername\temail\tname\trole\tapprovalStatus\temailVerified\tloginMethod\tcreatedAt\tlastSignedIn\n3930307\tdkoo\tabekah.ekow@Gmail.com\tdanquah koo\tfarmer\tapproved\t0\tlocal\t2026-02-23 15:31:02\t2026-02-23 15:31:02\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

@@ -1,0 +1,38 @@
+{
+  "query": "SELECT * FROM users WHERE username = 'dkoo';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute SELECT * FROM users WHERE username = 'dkoo';",
+  "rows": [
+    {
+      "id": "3930307",
+      "openId": "NULL",
+      "name": "danquah koo",
+      "email": "abekah.ekow@Gmail.com",
+      "loginMethod": "local",
+      "role": "farmer",
+      "createdAt": "2026-02-23 15:31:02",
+      "updatedAt": "2026-02-23 15:32:36",
+      "lastSignedIn": "2026-02-23 15:31:02",
+      "emailVerified": "0",
+      "emailVerificationToken": "1a791ec5eade8691ac3aa2d616e56f3d8fedbeda21b3e30335e1daa3d86d316b",
+      "emailVerificationTokenExpiresAt": "2026-02-24 15:31:02",
+      "phone": "NULL",
+      "approvalStatus": "approved",
+      "accountStatus": "active",
+      "accountStatusReason": "NULL",
+      "mfaEnabled": "0",
+      "mfaSecret": "NULL",
+      "mfaBackupCodes": "NULL",
+      "failedLoginAttempts": "0",
+      "lastFailedLoginAt": "NULL",
+      "accountLockedUntil": "NULL",
+      "googleId": "NULL",
+      "username": "dkoo",
+      "passwordHash": "$2b$10$NYnOGFpYb3Ba089ISvtgeOXB56ylQmP2LgbmBy6sMjKvfSf2Ta8Z6",
+      "totpSecret": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tcreatedAt\tupdatedAt\tlastSignedIn\temailVerified\temailVerificationToken\temailVerificationTokenExpiresAt\tphone\tapprovalStatus\taccountStatus\taccountStatusReason\tmfaEnabled\tmfaSecret\tmfaBackupCodes\tfailedLoginAttempts\tlastFailedLoginAt\taccountLockedUntil\tgoogleId\tusername\tpasswordHash\ttotpSecret\n3930307\tNULL\tdanquah koo\tabekah.ekow@Gmail.com\tlocal\tfarmer\t2026-02-23 15:31:02\t2026-02-23 15:32:36\t2026-02-23 15:31:02\t0\t1a791ec5eade8691ac3aa2d616e56f3d8fedbeda21b3e30335e1daa3d86d316b\t2026-02-24 15:31:02\tNULL\tapproved\tactive\tNULL\t0\tNULL\tNULL\t0\tNULL\tNULL\tNULL\tdkoo\t$2b$10$NYnOGFpYb3Ba089ISvtgeOXB56ylQmP2LgbmBy6sMjKvfSf2Ta8Z6\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

@@ -1,8 +1,8 @@
 import { invokeLLM } from "../_core/llm";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "noreply@farmkonnect.app";
-const FRONTEND_URL = process.env.VITE_FRONTEND_URL || "https://farmkonnect.app";
+const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "noreply@farmconnekt.com";
+const FRONTEND_URL = process.env.VITE_FRONTEND_URL || "https://www.farmconnekt.com";
 
 interface EmailOptions {
   to: string;
@@ -194,7 +194,7 @@ export async function sendRejectionEmail(
   name: string,
   reason: string
 ): Promise<SendGridResponse> {
-  const supportEmail = "support@farmkonnect.app";
+  const supportEmail = "support@farmconnekt.com";
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -258,7 +258,7 @@ export async function sendSuspensionEmail(
   name: string,
   reason: string
 ): Promise<SendGridResponse> {
-  const supportEmail = "support@farmkonnect.app";
+  const supportEmail = "support@farmconnekt.com";
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

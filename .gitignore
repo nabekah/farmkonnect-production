@@ -115,6 +115,8 @@ uploads/
 
 # Railway deployment secrets
 railway-env-production.txt
+.env.railway
+.env.docker
 
 # Manus debug collector
 client/public/__manus__/

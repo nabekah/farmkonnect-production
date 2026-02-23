@@ -78,7 +78,7 @@ export class EmailAlertsService {
         <p><strong>Time:</strong> ${event.details.timestamp || new Date().toISOString()}</p>
       </div>
       <p>Your account will be automatically unlocked in 15 minutes. If this wasn't you, please change your password immediately.</p>
-      <p><a href="https://farmkonnect.app/reset-password" style="color: #16a34a; text-decoration: none;">Reset Password</a></p>
+      <p><a href="https://farmconnekt.com/reset-password" style="color: #16a34a; text-decoration: none;">Reset Password</a></p>
     `;
 
     await this.sendAlert(event.emailAddress, "Account Locked - FarmKonnect", html);
@@ -104,7 +104,7 @@ export class EmailAlertsService {
         <p><strong>Time:</strong> ${event.details.timestamp || new Date().toISOString()}</p>
       </div>
       <p>If this was you, you can ignore this message. If this wasn't you, please secure your account immediately.</p>
-      <p><a href="https://farmkonnect.app/reset-password" style="color: #16a34a; text-decoration: none;">Reset Password</a></p>
+      <p><a href="https://farmconnekt.com/reset-password" style="color: #16a34a; text-decoration: none;">Reset Password</a></p>
     `;
 
     await this.sendAlert(event.emailAddress, "Failed Login Attempts - FarmKonnect", html);
@@ -130,7 +130,7 @@ export class EmailAlertsService {
         <p><strong>Time:</strong> ${event.details.timestamp || new Date().toISOString()}</p>
       </div>
       <p>Your account is now less secure. We recommend re-enabling 2FA immediately.</p>
-      <p><a href="https://farmkonnect.app/security/2fa" style="color: #16a34a; text-decoration: none;">Re-enable 2FA</a></p>
+      <p><a href="https://farmconnekt.com/security/2fa" style="color: #16a34a; text-decoration: none;">Re-enable 2FA</a></p>
     `;
 
     await this.sendAlert(event.emailAddress, "2FA Disabled - FarmKonnect", html);
@@ -156,7 +156,7 @@ export class EmailAlertsService {
         <p><strong>Time:</strong> ${event.details.timestamp || new Date().toISOString()}</p>
       </div>
       <p>If you didn't make this change, please secure your account immediately.</p>
-      <p><a href="https://farmkonnect.app/reset-password" style="color: #16a34a; text-decoration: none;">Reset Password</a></p>
+      <p><a href="https://farmconnekt.com/reset-password" style="color: #16a34a; text-decoration: none;">Reset Password</a></p>
     `;
 
     await this.sendAlert(event.emailAddress, "Password Changed - FarmKonnect", html);
@@ -183,7 +183,7 @@ export class EmailAlertsService {
         <p><strong>Time:</strong> ${event.details.timestamp || new Date().toISOString()}</p>
       </div>
       <p>If this was you, you can ignore this message. If this wasn't you, please secure your account immediately.</p>
-      <p><a href="https://farmkonnect.app/security/sessions" style="color: #16a34a; text-decoration: none;">Review Active Sessions</a></p>
+      <p><a href="https://farmconnekt.com/security/sessions" style="color: #16a34a; text-decoration: none;">Review Active Sessions</a></p>
     `;
 
     await this.sendAlert(event.emailAddress, "Suspicious Login - FarmKonnect", html);
@@ -210,7 +210,7 @@ export class EmailAlertsService {
         <p><strong>Time:</strong> ${event.details.timestamp || new Date().toISOString()}</p>
       </div>
       <p>If this was you, no action is needed. If this wasn't you, please review your active sessions.</p>
-      <p><a href="https://farmkonnect.app/security/sessions" style="color: #16a34a; text-decoration: none;">Review Active Sessions</a></p>
+      <p><a href="https://farmconnekt.com/security/sessions" style="color: #16a34a; text-decoration: none;">Review Active Sessions</a></p>
     `;
 
     await this.sendAlert(event.emailAddress, "New Device Login - FarmKonnect", html);
@@ -256,7 +256,7 @@ export class EmailAlertsService {
             <p style="font-size: 12px; color: #6b7280; margin-top: 16px;">
               This is an automated security alert from FarmKonnect. If you didn't request this, please ignore it.
               <br>
-              <a href="https://farmkonnect.app/security/alerts" style="color: #16a34a; text-decoration: none;">Manage Alert Preferences</a>
+              <a href="https://farmconnekt.com/security/alerts" style="color: #16a34a; text-decoration: none;">Manage Alert Preferences</a>
             </p>
           </div>
         `,
