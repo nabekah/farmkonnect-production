@@ -6,6 +6,7 @@ import { users, userAuthProviders } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../services/emailService";
 
 /**
  * Password validation schema
@@ -128,6 +129,10 @@ export const authRouter = router({
           emailVerificationToken: verificationToken,
           emailVerificationTokenExpiresAt: verificationTokenExpiresAt,
         });
+
+        // Send verification email
+        const verificationUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:3001'}/verify-email?token=${verificationToken}`;
+        await sendVerificationEmail(input.email, input.name, verificationToken, verificationUrl);
 
         return {
           success: true,
@@ -525,6 +530,127 @@ export const authRouter = router({
       return {
         success: true,
         message: `${input.provider} account linked successfully!`,
+      };
+    }),
+
+  /**
+   * Request password reset
+   */
+  requestPasswordReset: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email("Invalid email address"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
+
+      // Find user by email
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email))
+        .limit(1);
+
+      // Always return success for security (don't reveal if email exists)
+      if (user.length === 0) {
+        return {
+          success: true,
+          message: "If an account exists with this email, you will receive a password reset link.",
+        };
+      }
+
+      const userRecord = user[0];
+
+      // Generate password reset token
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Update user with reset token
+      await db
+        .update(users)
+        .set({
+          passwordResetToken: resetToken,
+          passwordResetTokenExpiresAt: resetTokenExpiresAt,
+        })
+        .where(eq(users.id, userRecord.id));
+
+      // Send password reset email
+      const resetUrl = `${process.env.VITE_FRONTEND_URL || 'http://localhost:3001'}/reset-password?token=${resetToken}`;
+      await sendPasswordResetEmail(input.email, userRecord.name || userRecord.username, resetToken, resetUrl);
+
+      return {
+        success: true,
+        message: "If an account exists with this email, you will receive a password reset link.",
+      };
+    }),
+
+  /**
+   * Reset password with token
+   */
+  resetPassword: publicProcedure
+    .input(
+      z.object({
+        token: z.string().min(1, "Reset token is required"),
+        newPassword: passwordSchema,
+        confirmPassword: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      // Validate password confirmation
+      if (input.newPassword !== input.confirmPassword) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Passwords don't match",
+        });
+      }
+
+      const db = await getDb();
+      if (!db) throw new Error("Database connection failed");
+
+      // Find user by reset token
+      const user = await db
+        .select()
+        .from(users)
+        .where(eq(users.passwordResetToken, input.token))
+        .limit(1);
+
+      if (user.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Invalid or expired reset token.",
+        });
+      }
+
+      const userRecord = user[0];
+
+      // Check if token has expired
+      if (userRecord.passwordResetTokenExpiresAt && new Date() > userRecord.passwordResetTokenExpiresAt) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Password reset token has expired. Please request a new one.",
+        });
+      }
+
+      // Hash new password
+      const newPasswordHash = await hashPassword(input.newPassword);
+
+      // Update password and clear reset token
+      await db
+        .update(users)
+        .set({
+          passwordHash: newPasswordHash,
+          passwordResetToken: null,
+          passwordResetTokenExpiresAt: null,
+          failedLoginAttempts: 0,
+          accountLockedUntil: null,
+        })
+        .where(eq(users.id, userRecord.id));
+
+      return {
+        success: true,
+        message: "Password reset successfully! You can now log in with your new password.",
       };
     }),
 

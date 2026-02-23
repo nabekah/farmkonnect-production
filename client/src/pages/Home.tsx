@@ -170,45 +170,89 @@ function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h1 className="text-5xl font-bold text-gray-900 mb-6">
-              Smart Farm Management for Modern Farmers
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              FarmKonnect helps you manage crops, livestock, weather, and marketplace sales all in one place. Increase productivity and profitability with data-driven insights.
-            </p>
-            <div className="flex gap-4 flex-wrap">
-              <a
-                href={getLoginUrl()}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                Sign In with Manus
-              </a>
-              <button
-                onClick={async () => {
-                  const authUrl = await getGoogleLoginUrl();
-                  if (authUrl) {
-                    window.location.href = authUrl;
-                  }
-                }}
-                className="px-8 py-3 bg-white text-gray-900 border-2 border-gray-300 rounded-lg font-semibold hover:border-gray-400 transition cursor-pointer"
-              >
-                Sign In with Google
-              </button>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <span className="inline-block px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-semibold">Welcome to FarmKonnect</span>
+              <h1 className="text-6xl font-bold text-gray-900 leading-tight">
+                Smart Farm Management for Modern Farmers
+              </h1>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Manage crops, livestock, weather, and marketplace sales all in one place. Increase productivity and profitability with data-driven insights.
+              </p>
+            </div>
+            <div className="flex gap-4 flex-col sm:flex-row">
               <a
                 href="/register"
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                className="px-8 py-4 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition shadow-lg hover:shadow-xl text-center"
               >
-                Create Account
+                Get Started Free
+              </a>
+              <a
+                href="/login"
+                className="px-8 py-4 bg-white text-gray-900 border-2 border-gray-300 rounded-lg font-semibold hover:border-green-600 hover:text-green-600 transition text-center"
+              >
+                Sign In
               </a>
             </div>
+            <div className="flex gap-8 pt-4">
+              <div>
+                <p className="text-3xl font-bold text-green-600">10K+</p>
+                <p className="text-gray-600">Active Farmers</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-green-600">50M+</p>
+                <p className="text-gray-600">Data Points</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-green-600">99.9%</p>
+                <p className="text-gray-600">Uptime</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-green-400 to-blue-500 rounded-lg p-8 text-white">
-            <Tractor className="h-24 w-24 mb-4" />
-            <h3 className="text-2xl font-bold mb-4">Start Managing Your Farm Today</h3>
-            <p>Join thousands of farmers using FarmKonnect to optimize their operations.</p>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl blur-2xl opacity-30"></div>
+            <div className="relative bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl p-12 text-white shadow-2xl">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                    <Sprout className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Crop Tracking</p>
+                    <p className="text-sm text-green-100">Real-time monitoring</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                    <Beef className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Livestock Mgmt</p>
+                    <p className="text-sm text-green-100">Health and breeding</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                    <Cloud className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Weather Alerts</p>
+                    <p className="text-sm text-green-100">Forecasts and insights</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Marketplace</p>
+                    <p className="text-sm text-green-100">Direct sales</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -216,7 +260,10 @@ function LandingPage() {
       {/* Features Section */}
       <section className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-center mb-12">Key Features</h2>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Powerful Features for Every Farmer</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">Everything you need to manage your farm efficiently</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Sprout className="h-8 w-8" />}
@@ -264,27 +311,22 @@ function LandingPage() {
 
       {/* CTA Section */}
       <section className="bg-gradient-to-r from-green-600 to-blue-600 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to Transform Your Farm?</h2>
-          <p className="text-xl text-green-100 mb-8">Join FarmKonnect today and start optimizing your agricultural operations.</p>
-          <div className="flex gap-4 justify-center">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-5xl font-bold text-white mb-6">Ready to Transform Your Farm?</h2>
+          <p className="text-xl text-green-100 mb-10 leading-relaxed">Join thousands of farmers already using FarmKonnect to optimize their operations.</p>
+          <div className="flex gap-4 justify-center flex-col sm:flex-row">
             <a
-              href={getLoginUrl()}
-              className="px-8 py-3 bg-white text-green-600 rounded-lg font-semibold hover:bg-gray-100 transition"
+              href="/register"
+              className="px-8 py-4 bg-white text-green-600 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg"
             >
-              Get Started with Manus
+              Start Your Free Trial
             </a>
-            <button
-              onClick={async () => {
-                const authUrl = await getGoogleLoginUrl();
-                if (authUrl) {
-                  window.location.href = authUrl;
-                }
-              }}
-              className="px-8 py-3 bg-green-700 text-white rounded-lg font-semibold hover:bg-green-800 transition cursor-pointer"
+            <a
+              href="/login"
+              className="px-8 py-4 bg-green-700 text-white rounded-lg font-semibold hover:bg-green-800 transition shadow-lg"
             >
-              Sign Up with Google
-            </button>
+              Sign In to Your Account
+            </a>
           </div>
         </div>
       </section>
@@ -294,10 +336,10 @@ function LandingPage() {
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="bg-gray-50 p-6 rounded-lg hover:shadow-lg transition">
-      <div className="text-green-600 mb-4">{icon}</div>
-      <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+    <div className="group bg-white p-8 rounded-xl border border-gray-200 hover:border-green-500 hover:shadow-xl transition duration-300">
+      <div className="text-green-600 mb-4 text-4xl group-hover:scale-110 transition duration-300">{icon}</div>
+      <h3 className="text-xl font-bold mb-3 text-gray-900">{title}</h3>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
     </div>
   );
 }
