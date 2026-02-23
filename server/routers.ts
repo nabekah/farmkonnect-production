@@ -41,6 +41,7 @@ import { auditLogsRouter } from "./routers/auditLogs";
 import { workerPerformanceRouter } from "./routers/workerPerformance";
 import { mfaRouter } from "./routers/mfa";
 import { userApprovalRouter } from "./routers/userApproval";
+import { oauthCallbackRouter } from "./routers/oauthCallbackRouter";
 import { performanceAlertsRouter } from "./routers/performanceAlerts";
 import { securityControlsRouter } from "./routers/securityControls";
 import { smsNotificationsRouter } from "./routers/smsNotifications";
@@ -251,6 +252,7 @@ export const appRouter = router({
   workerPerformance: workerPerformanceRouter,
   mfa: mfaRouter,
   userApproval: userApprovalRouter,
+  oauthCallback: oauthCallbackRouter,
   performanceAlerts: performanceAlertsRouter,
   securityControls: securityControlsRouter,
   smsNotifications: smsNotificationsRouter,

@@ -4,176 +4,210 @@ import { users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
-describe("Authentication Router", () => {
-  let testUserId: number;
-  const testUser = {
-    username: "testuser123",
-    email: "testuser@example.com",
-    name: "Test User",
-    password: "TestPassword123!",
-  };
+describe("Complete Registration and Login Flow", () => {
+  const testEmail = `test-${Date.now()}@farmkonnect.test`;
+  const testUsername = `testuser${Date.now()}`;
+  const testPassword = "TestPass123!@#";
+  let testUserId: number | null = null;
 
   beforeAll(async () => {
     // Clean up any existing test user
     const db = await getDb();
     if (db) {
-      await db.delete(users).where(eq(users.email, testUser.email));
+      await db.delete(users).where(eq(users.email, testEmail));
     }
   });
 
   afterAll(async () => {
     // Clean up test user
     const db = await getDb();
-    if (db) {
-      await db.delete(users).where(eq(users.email, testUser.email));
+    if (db && testUserId) {
+      await db.delete(users).where(eq(users.email, testEmail));
     }
   });
 
-  it("should hash password correctly", async () => {
+  it("should register a new user with password", async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
+
+    // Hash password
     const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(testUser.password, salt);
-    const isValid = await bcrypt.compare(testUser.password, hash);
-    expect(isValid).toBe(true);
-  });
+    const passwordHash = await bcrypt.hash(testPassword, salt);
 
-  it("should reject invalid password", async () => {
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(testUser.password, salt);
-    const isValid = await bcrypt.compare("WrongPassword123!", hash);
-    expect(isValid).toBe(false);
-  });
-
-  it("should validate password requirements", () => {
-    const validPasswords = [
-      "ValidPass123!",
-      "SecurePassword456@",
-      "MyFarmPass789#",
-    ];
-
-    const invalidPasswords = [
-      "short1!", // Too short
-      "nouppercase123!", // No uppercase
-      "NOLOWERCASE123!", // No lowercase
-      "NoNumbers!", // No numbers
-      "NoSpecial123", // No special character
-    ];
-
-    const passwordRegex = {
-      minLength: /.{8,}/,
-      uppercase: /[A-Z]/,
-      lowercase: /[a-z]/,
-      number: /[0-9]/,
-      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
-    };
-
-    validPasswords.forEach((pwd) => {
-      expect(passwordRegex.minLength.test(pwd)).toBe(true);
-      expect(passwordRegex.uppercase.test(pwd)).toBe(true);
-      expect(passwordRegex.lowercase.test(pwd)).toBe(true);
-      expect(passwordRegex.number.test(pwd)).toBe(true);
-      expect(passwordRegex.special.test(pwd)).toBe(true);
-    });
-
-    invalidPasswords.forEach((pwd) => {
-      const meetsAllRequirements =
-        passwordRegex.minLength.test(pwd) &&
-        passwordRegex.uppercase.test(pwd) &&
-        passwordRegex.lowercase.test(pwd) &&
-        passwordRegex.number.test(pwd) &&
-        passwordRegex.special.test(pwd);
-      expect(meetsAllRequirements).toBe(false);
-    });
-  });
-
-  it("should validate email format", () => {
-    const validEmails = [
-      "user@example.com",
-      "test.user@example.co.uk",
-      "user+tag@example.com",
-    ];
-
-    const invalidEmails = [
-      "invalid.email",
-      "@example.com",
-      "user@",
-      "user @example.com",
-    ];
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    validEmails.forEach((email) => {
-      expect(emailRegex.test(email)).toBe(true);
-    });
-
-    invalidEmails.forEach((email) => {
-      expect(emailRegex.test(email)).toBe(false);
-    });
-  });
-
-  it("should validate username format", () => {
-    const validUsernames = [
-      "user123",
-      "john_doe",
-      "farm-manager",
-      "test_user_123",
-    ];
-
-    const invalidUsernames = [
-      "user@name", // Invalid character
-      "user name", // Space
-      "user#123", // Invalid character
-      "ab", // Too short
-    ];
-
-    const usernameRegex = /^[a-zA-Z0-9_-]{3,100}$/;
-
-    validUsernames.forEach((username) => {
-      expect(usernameRegex.test(username)).toBe(true);
-    });
-
-    invalidUsernames.forEach((username) => {
-      expect(usernameRegex.test(username)).toBe(false);
-    });
-  });
-
-  it("should generate valid verification token", () => {
+    // Generate verification token
     const token = require("crypto").randomBytes(32).toString("hex");
-    expect(token).toBeDefined();
-    expect(token.length).toBe(64); // 32 bytes = 64 hex characters
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Insert user
+    const result = await db.insert(users).values({
+      username: testUsername,
+      email: testEmail,
+      passwordHash,
+      name: "Test User",
+      role: "farmer",
+      loginMethod: "local",
+      approvalStatus: "pending",
+      accountStatus: "active",
+      emailVerified: false,
+      emailVerificationToken: token,
+      emailVerificationTokenExpiresAt: expiresAt,
+    });
+
+    testUserId = result.insertId;
+
+    expect(testUserId).toBeGreaterThan(0);
   });
 
-  it("should handle account lockout after failed attempts", () => {
-    const maxFailedAttempts = 5;
-    const lockoutDuration = 15 * 60 * 1000; // 15 minutes
-
-    let failedAttempts = 0;
-    let accountLockedUntil: Date | null = null;
-
-    // Simulate 5 failed login attempts
-    for (let i = 0; i < maxFailedAttempts; i++) {
-      failedAttempts++;
-      if (failedAttempts >= maxFailedAttempts) {
-        accountLockedUntil = new Date(Date.now() + lockoutDuration);
-      }
+  it("should verify email with valid token", async () => {
+    if (!testUserId) {
+      throw new Error("Test setup failed");
     }
 
-    expect(failedAttempts).toBe(maxFailedAttempts);
-    expect(accountLockedUntil).toBeDefined();
-    expect(accountLockedUntil!.getTime()).toBeGreaterThan(Date.now());
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
+
+    // Verify email
+    await db.update(users)
+      .set({
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationTokenExpiresAt: null,
+      })
+      .where(eq(users.id, testUserId));
+
+    // Check verification
+    const [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user.emailVerified).toBe(true);
+    expect(user.emailVerificationToken).toBeNull();
   });
 
-  it("should reset failed attempts on successful login", () => {
-    let failedAttempts = 5;
-    let lastFailedLoginAt: Date | null = new Date();
-    let accountLockedUntil: Date | null = new Date(Date.now() + 15 * 60 * 1000);
+  it("should allow login with correct password", async () => {
+    if (!testUserId) {
+      throw new Error("Test setup failed");
+    }
 
-    // Simulate successful login
-    failedAttempts = 0;
-    lastFailedLoginAt = null;
-    accountLockedUntil = null;
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
 
-    expect(failedAttempts).toBe(0);
-    expect(lastFailedLoginAt).toBeNull();
-    expect(accountLockedUntil).toBeNull();
+    // Get user
+    const [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user).toBeTruthy();
+
+    // Verify password
+    if (user.passwordHash) {
+      const passwordValid = await bcrypt.compare(testPassword, user.passwordHash);
+      expect(passwordValid).toBe(true);
+    }
+  });
+
+  it("should reject login with incorrect password", async () => {
+    if (!testUserId) {
+      throw new Error("Test setup failed");
+    }
+
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
+
+    // Get user
+    const [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user).toBeTruthy();
+
+    // Verify password
+    if (user.passwordHash) {
+      const passwordValid = await bcrypt.compare("WrongPassword123!", user.passwordHash);
+      expect(passwordValid).toBe(false);
+    }
+  });
+
+  it("should handle account lockout after failed attempts", async () => {
+    if (!testUserId) {
+      throw new Error("Test setup failed");
+    }
+
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
+
+    // Simulate failed login attempts
+    const lockoutTime = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    await db.update(users)
+      .set({
+        failedLoginAttempts: 5,
+        accountLockedUntil: lockoutTime,
+      })
+      .where(eq(users.id, testUserId));
+
+    // Check lockout
+    const [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user.failedLoginAttempts).toBe(5);
+    expect(user.accountLockedUntil).toBeTruthy();
+  });
+
+  it("should reset password with valid token", async () => {
+    if (!testUserId) {
+      throw new Error("Test setup failed");
+    }
+
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
+
+    // Generate reset token
+    const resetToken = require("crypto").randomBytes(32).toString("hex");
+    const resetExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Update user with reset token
+    await db.update(users)
+      .set({
+        passwordResetToken: resetToken,
+        passwordResetTokenExpiresAt: resetExpiresAt,
+      })
+      .where(eq(users.id, testUserId));
+
+    // Verify reset token is set
+    const [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user.passwordResetToken).toBe(resetToken);
+
+    // Reset password
+    const newPassword = "NewPass456!@#";
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+    await db.update(users)
+      .set({
+        passwordHash: newPasswordHash,
+        passwordResetToken: null,
+        passwordResetTokenExpiresAt: null,
+        failedLoginAttempts: 0,
+        accountLockedUntil: null,
+      })
+      .where(eq(users.id, testUserId));
+
+    // Verify new password works
+    const [updatedUser] = await db.select().from(users).where(eq(users.id, testUserId));
+    if (updatedUser.passwordHash) {
+      const passwordValid = await bcrypt.compare(newPassword, updatedUser.passwordHash);
+      expect(passwordValid).toBe(true);
+    }
+  });
+
+  it("should track user approval status", async () => {
+    if (!testUserId) {
+      throw new Error("Test setup failed");
+    }
+
+    const db = await getDb();
+    if (!db) throw new Error("Database connection failed");
+
+    // Check initial approval status
+    let [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user.approvalStatus).toBe("pending");
+
+    // Approve user
+    await db.update(users)
+      .set({ approvalStatus: "approved" })
+      .where(eq(users.id, testUserId));
+
+    // Verify approval
+    [user] = await db.select().from(users).where(eq(users.id, testUserId));
+    expect(user.approvalStatus).toBe("approved");
   });
 });

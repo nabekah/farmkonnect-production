@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import Home from "./pages/Home";
+import AdminApprovalDashboard from "./pages/AdminApprovalDashboard";
 import DashboardLayout from "./components/DashboardLayout";
 import FarmManagement from "./pages/FarmManagement";
 import CropTracking from "./pages/CropTracking";
@@ -430,6 +431,7 @@ function Router() {
       </Route>
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/admin/approvals" component={AdminApprovalDashboard} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/data-management">
         {() => (
