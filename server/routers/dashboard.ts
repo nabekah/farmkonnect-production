@@ -14,7 +14,19 @@ export const dashboardRouter = router({
   // Get quick stats for the dashboard
   getQuickStats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    const userId = ctx.user.id;
+    const userId = ctx.user?.id;
+
+    // Return empty stats if user is not authenticated
+    if (!userId) {
+      return {
+        totalFarms: 0,
+        totalFarmArea: 0,
+        activeCrops: 0,
+        pendingTasks: 0,
+        weatherAlerts: 0,
+        livestockCount: 0,
+      };
+    }
 
     try {
       // Get total farms
@@ -100,8 +112,13 @@ export const dashboardRouter = router({
   // Get recent activities
   getRecentActivities: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    const userId = ctx.user.id;
+    const userId = ctx.user?.id;
     const thirtyDaysAgo = subDays(new Date(), 30);
+
+    // Return empty activities if user is not authenticated
+    if (!userId) {
+      return [];
+    }
 
     try {
       const activities: any[] = [];

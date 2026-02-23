@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import NotFound from "@/pages/NotFound";import VerifyEmail from "@/pages/VerifyEmail";
+
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -168,7 +169,8 @@ function Router() {
     <Switch>
        <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      <Route path="/verify-email" component={VerifyEmail} />
+        <Route path="/register" component={Register} />
       <Route path="/test-email">
         {() => (
           <DashboardLayout>
@@ -429,7 +431,8 @@ function Router() {
           </DashboardLayout>
         )}
       </Route>
-      <Route path="/register" component={Register} />
+      <Route path="/verify-email" component={VerifyEmail} />
+        <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/admin/approvals" component={AdminApprovalDashboard} />
       <Route path="/reset-password" component={ResetPassword} />
