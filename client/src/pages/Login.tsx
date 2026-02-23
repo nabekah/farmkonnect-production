@@ -46,10 +46,7 @@ export default function Login() {
     setError("Google login coming soon");
   };
 
-  const handleManusLogin = () => {
-    // TODO: Implement Manus OAuth login
-    setError("Manus login coming soon");
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
@@ -150,16 +147,7 @@ export default function Login() {
                 Sign in with Google
               </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handleManusLogin}
-                disabled={isLoading}
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Sign in with Manus
-              </Button>
+
             </div>
 
             {/* Sign Up Link */}

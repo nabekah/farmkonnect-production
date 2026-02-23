@@ -6050,3 +6050,19 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Test Login Flow - Verify username/password login works
 - [x] Test OAuth Flows - Verify Google and Manus OAuth callbacks
 - [x] Verify Admin Approval Dashboard - Test approval/rejection functionality
+
+
+## Production Website Error Fixes
+- [ ] Fix CORS policy blocking manifest.json - Add proper CORS headers to manifest.json endpoint
+- [ ] Fix React error #310 - Debug component lifecycle issues in useEffect hooks
+- [ ] Fix WebSocket connection failures - Verify WebSocket server configuration and SSL/TLS setup
+- [ ] Fix Service Worker issues - Update service worker to handle CORS and failed requests properly
+- [ ] Fix index.css preload warning - Optimize CSS loading and preload directives
+
+
+## Remove Manus OAuth - Current Session
+- [x] Remove Manus OAuth from authentication flow
+- [x] Update Login and Registration UI to remove Manus OAuth button
+- [x] Remove Manus OAuth routes and middleware
+- [x] Test authentication without Manus OAuth
+- [x] Verify registration and login work correctly
