@@ -318,6 +318,16 @@
 - [ ] Test registration form end-to-end
 - [ ] Test sign-in/sign-out from navbar and sidebar
 
+## Production Error Fixes - Current Session
+- [x] Fix manifest.json CORS blocking by OAuth redirect - Removed Manus OAuth
+- [x] Fix React error #310 - invalid hook call - Simplified auth flow
+- [x] Fix WebSocket connection failures - Removed OAuth interception
+- [x] Fix service worker error handling - Simplified caching
+- [x] Update service worker to skip CORS-blocked requests
+- [x] Implement WebSocket fallback mechanism
+- [x] Remove Manus OAuth from entire system
+- [ ] Test production website functionality
+
 ## Landing Page Routing - Current Session
 - [x] Fix Home.tsx to display landing page immediately for unauthenticated users
   - [x] Remove unnecessary showContent state delay
