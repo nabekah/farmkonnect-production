@@ -197,15 +197,12 @@ function LandingPage() {
               >
                 Sign In with Google
               </button>
-              <button
-                onClick={() => {
-                  const elem = document.getElementById('registration-section');
-                  if (elem) elem.scrollIntoView({ behavior: 'smooth' });
-                }}
+              <a
+                href="/register"
                 className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
               >
                 Create Account
-              </button>
+              </a>
             </div>
           </div>
           <div className="bg-gradient-to-br from-green-400 to-blue-500 rounded-lg p-8 text-white">

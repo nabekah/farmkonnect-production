@@ -159,12 +159,15 @@ import { ResponsiveZoomManager } from "./components/ResponsiveZoomManager";
 import { useZoomKeyboardShortcuts } from "./hooks/useZoomKeyboardShortcuts";
 import { ProfileMenu } from "./components/ProfileMenu";
 import { TestEmailPage } from "./pages/TestEmail";
+import Login from "./pages/Login";
 
 // Build version: 2.0.1 - Force rebuild with all fixes
 function Router() {
   return (
     <Switch>
        <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route path="/test-email">
         {() => (
           <DashboardLayout>

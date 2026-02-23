@@ -131,14 +131,14 @@ export function Navbar() {
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-3">
-                <a href={getLoginUrl()}>
+                <a href="/login">
                   <Button variant="outline" size="sm">
                     Sign In
                   </Button>
                 </a>
-                <a href={getLoginUrl()}>
+                <a href="/register">
                   <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                    Get Started
+                    Sign Up
                   </Button>
                 </a>
               </div>
