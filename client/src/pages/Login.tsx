@@ -41,9 +41,24 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth login
-    setError("Google login coming soon");
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // Redirect to Google OAuth authorization endpoint
+      const redirectUri = `${window.location.origin}/api/oauth/google/callback`;
+      const response = await fetch(`/api/oauth/google/authorize?redirect_uri=${encodeURIComponent(redirectUri)}`);
+      const data = await response.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        setError("Failed to initialize Google login. Please try again.");
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      setError(err.message || "Google login failed. Please try again.");
+      setIsLoading(false);
+    }
   };
 
 
