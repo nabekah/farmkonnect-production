@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE users ADD COLUMN username VARCHAR(100) DEFAULT NULL AFTER googleId;\nALTER TABLE users ADD COLUMN passwordHash VARCHAR(255) DEFAULT NULL AFTER username;\nALTER TABLE users ADD COLUMN emailVerificationToken VARCHAR(255) DEFAULT NULL AFTER emailVerified;\nALTER TABLE users ADD COLUMN emailVerificationTokenExpiresAt TIMESTAMP DEFAULT NULL AFTER emailVerificationToken;\nALTER TABLE users ADD COLUMN passwordResetToken VARCHAR(255) DEFAULT NULL AFTER emailVerificationTokenExpiresAt;\nALTER TABLE users ADD COLUMN passwordResetTokenExpiresAt TIMESTAMP DEFAULT NULL AFTER passwordResetToken;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute ALTER TABLE users ADD COLUMN username VARCHAR(100) DEFAULT NULL AFTER googleId;\nALTER TABLE users ADD COLUMN passwordHash VARCHAR(255) DEFAULT NULL AFTER username;\nALTER TABLE users ADD COLUMN emailVerificationToken VARCHAR(255) DEFAULT NULL AFTER emailVerified;\nALTER TABLE users ADD COLUMN emailVerificationTokenExpiresAt TIMESTAMP DEFAULT NULL AFTER emailVerificationToken;\nALTER TABLE users ADD COLUMN passwordResetToken VARCHAR(255) DEFAULT NULL AFTER emailVerificationTokenExpiresAt;\nALTER TABLE users ADD COLUMN passwordResetTokenExpiresAt TIMESTAMP DEFAULT NULL AFTER passwordResetToken;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 3: Duplicate column name 'emailVerificationToken'"
+  ]
+}
