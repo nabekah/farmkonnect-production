@@ -56,6 +56,7 @@ import { emailRouter } from "./routers/email";
 import { sendgridWebhookRouter } from "./routers/sendgridWebhook";
 import { websocketTokenRouter } from "./routers/websocketToken";
 import { suspiciousActivityAlertsRouter } from "./routers/suspiciousActivityAlerts";
+import { authRouter } from "./routers/authRouter";
 import { logAuthenticationAttempt, logLogoutEvent } from "./_core/authAnalyticsLogger";
 import { emailNotifications } from "./_core/emailNotifications";
 import { eq } from "drizzle-orm";

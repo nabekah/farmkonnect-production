@@ -442,6 +442,13 @@
       "when": 1771579451605,
       "tag": "0062_tranquil_vampiro",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "5",
+      "when": 1771848155919,
+      "tag": "0063_abandoned_revanche",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,10 @@ export const users = mysqlTable("users", {
   openId: varchar("openId", { length: 64 }).unique().default(null),
   /** Google OAuth identifier (sub) for Google Sign-In users */
   googleId: varchar("googleId", { length: 255 }).unique().default(null),
+  /** Username for local authentication (unique, optional) */
+  username: varchar("username", { length: 100 }).unique().default(null),
+  /** Hashed password for local authentication (optional) */
+  passwordHash: varchar("passwordHash", { length: 255 }).default(null),
   name: text("name").notNull(),
   email: varchar("email", { length: 320 }).notNull(),
   phone: varchar("phone", { length: 20 }),
