@@ -4,6 +4,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
 import { ENV } from "./env";
+import { getUserById } from "../db";
 
 export type SessionPayload = {
   userId: string;
@@ -53,10 +54,10 @@ export const sdk = {
     }
     try {
       const payload = await sessionService.verifySessionToken(token);
-      const db = require("../db");
-      const user = await db.getUserById(payload.userId);
+      const user = await getUserById(payload.userId);
       return user || null;
     } catch (error) {
+      console.error("[Session] Auth request failed:", error);
       return null;
     }
   },

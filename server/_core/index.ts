@@ -3,11 +3,14 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+// Dynamic import for vite (dev only) - serveStatic is always available
+let setupVite: ((app: express.Express, server: any) => Promise<void>) | null = null;
+let serveStatic: ((app: express.Express) => void) | null = null;
 import { initializeWebSocketServer } from "./websocket";
 
 // Optional cron imports - wrapped in try/catch for Railway compatibility
@@ -117,6 +120,9 @@ async function startServer() {
   app.use(performanceHeaders);
   app.use(cacheMiddleware);
   
+  // Cookie parser - required for session authentication
+  app.use(cookieParser());
+  
   // Body parser with larger limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -147,9 +153,11 @@ async function startServer() {
 
   // Vite dev server or static file serving
   if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
+    const viteModule = await import("./vite");
+    await viteModule.setupVite(app, server);
   } else {
-    serveStatic(app);
+    const viteModule = await import("./vite");
+    viteModule.serveStatic(app);
     // Security headers for production
     app.use((req, res, next) => {
       res.set('X-Content-Type-Options', 'nosniff');

@@ -7,6 +7,11 @@ import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../services/emailService";
+import { sessionService } from "../_core/sdk";
+import { getSessionCookieOptions } from "../_core/cookies";
+
+const COOKIE_NAME = "session";
+const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 
 /**
  * Password validation schema
@@ -254,6 +259,14 @@ export const authRouter = router({
           lastSignedIn: new Date(),
         })
         .where(eq(users.id, userRecord.id));
+
+      // Create session token and set cookie
+      const sessionToken = await sessionService.createSessionToken(String(userRecord.id), {
+        email: userRecord.email || "",
+        role: userRecord.role || "farmer",
+      });
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
       return {
         success: true,

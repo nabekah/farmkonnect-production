@@ -88,7 +88,7 @@ export function registerOAuthRoutes(app: Express) {
         success: true,
       });
 
-      res.redirect(302, "/dashboard");
+      res.redirect(302, "/farmer-dashboard");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("[OAuth] Google callback failed:", errorMessage);
