@@ -172,11 +172,6 @@ export class FarmKonnectWebSocketServer {
     console.log(`[WebSocket] Broadcast to farm ${farmId}: ${sentCount} clients`);
   }
 
-  // Broadcast to specific client (alias for broadcastToUser)
-  public broadcastToClient(userId: number, message: any) {
-    return this.broadcastToUser(userId, message);
-  }
-
   // Broadcast to specific user
   public broadcastToUser(userId: number, message: any) {
     const payload = JSON.stringify(message);

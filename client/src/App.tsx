@@ -34,7 +34,6 @@ import BusinessStrategy from "./pages/BusinessStrategy";
 import WeatherAlerts from "./pages/WeatherAlerts";
 import WeatherTrends from "./pages/WeatherTrends";
 import Settings from "./pages/Settings";
-import { ProfileSettings } from "./pages/ProfileSettings";
 import CropPlanning from "./pages/CropPlanning";
 import RoleManagement from "./pages/RoleManagement";
 import SecurityDashboard from "./pages/SecurityDashboard";
@@ -738,13 +737,6 @@ function Router() {
         {() => (
           <DashboardLayout>
             <Settings />
-          </DashboardLayout>
-        )}
-      </Route>
-      <Route path="/profile-settings">
-        {() => (
-          <DashboardLayout>
-            <ProfileSettings />
           </DashboardLayout>
         )}
       </Route>

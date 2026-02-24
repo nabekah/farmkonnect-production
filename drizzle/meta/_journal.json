@@ -449,13 +449,6 @@
       "when": 1771848155919,
       "tag": "0063_abandoned_revanche",
       "breakpoints": true
-    },
-    {
-      "idx": 64,
-      "version": "5",
-      "when": 1771940934773,
-      "tag": "0064_blue_tomas",
-      "breakpoints": true
     }
   ]
 }
