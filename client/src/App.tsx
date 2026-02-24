@@ -48,6 +48,8 @@ import WorkforceManagement from "./pages/WorkforceManagement";
 import FishFarming from "./pages/FishFarming";
 import AssetManagement from "./pages/AssetManagement";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import { Welcome } from "./pages/Welcome";
+import { ChangePassword } from "./pages/ChangePassword";
 import PredictiveAnalytics from "./pages/PredictiveAnalytics";
 import PredictionDashboard from "./pages/PredictionDashboard";
 import { UsersList } from "./pages/UsersList";
@@ -170,6 +172,8 @@ function Router() {
   return (
     <Switch>
        <Route path="/" component={Home} />
+      <Route path="/welcome" component={Welcome} />
+      <Route path="/change-password" component={ChangePassword} />
       <Route path="/login" component={Login} />
       <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/register" component={Register} />
