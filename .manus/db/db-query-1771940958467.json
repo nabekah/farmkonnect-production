@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE users ADD COLUMN profilePictureUrl VARCHAR(500) DEFAULT NULL, ADD COLUMN profilePictureKey VARCHAR(500) DEFAULT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute ALTER TABLE users ADD COLUMN profilePictureUrl VARCHAR(500) DEFAULT NULL, ADD COLUMN profilePictureKey VARCHAR(500) DEFAULT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 426
+}

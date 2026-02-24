@@ -42,6 +42,9 @@ export const users = mysqlTable("users", {
   emailVerified: boolean("emailVerified").default(false).notNull(),
   emailVerificationToken: varchar("emailVerificationToken", { length: 255 }),
   emailVerificationTokenExpiresAt: timestamp("emailVerificationTokenExpiresAt"),
+  // Profile picture
+  profilePictureUrl: varchar("profilePictureUrl", { length: 500 }),
+  profilePictureKey: varchar("profilePictureKey", { length: 500 }),
 });
 
 // Add a unique constraint to ensure at least one OAuth provider is set

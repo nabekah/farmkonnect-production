@@ -6136,3 +6136,15 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Add session cookie setting to loginWithPassword procedure
 - [x] Verify auth.me returns user data on Railway production deployment
 - [x] Full login flow working: login → cookie set → auth.me returns user → dashboard loads
+
+
+## Profile Picture Upload Feature
+- [x] Update user schema to add profilePictureUrl field
+- [x] Create tRPC procedure for uploading profile pictures
+- [x] Implement S3 upload integration with storagePut helper
+- [x] Build profile picture upload UI component (ProfilePictureUpload.tsx)
+- [x] Add profile picture display in user profile (ProfileSettings.tsx)
+- [x] Create unit tests for profile picture procedures (8/8 tests passing)
+- [x] Add ProfileSettings route to App.tsx
+- [ ] Test end-to-end profile picture upload flow on dev server
+- [ ] Deploy to production and verify feature
