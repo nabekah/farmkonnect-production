@@ -34,13 +34,17 @@ async function seedAdmin() {
       return;
     }
     
-    // Create admin account
+    // Create admin account with all required fields for login
     await db.insert(users).values({
       email: ADMIN_EMAIL,
       username: ADMIN_USERNAME,
       passwordHash: hashedPassword,
+      name: 'System Administrator',
       role: 'admin',
       emailVerified: true,
+      approvalStatus: 'approved',
+      accountStatus: 'active',
+      failedLoginAttempts: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

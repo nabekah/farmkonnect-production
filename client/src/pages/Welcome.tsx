@@ -138,6 +138,15 @@ export function Welcome() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => navigate('/profile')}
+              className="gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              My Profile
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => navigate('/change-password')}
               className="gap-2"
             >
