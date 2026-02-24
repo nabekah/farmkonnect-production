@@ -1,5 +1,5 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +46,9 @@ import { NotificationHistoryPanel } from './NotificationHistoryPanel';
 import { FieldWorkerNotificationCenter } from './FieldWorkerNotificationCenter';
 import { TimeTrackerWidget } from './TimeTrackerWidget';
 import { ZoomIndicator } from './ZoomIndicator';
+import { WebSocketStatusBanner } from './WebSocketStatusIndicator';
+import { useDashboardRealtimeUpdates } from '@/hooks/useRealtimeUpdates';
+import { useNotificationBadges } from '@/contexts/NotificationBadgeContext';
 
 const menuItems = getAllMenuItems();
 
@@ -104,6 +107,29 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout: baseLogout } = useAuth();
   const [location, setLocation] = useLocation();
+  const [wsConnected, setWsConnected] = useState(true);
+  const [wsReconnecting, setWsReconnecting] = useState(false);
+  const { updateFromWebSocket } = useNotificationBadges();
+
+  // Setup real-time updates
+  const { connected } = useDashboardRealtimeUpdates({
+    enabled: !!user,
+    onUpdate: (message) => {
+      setWsConnected(true);
+      setWsReconnecting(false);
+      updateFromWebSocket(message);
+    },
+  });
+
+  useEffect(() => {
+    setWsConnected(connected);
+  }, [connected]);
+  
+  useEffect(() => {
+    if (!connected && user) {
+      setWsReconnecting(true);
+    }
+  }, [connected, user])
   
   // Wrap logout to redirect to home page
   const logout = async () => {
@@ -269,6 +295,7 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
+        <WebSocketStatusBanner connected={wsConnected} reconnecting={wsReconnecting} />
         <ConnectionStatusIndicator />
         <main className="flex-1 p-4 flex flex-col">
           {children}
