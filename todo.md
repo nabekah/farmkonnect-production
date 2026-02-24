@@ -6136,3 +6136,12 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Add session cookie setting to loginWithPassword procedure
 - [x] Verify auth.me returns user data on Railway production deployment
 - [x] Full login flow working: login → cookie set → auth.me returns user → dashboard loads
+
+
+## Backup and WebSocket Features (Completed)
+- [x] Create DatabaseBackupService with daily 2 AM UTC schedule (cron-based)
+- [x] Create backupRouter with admin-only backup management procedures (createBackup, listBackups, restoreBackup, deleteBackup)
+- [x] Create WebSocket test utilities and integration tests (WebSocketTestClient class)
+- [x] Integrate backup service into server startup
+- [x] Add backup router to appRouter
+- [ ] Push to GitHub and verify Railway deployment

@@ -210,6 +210,7 @@ import { notificationCenterRouter } from "./routers/notificationCenterRouter";
 import { adminRouter } from "./routers/adminRouter";
 import { chatbotRouter } from "./routers/chatbotRouter";
 import { weatherAlertsRouter } from "./routers/weatherAlertsRouter";
+import { backupRouter } from "./routers/backupRouter";
 import { pushNotificationIntegrationRouter } from "./routers/pushNotificationIntegration";
 import { notificationEventHandlersRouter } from "./routers/notificationEventHandlers";
 import { notificationRouter as advancedNotificationRouter } from "./routers/notificationRouter";
@@ -237,6 +238,7 @@ import {
 import { eq } from "drizzle-orm";
 
 export const appRouter = router({
+  backup: backupRouter,
   system: systemRouter,
   tokenRefresh: tokenRefreshRouter,
   authAnalytics: authAnalyticsRouter,
