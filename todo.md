@@ -6145,3 +6145,25 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Integrate backup service into server startup
 - [x] Add backup router to appRouter
 - [ ] Push to GitHub and verify Railway deployment
+
+
+## Implementation Phase 1: GitHub & Railway Deployment
+- [ ] Commit backup service and WebSocket features to git
+- [ ] Push to nabekah/farmkonnect-production GitHub repo
+- [ ] Verify Railway auto-deployment triggers
+- [ ] Test backup and WebSocket features on Railway production
+
+## Implementation Phase 2: Admin Backup Dashboard
+- [ ] Create AdminBackupDashboard component
+- [ ] Add backup management UI (create, list, restore, delete)
+- [ ] Add role-based access control (admin-only)
+- [ ] Add backup history timeline and status indicators
+- [ ] Test backup operations through UI
+
+## Implementation Phase 3: Real-time WebSocket Notifications
+- [ ] Create NotificationService for WebSocket events
+- [ ] Implement weather alert notifications
+- [ ] Implement pest warning notifications
+- [ ] Implement task update notifications
+- [ ] Add notification UI toast/banner in farmer dashboard
+- [ ] Test real-time message delivery
