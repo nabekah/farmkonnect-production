@@ -12,7 +12,6 @@ import { createContext } from "./context";
 let setupVite: ((app: express.Express, server: any) => Promise<void>) | null = null;
 let serveStatic: ((app: express.Express) => void) | null = null;
 import { initializeWebSocketServer } from "./websocket";
-import { initializeDatabaseBackupService } from "../services/databaseBackupService";
 
 // Optional cron imports - wrapped in try/catch for Railway compatibility
 let initializeWeatherCron: (() => void) | null = null;
@@ -181,14 +180,6 @@ async function startServer() {
     
     // Initialize WebSocket server
     initializeWebSocketServer(server);
-    
-    // Initialize Database Backup Service
-    try {
-      initializeDatabaseBackupService();
-      console.log('[BackupService] Database backup service initialized');
-    } catch (e) {
-      console.warn('[BackupService] Failed to initialize:', (e as Error).message);
-    }
     
     // Initialize optional services
     if (RealTimeProductTracking) {

@@ -66,8 +66,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       return;
     }
 
+    // Use current domain for WebSocket connection (works with custom domains)
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${token}`;
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws?token=${token}`;
+    
+    // Log for debugging
+    console.log('[WebSocket] Current location:', window.location.href);
+    console.log('[WebSocket] WebSocket URL:', wsUrl);
 
     console.log('[WebSocket] Connecting to:', wsUrl);
 

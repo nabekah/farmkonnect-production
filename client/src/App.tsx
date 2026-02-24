@@ -48,9 +48,6 @@ import WorkforceManagement from "./pages/WorkforceManagement";
 import FishFarming from "./pages/FishFarming";
 import AssetManagement from "./pages/AssetManagement";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
-import { Welcome } from "./pages/Welcome";
-import { ChangePassword } from "./pages/ChangePassword";
-import { UserProfile } from "./pages/UserProfile";
 import PredictiveAnalytics from "./pages/PredictiveAnalytics";
 import PredictionDashboard from "./pages/PredictionDashboard";
 import { UsersList } from "./pages/UsersList";
@@ -165,17 +162,12 @@ import { useZoomKeyboardShortcuts } from "./hooks/useZoomKeyboardShortcuts";
 import { ProfileMenu } from "./components/ProfileMenu";
 import { TestEmailPage } from "./pages/TestEmail";
 import Login from "./pages/Login";
-import { AdminBackupDashboard } from "./pages/AdminBackupDashboard";
-import { NotificationContainer } from "./components/NotificationToast";
 
 // Build version: 2.0.1 - Force rebuild with all fixes
 function Router() {
   return (
     <Switch>
        <Route path="/" component={Home} />
-      <Route path="/welcome" component={Welcome} />
-      <Route path="/change-password" component={ChangePassword} />
-      <Route path="/profile" component={UserProfile} />
       <Route path="/login" component={Login} />
       <Route path="/verify-email" component={VerifyEmail} />
         <Route path="/register" component={Register} />
@@ -443,13 +435,6 @@ function Router() {
         <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/admin/approvals" component={AdminApprovalDashboard} />
-      <Route path="/admin/backups">
-        {() => (
-          <DashboardLayout>
-            <AdminBackupDashboard />
-          </DashboardLayout>
-        )}
-      </Route>
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/data-management">
         {() => (

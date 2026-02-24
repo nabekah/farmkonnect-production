@@ -1,4 +1,5 @@
 import type { Express, Request, Response } from "express";
+import { OAuth2Client } from "google-auth-library";
 import { googleOAuth } from "./googleOAuth";
 import { logAuthenticationAttempt } from "./authAnalyticsLogger";
 import * as db from "../db";
@@ -18,7 +19,19 @@ export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/google/authorize", async (req: Request, res: Response) => {
     try {
       const state = Math.random().toString(36).substring(2, 15);
-      const authUrl = googleOAuth.getAuthorizationUrl(state);
+      // Create a fresh OAuth2Client with current environment variables
+      const clientId = process.env.GOOGLE_CLIENT_ID || "";
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
+      const redirectUri = process.env.GOOGLE_REDIRECT_URL || "";
+      
+      const oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUri);
+      const authUrl = oauth2Client.generateAuthUrl({
+        access_type: "offline",
+        scope: ["openid", "email", "profile"],
+        state,
+      });
+      
+      console.log("[OAuth] Generated auth URL with redirect_uri:", redirectUri);
       res.json({ authUrl, state });
     } catch (error) {
       console.error("[OAuth] Failed to generate Google auth URL:", error);

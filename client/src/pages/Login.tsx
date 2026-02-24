@@ -16,8 +16,8 @@ export default function Login() {
 
   const loginMutation = trpc.auth.loginWithPassword.useMutation({
     onSuccess: (data) => {
-      // Redirect to welcome page on successful login
-      setLocation("/welcome");
+      // Redirect to farmer dashboard on successful login
+      setLocation("/farmer-dashboard");
     },
     onError: (error) => {
       setError(error.message);

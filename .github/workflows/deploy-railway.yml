@@ -1,0 +1,76 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Railway
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.13.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
+          VITE_FRONTEND_URL: ${{ secrets.VITE_FRONTEND_URL }}
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway deploy --service=web
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Get Railway deployment URL
+        id: railway_url
+        run: |
+          URL=$(railway status --service=web | grep "URL:" | awk '{print $NF}')
+          echo "deployment_url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployment URL: $URL"
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 10
+          curl -f -s -o /dev/null -w "%{http_code}" ${{ steps.railway_url.outputs.deployment_url }} || echo "Deployment verification pending"
+
+      - name: Slack notification on success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'FarmKonnect deployed to Railway successfully! 🚀'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author
+
+      - name: Slack notification on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'FarmKonnect deployment to Railway failed! ❌'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author

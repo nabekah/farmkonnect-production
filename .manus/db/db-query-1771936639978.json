@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO users (username, email, name, passwordHash, emailVerified, approvalStatus, accountStatus, role, createdAt, updatedAt) VALUES ('admin', 'admin@farmkonnect.com', 'Admin User', '$2a$10$4/OZLvOIqNFYN.9xWNMxJuNPPVpVnCLxqEqLqNLQfEZVQEGG2Jzum', true, 'approved', 'active', 'admin', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2kNF22PapS9mysw.root --database WZQk4bD8DnsRHwYBkmh7FN --execute INSERT INTO users (username, email, name, passwordHash, emailVerified, approvalStatus, accountStatus, role, createdAt, updatedAt) VALUES ('admin', 'admin@farmkonnect.com', 'Admin User', '$2a$10$4/OZLvOIqNFYN.9xWNMxJuNPPVpVnCLxqEqLqNLQfEZVQEGG2Jzum', true, 'approved', 'active', 'admin', NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 58
+}

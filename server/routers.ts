@@ -48,6 +48,7 @@ import { smsNotificationsRouter } from "./routers/smsNotifications";
 import { complianceReportsRouter } from "./routers/complianceReports";
 import { deviceFingerprintingRouter } from "./routers/deviceFingerprinting";
 import { incidentPlaybooksRouter } from "./routers/incidentPlaybooks";
+import { diagnosticRouter } from "./routers/diagnosticRouter";
 import { exportRouter } from "./exportRouter";
 import { tokenRefreshRouter } from "./routers/tokenRefresh";
 import { authAnalyticsRouter } from "./routers/authAnalytics";
@@ -210,7 +211,6 @@ import { notificationCenterRouter } from "./routers/notificationCenterRouter";
 import { adminRouter } from "./routers/adminRouter";
 import { chatbotRouter } from "./routers/chatbotRouter";
 import { weatherAlertsRouter } from "./routers/weatherAlertsRouter";
-import { backupRouter } from "./routers/backupRouter";
 import { pushNotificationIntegrationRouter } from "./routers/pushNotificationIntegration";
 import { notificationEventHandlersRouter } from "./routers/notificationEventHandlers";
 import { notificationRouter as advancedNotificationRouter } from "./routers/notificationRouter";
@@ -238,7 +238,6 @@ import {
 import { eq } from "drizzle-orm";
 
 export const appRouter = router({
-  backup: backupRouter,
   system: systemRouter,
   tokenRefresh: tokenRefreshRouter,
   authAnalytics: authAnalyticsRouter,
@@ -261,6 +260,7 @@ export const appRouter = router({
   complianceReports: complianceReportsRouter,
   deviceFingerprinting: deviceFingerprintingRouter,
   incidentPlaybooks: incidentPlaybooksRouter,
+  diagnostic: diagnosticRouter,
   upload: uploadRouter,
   financial: financialRouter,
   financialAnalysis: financialAnalysisRouter,

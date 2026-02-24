@@ -19,9 +19,13 @@ export interface GoogleTokenPayload {
 }
 
 class GoogleOAuthService {
-  private client: OAuth2Client;
+  private client: OAuth2Client | null = null;
 
   constructor() {
+    this.initializeClient();
+  }
+
+  private initializeClient() {
     const clientId = ENV.googleClientId;
     const clientSecret = ENV.googleClientSecret;
     const redirectUrl = ENV.googleRedirectUrl;
@@ -33,7 +37,14 @@ class GoogleOAuthService {
     }
 
     this.client = new OAuth2Client(clientId, clientSecret, redirectUrl);
-    console.log("[GoogleOAuth] Initialized with clientId:", clientId);
+    console.log("[GoogleOAuth] Initialized with clientId:", clientId, "redirectUrl:", redirectUrl);
+  }
+
+  private getClient(): OAuth2Client {
+    if (!this.client) {
+      this.initializeClient();
+    }
+    return this.client!;
   }
 
   /**
@@ -42,7 +53,7 @@ class GoogleOAuthService {
    * @returns Authorization URL
    */
   getAuthorizationUrl(state: string): string {
-    return this.client.generateAuthUrl({
+    return this.getClient().generateAuthUrl({
       access_type: "offline",
       scope: ["openid", "email", "profile"],
       state,
@@ -55,7 +66,7 @@ class GoogleOAuthService {
    * @returns Token response with id_token, access_token, etc.
    */
   async exchangeCodeForToken(code: string) {
-    const { tokens } = await this.client.getToken(code);
+    const { tokens } = await this.getClient().getToken(code);
     return tokens;
   }
 
@@ -65,7 +76,7 @@ class GoogleOAuthService {
    * @returns Decoded token payload
    */
   async verifyIdToken(idToken: string): Promise<GoogleTokenPayload> {
-    const ticket = await this.client.verifyIdToken({
+    const ticket = await this.getClient().verifyIdToken({
       idToken,
       audience: ENV.googleClientId,
     });
