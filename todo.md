@@ -6148,3 +6148,14 @@ All components are integrated into the Financial Management Dashboard and tested
 - [x] Add ProfileSettings route to App.tsx
 - [ ] Test end-to-end profile picture upload flow on dev server
 - [ ] Deploy to production and verify feature
+
+
+## WebSocket Real-time Dashboard Updates
+- [x] Analyze dashboard structure and identify data sources
+- [x] Design WebSocket event system for database changes
+- [x] Create database change listeners for all tables (databaseChangeListener.ts)
+- [x] Implement WebSocket broadcast handlers (websocketBroadcaster.ts)
+- [x] Update frontend components to subscribe to real-time events
+- [x] Create WebSocket hooks for React components (useDashboardRealtimeUpdates)
+- [ ] Test real-time updates across all dashboards
+- [ ] Deploy and verify on production
