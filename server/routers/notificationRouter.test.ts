@@ -311,19 +311,21 @@ describe('Advanced Push Notifications', () => {
   })
 
   describe('Notification Subscriptions', () => {
-    it('should subscribe to notifications', (done) => {
-      const unsubscribe = advancedPushNotificationService.subscribe((notification) => {
-        expect(notification).toBeDefined()
-        expect(notification.type).toBe('emergency')
-        unsubscribe()
-        done()
-      })
+    it('should subscribe to notifications', async () => {
+      return new Promise<void>((resolve) => {
+        const unsubscribe = advancedPushNotificationService.subscribe((notification) => {
+          expect(notification).toBeDefined()
+          expect(notification.type).toBe('emergency')
+          unsubscribe()
+          resolve()
+        })
 
-      advancedPushNotificationService.sendEmergencyAlert({
-        alertId: 'alert-011',
-        severity: 'warning',
-        description: 'Test alert',
-        actionRequired: false,
+        advancedPushNotificationService.sendEmergencyAlert({
+          alertId: 'alert-011',
+          severity: 'warning',
+          description: 'Test alert',
+          actionRequired: false,
+        })
       })
     })
 
