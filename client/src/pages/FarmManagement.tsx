@@ -40,9 +40,10 @@ export default function FarmManagement() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const { data: farms = [], isLoading } = trpc.farms.list.useQuery();
+  const utils = trpc.useUtils();
 
   const createFarmMutation = trpc.farms.create.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setFormData({
         farmName: "",
         location: "",
@@ -53,6 +54,8 @@ export default function FarmManagement() {
         description: "",
       });
       setOpen(false);
+      // Refetch farms list to show newly created farm
+      await utils.farms.list.invalidate();
       toast.success("Farm created successfully!");
     },
     onError: (error) => {
@@ -61,8 +64,10 @@ export default function FarmManagement() {
   });
 
   const updateFarmMutation = trpc.farms.update.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setEditDialog({ open: false, farm: null });
+      // Refetch farms list to show updated farm
+      await utils.farms.list.invalidate();
       toast.success("Farm updated successfully!");
     },
     onError: (error) => {
@@ -71,8 +76,10 @@ export default function FarmManagement() {
   });
 
   const deleteFarmMutation = trpc.farms.delete.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       setEditDialog({ open: false, farm: null });
+      // Refetch farms list to remove deleted farm
+      await utils.farms.list.invalidate();
       toast.success("Farm deleted successfully!");
     },
     onError: (error) => {

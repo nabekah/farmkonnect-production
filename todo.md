@@ -6161,3 +6161,39 @@ All components are integrated into the Financial Management Dashboard and tested
 - [ ] Update all references to use refactored code
 - [ ] Run tests to verify refactoring doesn't break functionality
 - [ ] Document refactoring changes
+
+
+## CRITICAL ISSUES FOUND (Feb 26, 2026)
+
+### Issue #1: Farm Creation Not Displaying in List
+- [x] Identified root cause - missing cache invalidation in FarmManagement.tsx
+- [x] Applied fix - added utils.farms.list.invalidate() to mutations
+- [ ] Deploy fix to production
+- [ ] Test with dkoo user
+- [ ] Test with admin account
+
+### Issue #2: Farm Dropdown Empty in All Pages
+- [x] Identified root cause - same as Issue #1
+- [ ] Deploy fix to production
+- [ ] Test Crop Tracking dropdown
+- [ ] Test Livestock dropdown
+- [ ] Test Tasks dropdown
+- [ ] Test Analytics dropdown
+
+### Issue #3: Dashboard Shows 3 Farms but User Has 0
+- [ ] Investigate dashboard router implementation
+- [ ] Check farm ownership filtering
+- [ ] Verify data consistency
+- [ ] Fix if needed
+
+### Data Capture Testing (After Fixes)
+- [ ] Test farm creation and display
+- [ ] Test crop cycle creation
+- [ ] Test soil test logging
+- [ ] Test yield recording
+- [ ] Test livestock management
+- [ ] Test animal health records
+- [ ] Test task creation and assignment
+- [ ] Test marketplace operations
+- [ ] Test weather alerts
+- [ ] Test analytics reporting
