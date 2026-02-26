@@ -2,8 +2,18 @@ import { router, protectedProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
 import { TRPCError } from "@trpc/server";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { farmWorkers } from "../drizzle/schema";
+import {
+  getWorkersByFarm,
+  getWorkerById,
+  getAvailableWorkers,
+  searchWorkers,
+  getWorkerCount,
+  getTeamStats,
+  getTeamByRole,
+  calculateWorkerSalary,
+} from "./_core/workforceUtils";
 
 export const workforceRouter = router({
   // ============================================================================
@@ -12,17 +22,19 @@ export const workforceRouter = router({
 
   workers: router({
     create: protectedProcedure
-      .input(z.object({
-        farmId: z.number(),
-        name: z.string(),
-        contact: z.string().optional(),
-        email: z.string().optional(),
-        role: z.string(),
-        hireDate: z.date(),
-        salary: z.union([z.number(), z.string()]).optional(),
-        salaryFrequency: z.string().optional(),
-        status: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          farmId: z.number(),
+          name: z.string(),
+          contact: z.string().optional(),
+          email: z.string().optional(),
+          role: z.string(),
+          hireDate: z.date(),
+          salary: z.union([z.number(), z.string()]).optional(),
+          salaryFrequency: z.string().optional(),
+          status: z.string().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -36,38 +48,29 @@ export const workforceRouter = router({
       }),
 
     list: protectedProcedure
-      .input(z.object({
-        farmId: z.number(),
-        status: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          farmId: z.number(),
+          status: z.string().optional(),
+        })
+      )
       .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) return [];
-
-        let whereConditions = [eq(farmWorkers.farmId, input.farmId)];
-        if (input.status) {
-          whereConditions.push(eq(farmWorkers.status, input.status));
-        }
-
-        const result = await db.select().from(farmWorkers).where(and(...whereConditions));
-        console.log('[workers.list] farmId:', input.farmId, 'result count:', result.length);
-        if (result.length > 0) {
-          console.log('[workers.list] First worker object:', JSON.stringify(result[0], null, 2));
-        }
-        return result;
+        return await getWorkersByFarm(input.farmId, input.status);
       }),
 
     update: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().optional(),
-        contact: z.string().optional(),
-        email: z.string().optional(),
-        role: z.string().optional(),
-        salary: z.union([z.number(), z.string()]).optional(),
-        salaryFrequency: z.string().optional(),
-        status: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          contact: z.string().optional(),
+          email: z.string().optional(),
+          role: z.string().optional(),
+          salary: z.union([z.number(), z.string()]).optional(),
+          salaryFrequency: z.string().optional(),
+          status: z.string().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -92,22 +95,21 @@ export const workforceRouter = router({
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) return null;
-
-        const result = await db.select().from(farmWorkers).where(eq(farmWorkers.id, input.id));
-        return result.length > 0 ? result[0] : null;
+        return await getWorkerById(input.id);
       }),
+
     getAllWorkers: protectedProcedure
-      .input(z.object({
-        status: z.string().optional(),
-      }).optional())
+      .input(
+        z.object({
+          status: z.string().optional(),
+        }).optional()
+      )
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) return [];
 
         if (input?.status) {
-          return await db.select().from(farmWorkers).where(eq(farmWorkers.status, input.status));
+          return await getWorkersByFarm(0, input.status);
         }
         return await db.select().from(farmWorkers);
       }),
@@ -119,28 +121,29 @@ export const workforceRouter = router({
 
   attendance: router({
     record: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        date: z.date(),
-        status: z.enum(["present", "absent", "late", "half-day", "leave"]),
-        hoursWorked: z.number().optional(),
-        notes: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          date: z.date(),
+          status: z.enum(["present", "absent", "late", "half-day", "leave"]),
+          hoursWorked: z.number().optional(),
+          notes: z.string().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
         // For now, we'll store attendance in a simple format
         // In production, you'd create an attendance table
         return { success: true, message: "Attendance recorded" };
       }),
 
     summary: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        startDate: z.date(),
-        endDate: z.date(),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          startDate: z.date(),
+          endDate: z.date(),
+        })
+      )
       .query(async ({ input }) => {
         // Calculate attendance summary
         return {
@@ -159,58 +162,42 @@ export const workforceRouter = router({
 
   payroll: router({
     calculateSalary: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        month: z.number().min(1).max(12),
-        year: z.number(),
-        daysWorked: z.number().optional(),
-        deductions: z.number().optional(),
-        bonuses: z.number().optional(),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          month: z.number().min(1).max(12),
+          year: z.number(),
+          daysWorked: z.number().optional(),
+          deductions: z.number().optional(),
+          bonuses: z.number().optional(),
+        })
+      )
       .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) return { grossSalary: 0, deductions: 0, netSalary: 0 };
-
-        const worker = await db.select().from(farmWorkers).where(eq(farmWorkers.id, input.workerId));
-        if (worker.length === 0) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Worker not found" });
-        }
-
-        const baseSalary = parseFloat(worker[0].salary?.toString() || "0");
-        const deductions = input.deductions || 0;
-        const bonuses = input.bonuses || 0;
-
-        let grossSalary = baseSalary;
-        if (input.daysWorked && worker[0].salaryFrequency === "daily") {
-          grossSalary = baseSalary * input.daysWorked;
-        }
-
-        const netSalary = grossSalary + bonuses - deductions;
-
+        const result = await calculateWorkerSalary(
+          input.workerId,
+          input.daysWorked,
+          input.deductions,
+          input.bonuses
+        );
         return {
-          workerId: input.workerId,
+          ...result,
           month: input.month,
           year: input.year,
-          grossSalary,
-          deductions,
-          bonuses,
-          netSalary,
         };
       }),
 
     processPayout: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        month: z.number().min(1).max(12),
-        year: z.number(),
-        amount: z.number().positive(),
-        paymentMethod: z.enum(["cash", "bank_transfer", "mobile_money"]),
-        notes: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          month: z.number().min(1).max(12),
+          year: z.number(),
+          amount: z.number().positive(),
+          paymentMethod: z.enum(["cash", "bank_transfer", "mobile_money"]),
+          notes: z.string().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
         // Record payout (in production, create a payroll_records table)
         return {
           success: true,
@@ -220,10 +207,12 @@ export const workforceRouter = router({
       }),
 
     getPayrollHistory: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        limit: z.number().default(12),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          limit: z.number().default(12),
+        })
+      )
       .query(async ({ input }) => {
         // Return payroll history (in production, query payroll_records table)
         return [];
@@ -236,25 +225,29 @@ export const workforceRouter = router({
 
   performance: router({
     recordEvaluation: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        evaluationDate: z.date(),
-        rating: z.number().min(1).max(5),
-        skills: z.array(z.string()).optional(),
-        strengths: z.string().optional(),
-        areasForImprovement: z.string().optional(),
-        notes: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          evaluationDate: z.date(),
+          rating: z.number().min(1).max(5),
+          skills: z.array(z.string()).optional(),
+          strengths: z.string().optional(),
+          areasForImprovement: z.string().optional(),
+          notes: z.string().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
         // Store performance evaluation
         return { success: true, message: "Performance evaluation recorded" };
       }),
 
     getEvaluations: protectedProcedure
-      .input(z.object({
-        workerId: z.number(),
-        limit: z.number().default(5),
-      }))
+      .input(
+        z.object({
+          workerId: z.number(),
+          limit: z.number().default(5),
+        })
+      )
       .query(async ({ input }) => {
         // Return performance evaluations
         return [];
@@ -267,61 +260,23 @@ export const workforceRouter = router({
 
   teams: router({
     getTeamByFarm: protectedProcedure
-      .input(z.object({
-        farmId: z.number(),
-      }))
+      .input(
+        z.object({
+          farmId: z.number(),
+        })
+      )
       .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) return [];
-
-        const workers = await db.select()
-          .from(farmWorkers)
-          .where(and(
-            eq(farmWorkers.farmId, input.farmId),
-            eq(farmWorkers.status, "active")
-          ));
-
-        // Group by role
-        const teamByRole: Record<string, any[]> = {};
-        workers.forEach(w => {
-          if (!teamByRole[w.role]) {
-            teamByRole[w.role] = [];
-          }
-          teamByRole[w.role].push(w);
-        });
-
-        return {
-          totalWorkers: workers.length,
-          activeWorkers: workers.filter(w => w.status === "active").length,
-          teamByRole,
-        };
+        return await getTeamByRole(input.farmId);
       }),
 
     getTeamStats: protectedProcedure
-      .input(z.object({
-        farmId: z.number(),
-      }))
+      .input(
+        z.object({
+          farmId: z.number(),
+        })
+      )
       .query(async ({ input }) => {
-        const db = await getDb();
-        if (!db) return { totalWorkers: 0, totalPayroll: 0, averageSalary: 0 };
-
-        const workers = await db.select()
-          .from(farmWorkers)
-          .where(eq(farmWorkers.farmId, input.farmId));
-
-        const totalPayroll = workers.reduce((sum, w) => sum + parseFloat(w.salary?.toString() || "0"), 0);
-        const averageSalary = workers.length > 0 ? totalPayroll / workers.length : 0;
-
-        return {
-          totalWorkers: workers.length,
-          activeWorkers: workers.filter(w => w.status === "active").length,
-          totalPayroll,
-          averageSalary,
-          workersByRole: workers.reduce((acc, w) => {
-            acc[w.role] = (acc[w.role] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>),
-        };
+        return await getTeamStats(input.farmId);
       }),
   }),
 });

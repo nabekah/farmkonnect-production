@@ -1,8 +1,12 @@
-import { router, publicProcedure, protectedProcedure } from '../_core/trpc';
+import { router, protectedProcedure } from '../_core/trpc';
 import { z } from 'zod';
-import { getDb } from '../db';
-import { farmWorkers } from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import {
+  getWorkersByFarm,
+  getWorkerById,
+  getAvailableWorkers,
+  searchWorkers,
+  getWorkerCount,
+} from '../_core/workforceUtils';
 
 export const workerRouter = router({
   /**
@@ -11,23 +15,8 @@ export const workerRouter = router({
   getAllWorkers: protectedProcedure
     .input(z.object({ farmId: z.number() }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
       try {
-        const result = await db
-          .select({
-            id: farmWorkers.id,
-            name: farmWorkers.name,
-            email: farmWorkers.email,
-            contact: farmWorkers.contact,
-            farmId: farmWorkers.farmId,
-            role: farmWorkers.role,
-            status: farmWorkers.status,
-          })
-          .from(farmWorkers)
-          .where(eq(farmWorkers.farmId, input.farmId));
-
-        return result;
+        return await getWorkersByFarm(input.farmId);
       } catch (error) {
         console.error('Error fetching workers:', error);
         throw new Error('Failed to fetch workers');
@@ -40,19 +29,12 @@ export const workerRouter = router({
   getWorkerById: protectedProcedure
     .input(z.object({ workerId: z.number(), farmId: z.number() }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
       try {
-        const result = await db
-          .select()
-          .from(farmWorkers)
-          .where(eq(farmWorkers.id, input.workerId));
-
-        if (!result || result.length === 0) {
+        const worker = await getWorkerById(input.workerId);
+        if (!worker) {
           throw new Error('Worker not found');
         }
-
-        return result[0];
+        return worker;
       } catch (error) {
         console.error('Error fetching worker:', error);
         throw new Error('Failed to fetch worker');
@@ -65,23 +47,8 @@ export const workerRouter = router({
   getAvailableWorkers: protectedProcedure
     .input(z.object({ farmId: z.number() }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
       try {
-        const result = await db
-          .select({
-            id: farmWorkers.id,
-            name: farmWorkers.name,
-            email: farmWorkers.email,
-            contact: farmWorkers.contact,
-            role: farmWorkers.role,
-            status: farmWorkers.status,
-          })
-          .from(farmWorkers)
-          .where(eq(farmWorkers.farmId, input.farmId));
-
-        // Filter for active workers
-        return result.filter((w: any) => w.status === 'active');
+        return await getAvailableWorkers(input.farmId);
       } catch (error) {
         console.error('Error fetching available workers:', error);
         throw new Error('Failed to fetch available workers');
@@ -94,27 +61,8 @@ export const workerRouter = router({
   searchWorkers: protectedProcedure
     .input(z.object({ farmId: z.number(), query: z.string() }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
       try {
-        const result = await db
-          .select({
-            id: farmWorkers.id,
-            name: farmWorkers.name,
-            email: farmWorkers.email,
-            contact: farmWorkers.contact,
-            role: farmWorkers.role,
-            status: farmWorkers.status,
-          })
-          .from(farmWorkers)
-          .where(eq(farmWorkers.farmId, input.farmId));
-
-        // Filter by search query
-        const query = input.query.toLowerCase();
-        return result.filter((w: any) =>
-          w.name.toLowerCase().includes(query) ||
-          w.email.toLowerCase().includes(query)
-        );
+        return await searchWorkers(input.farmId, input.query);
       } catch (error) {
         console.error('Error searching workers:', error);
         throw new Error('Failed to search workers');
@@ -127,19 +75,8 @@ export const workerRouter = router({
   getWorkerCount: protectedProcedure
     .input(z.object({ farmId: z.number() }))
     .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new Error('Database not available');
       try {
-        const result = await db
-          .select()
-          .from(farmWorkers)
-          .where(eq(farmWorkers.farmId, input.farmId));
-
-        return {
-          total: result.length,
-          active: result.filter((w: any) => w.status === 'active').length,
-          inactive: result.filter((w: any) => w.status !== 'active').length,
-        };
+        return await getWorkerCount(input.farmId);
       } catch (error) {
         console.error('Error getting worker count:', error);
         throw new Error('Failed to get worker count');
