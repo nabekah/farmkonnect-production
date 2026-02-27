@@ -98,17 +98,24 @@ class FieldWorkerWebSocketService {
         this.ws.onerror = (error) => {
           console.error('WebSocket error:', error);
           this.isConnecting = false;
-          reject(error);
+          // Don't reject immediately, allow fallback to polling
+          this.attemptReconnect();
         };
 
-        this.ws.onclose = () => {
-          console.log('WebSocket disconnected');
+        this.ws.onclose = (event) => {
+          console.log('WebSocket disconnected', event.code, event.reason);
           this.isConnecting = false;
-          this.emit('connection_closed', {});
-          this.attemptReconnect();
+          this.emit('connection_closed', { code: event.code, reason: event.reason });
+          // Only attempt reconnect if it wasn't a normal closure
+          if (event.code !== 1000 && event.code !== 1001) {
+            this.attemptReconnect();
+          }
         };
       } catch (error) {
         this.isConnecting = false;
+        console.error('Failed to create WebSocket:', error);
+        // Attempt to recover with fallback
+        this.attemptReconnect();
         reject(error);
       }
     });
@@ -121,7 +128,13 @@ class FieldWorkerWebSocketService {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      console.warn('WebSocket not connected, message not sent');
+      console.warn('WebSocket not connected, attempting to reconnect...');
+      // Attempt to reconnect if not already connecting
+      if (!this.isConnecting && this.workerId && this.farmId) {
+        this.connect(this.workerId, this.farmId).catch(err => {
+          console.error('Reconnection failed:', err);
+        });
+      }
     }
   }
 
