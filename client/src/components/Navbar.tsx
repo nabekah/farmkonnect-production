@@ -15,8 +15,21 @@ export function Navbar() {
   const logoutMutation = trpc.auth.logout.useMutation();
 
   const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-    setLocation("/");
+    try {
+      await logoutMutation.mutateAsync();
+      setProfileMenuOpen(false);
+      // Wait a moment for the mutation to complete and cookie to be cleared
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still redirect on error
+      setProfileMenuOpen(false);
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
+    }
   };
 
   return (

@@ -33,7 +33,10 @@ class WebSocketService {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(this.url);
+        // Get JWT token from localStorage or cookies
+        const token = this.getAuthToken();
+        const wsUrl = token ? `${this.url}?token=${encodeURIComponent(token)}` : this.url;
+        this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
           console.log("WebSocket connected");
@@ -266,6 +269,29 @@ class WebSocketService {
    */
   isConnected(): boolean {
     return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
+  }
+
+  /**
+   * Get authentication token from storage
+   */
+  private getAuthToken(): string | null {
+    try {
+      // Try to get from localStorage first
+      const token = localStorage.getItem('auth-token');
+      if (token) return token;
+
+      // Try to get from cookies
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'session' || name === 'jwt') {
+          return decodeURIComponent(value);
+        }
+      }
+    } catch (error) {
+      console.warn('Error getting auth token:', error);
+    }
+    return null;
   }
 }
 
