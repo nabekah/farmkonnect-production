@@ -98,7 +98,7 @@ import { GPSTracking } from "./pages/GPSTracking";
 import { ActivityPhotoGallery } from "./pages/ActivityPhotoGallery";
 import { TaskPerformanceAnalytics } from "./pages/TaskPerformanceAnalytics";
 import { BlockchainSupplyChain } from "./pages/BlockchainSupplyChain";
-import { FarmerDashboard } from "./pages/FarmerDashboard";
+import FarmerDashboard from "./pages/FarmerDashboard";
 import { ActivityHistory } from "./pages/ActivityHistory";
 import { ActivityApprovalManager } from "./pages/ActivityApprovalManager";
 import { TimeTrackerReporting } from "./pages/TimeTrackerReporting";

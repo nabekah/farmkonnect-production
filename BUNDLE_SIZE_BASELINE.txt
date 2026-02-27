@@ -1,0 +1,36 @@
+BUNDLE SIZE BASELINE - Phase 2 & 3 Complete (February 27, 2026)
+
+=== MAIN BUNDLE ===
+Server Bundle (dist/index.js): 2.2 MB
+
+=== CLIENT ASSETS ===
+Main JavaScript Bundle: 4.8 MB (index-DMrLkQh0.js)
+Main CSS Bundle: 185 KB (index-FUof5jFU.css)
+
+=== VENDOR BUNDLES ===
+Charts Library: 171 KB (vendor-charts-VO69dvca.js)
+React & Dependencies: 30 KB (vendor-react-emu4BC1w.js)
+tRPC Client: 83 KB (vendor-trpc-Bbvd2poo.js)
+UI Components: 104 KB (vendor-ui-HtGUCMqN.js)
+Utilities: 50 KB (vendor-utils-aYYGIuFw.js)
+
+=== TOTAL BUNDLE SIZE ===
+JavaScript: ~5.2 MB (main + vendor)
+CSS: 185 KB
+Static Assets: 5.5 MB
+Total: ~10.9 MB
+
+=== PERFORMANCE NOTES ===
+- Phase 2 & 3 consolidation: 2,469 lines eliminated (92% reduction)
+- Expected bundle reduction: 15-20% (1.6-2.2 MB savings)
+- Target bundle size after optimization: 8.7-9.3 MB
+- Main optimization opportunities:
+  * Consolidated dashboard components reduce duplicate logic
+  * Shared base components eliminate redundant imports
+  * Unified state management reduces bundle overhead
+
+=== NEXT STEPS ===
+1. Implement Phase 4 consolidation (Analytics + Farm dashboards)
+2. Re-measure bundle size after Phase 4
+3. Compare against baseline to validate optimization
+4. Deploy to production and monitor real-world performance
