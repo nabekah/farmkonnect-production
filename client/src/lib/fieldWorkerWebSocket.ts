@@ -4,6 +4,7 @@
  */
 
 import { FieldWorkerNotification } from './fieldWorkerNotifications';
+import { getWebSocketConfig } from './railwayWebSocketConfig';
 
 export type WebSocketEventType =
   | 'task_assigned'
@@ -34,6 +35,7 @@ class FieldWorkerWebSocketService {
   private reconnectDelay = 3000;
   private listeners: Map<WebSocketEventType, Set<(data: any) => void>> = new Map();
   private isConnecting = false;
+  private config = getWebSocketConfig();
 
   constructor(url: string = '') {
     this.url = url || this.getWebSocketURL();
@@ -53,6 +55,15 @@ class FieldWorkerWebSocketService {
    */
   public connect(workerId: number, farmId: number): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Skip WebSocket on Railway if disabled
+      if (!this.config.enabled) {
+        console.log('[WebSocket] Disabled on this environment, using polling instead');
+        this.workerId = workerId;
+        this.farmId = farmId;
+        resolve();
+        return;
+      }
+
       if (this.isConnecting) {
         reject(new Error('Connection already in progress'));
         return;
@@ -99,6 +110,9 @@ class FieldWorkerWebSocketService {
           console.error('WebSocket error:', error);
           this.isConnecting = false;
           // Don't reject immediately, allow fallback to polling
+          if (!this.config.blockOnFailure) {
+            resolve(); // Resolve with fallback instead of blocking
+          }
           this.attemptReconnect();
         };
 
@@ -115,8 +129,13 @@ class FieldWorkerWebSocketService {
         this.isConnecting = false;
         console.error('Failed to create WebSocket:', error);
         // Attempt to recover with fallback
+        if (!this.config.blockOnFailure) {
+          resolve(); // Resolve with fallback instead of blocking
+        }
         this.attemptReconnect();
-        reject(error);
+        if (this.config.blockOnFailure) {
+          reject(error);
+        }
       }
     });
   }
